@@ -1,0 +1,115 @@
+##############################################################################
+Mutations Overburdening Annotations Tool (MOAT)
+README
+
+February 5, 2016
+
+Lucas Lochovsky	and Jing Zhang
+Gerstein Lab
+Yale University
+##############################################################################
+
+Contents:
+
+A) Description
+B) Prerequisite Software
+C) File List
+D) Build Instructions
+E) Prerequisite User-supplied Data
+F) MOAT-a
+G) MOAT-v
+
+(A) Description
+
+MOAT (Mutations Overburdening Annotations Tool) is a computational system for identifying significant mutation burdens in genomic elements with an empirical, nonparametric method. Taking a set of variant calls and a set of annotations, both of which may be drawn from anywhere in the human genome, MOAT calculates the observed mutation counts of each annotation, and compares them to the expected mutation counts to detect elevated mutation burdens. The expected mutation count is derived by simulating the expected distribution of background mutations. To produce this expected distribution, MOAT offers two types of permutation algorithm: one that permutes the locations of annotations (MOAT-a), and one that permutes the locations of variants (MOAT-v).
+
+MOAT's annotation permutation algorithm was amenable to parallelization on graphics processing units (GPUs) using Nvidia's CUDA framework due to its high computational intensity and low memory requirements. MOAT's variant permutation algorithm, however, required importing the human reference genome into memory, which made it better suited to parallelization across multiple CPUs with the OpenMPI framework.
+
+(B) Prerequisite Software
+
+MOAT is developed for Unix-based operating systems like Linux and Mac OS X. These types of operating systems are fully supported. It is possible that MOAT may function under Windows in an environment like Cygwin, but this has not been tested.
+
+The following software are required to run MOAT. The "version tested" fields indicate the versions of each dependency that have been tested with MOAT. Earlier versions may work, but are unsupported.
+
+1) gcc: The GNU project's C and C++ compiler. Necessary to produce executables from the C++ source code in the MOAT distribution.
+	Link: http://gcc.gnu.org/
+	Versions tested: 4.4.7, 4.8.2
+	
+2) make: The GNU make utility, used to automate compilation of C++ source code in MOAT.
+	Link: https://www.gnu.org/software/make/
+	Version tested: 3.81
+	
+3) CUDA (For parallel MOAT-a only): Nvidia's Compute Unified Device Architecture framework for parallelizing computational workflows across graphics processing unit (GPU) stream processors. Requires an Nvidia GeForce or Quadro graphics card.
+	Link: http://www.nvidia.com/object/cuda_home_new.html
+	Version tested: 6.5.12
+	
+4) OpenMPI (For parallel MOAT-v only): An open source Message Passing Interface implementation that facilitates interprocess communication between parallel processes.
+	Link: https://www.open-mpi.org/
+	Version tested: 1.10.1
+
+(C) File List
+
+1) makefile: The script that compiles the C++ source code.
+
+2) mutation_burden_emp.cpp: The C++ source code for the serial version of MOAT-a.
+
+3) mutation_burden_emp.cu: The source code for the parallel CUDA version of MOAT-a.
+
+4) mutation_burden_emp_v9.cpp: The C++ source code for the serial version of MOAT-v.
+
+5) mutation_burden_emp_v9_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOAT-v.
+
+6) p_value_emp.cpp: The C++ source code for doing p-value calculations in MOAT-v.
+
+7) README.txt: This file. Contains compilation and usage instructions.
+
+8) run_moat.cpp: The universal frontend for all versions of MOAT. Input checks and organization are performed here before transferring execution into one of the other executables.
+
+9) variant_permutation_v3.cpp: A collection of helper methods common to all versions of MOAT.
+
+10) variant_permutation_v3.h: Header file corresponding to "variant_permutation_v3.cpp" methods.
+
+(D) Build Instructions
+
+Before MOAT can be used, its C++ source code must be compiled into executable binaries. All the requisite commands have been collected in the "makefile" file in the MOAT "code" directory. To initiate C++ compilation, "cd" into MOAT's code directory and run the "make" command.
+
+Command summary:
+
+	cd [MOAT code directory]
+	make
+	
+The makefile will compile all the serial source code, and detect any CUDA or OpenMPI installations, compiling the parallel source code if those frameworks are available. The makefile's output will indicate if the parallel versions are available for use.
+
+(E) Prerequisite User-supplied Data
+
+MOAT-v's algorithm depends on the human reference genome in order to preserve the dinucleotide context of the input variants when they are permuted. Therefore, MOAT-v requires a local copy of the human genome reference sequence FASTA files to operate. For our analyses, we used the hg19 FASTA files available from the UCSC Genome Browser at:
+
+http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
+
+(F) MOAT-a
+
+[] = user-defined parameter
+
+Usage: run_moat --algo=a --parallel=[y/n] -n=[number of permutations] --dmin=[minimum distance for random bins] --dmax=[maximum distance for random bins] --blacklist_file=[blacklist file] --vfile=[variant file] --afile=[annotation file] --out=[output file]
+
+MOAT-a is the implementation of the annotation-based permutation algorithm. It iterates through the annotations in the [annotation file], and randomizes [number of permutations (n)] new locations for each annotation in the local genome context, whose boundaries are defined by [minimum distance for random bins (dmin)] and [maximum distance for random bins (dmax)]. Therefore, the local genome context is two intervals: one upstream of the annotation [-dmax, -dmin] and one downstream of the annotation [dmin, dmax]. Variants from the [variant file] are intersected with each of these permuted annotations to produce [n] permuted variant counts. The p-value of each annotation is the fraction of the permuted variant counts that are equal to or greater than the observed variant count (derived from intersecting the [variant file] variants with the annotation). These p-values are written to the [output file].
+
+Additionally, [algo] specifies which permutation algorithm to use: [a] for MOAT-a and [v] for MOAT-v. The [parallel] flag indicates whether to use the CUDA-accelerated version [y] (recommended) or the much slower CPU version [n]. Finally, the [blacklist file] is used to remove regions from consideration that have poor mappability, such as centromeres and telomeres, among others. Annotations that intersect the [blacklist file] will not be analyzed.
+
+(G) MOAT-v
+
+[] = user-defined parameter
+
+Usage: run_moat --algo=v --parallel=[y/n] -n=[number of permutations] --width=[width of whole genome bins] --min_width=[minimum width of whole genome bins] --blacklist_file=[blacklist file] --vfile=[variant file] --out=[output directory] --ncpu=[]
+
+MOAT-v is the implementation of the variant-based permutation algorithm. It divides the human genome into bins of size [width of whole genome bins], and permutes variants within each bin. Essentially, [width] controls the size of the local genome context, in which we assume the covariates affecting the background mutation rate are more or less constant. The [min_width] parameter influences what MOAT-v will do when it produces bins less than [width], which can happen at the ends of chromosomes, or if a blacklist region is encountered as defined in the [blacklist file]. If the bin's size is higher than [min_width], MOAT-v will proceed with the bin as is. Otherwise, it will attempt to merge the bin with an adjoining neighbor bin to avoid having a bin size below [min_width]. If there are no adjoining neighbors available, the bin will be deleted.
+
+Within each bin, variants from the [variant file] are shuffled to new locations to form [number of permutations (n)] permuted variant datasets. These new locations are chosen uniformly over the available trinucleotides that match the trinucleotide identity of the original variant. The [n] permuted variant datasets are produced as [n] files in the [output directory].
+
+Additionally, [algo] specifies which permutation algorithm to use: [a] for MOAT-a and [v] for MOAT-v. The [parallel] flag indicates whether to use the OpenMPI-accelerated version [y] (recommended) or the much slower single CPU version [n]. Finally, the [ncpu] option gives the user control over the number of CPU cores to use in the parallel version. This parameter can be omitted, in which case MOAT-v will automatically use all available CPU cores. This can also be achieved by setting --ncpu to MAX. Alternatively, the user can specify any number between 2 and the maximum number of cores available.
+
+Using run_moat in this way will produce the permuted variant datasets, but to obtain annotation p-values, an additional program must be run: p_value_emp
+
+Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file]
+
+[variant file] is the same variant file used in run_moat, and the [annotation file] contains the annotations whose mutation burdens you want to evaluate. [prohibited regions file] works the same as [blacklist file], and [permutation variants' directory] corresponds to the [output directory] used in run_moat. The p-values are written to the [output file].
