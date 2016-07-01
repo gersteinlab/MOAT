@@ -389,7 +389,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		/* Data structures for the starting data */
-		// Variant array, contains variants of the format vector(chr, start, end)
+		// Variant array, contains variants of the format vector(chr, start, end, name)
 		vector<vector<string> > var_array;
 	
 		// Annotation array, contains annotations of the format vector(chr, start, end, ann_name)
@@ -400,7 +400,7 @@ int main (int argc, char* argv[]) {
 		vector<vector<string> > prohibited_regions;
 	
 		// Bring variant file data into memory
-		// Save the first 3 columns, ignore the rest if there are any
+		// Save the first 4 columns, ignore the rest if there are any
 		char linebuf[STRSIZE];
 		FILE *vfile_ptr = fopen(vfile.c_str(), "r");
 		while (fgets(linebuf, STRSIZE, vfile_ptr) != NULL) {
@@ -409,9 +409,9 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			// printf("%s\n", line.c_str());
 		
-			// Extract chromosome, start, and end from line (first 3 columns)
+			// Extract chromosome, start, end, and name from line (first 4 columns)
 			vector<string> vec;
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 4; i++) {
 				size_t ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
 				vec.push_back(in);
@@ -773,12 +773,27 @@ int main (int argc, char* argv[]) {
 				// DEBUG
 				// printf("Permuted variant count: perm: %d, proc: %d, num: %d\n", i, source, permuted_var_coor_size);
 				
+				// Variables for pointer tracking in the var_array where we are, so that we can retrive the right variant name
+				string chr_block = "";
+				unsigned int chr_pointer = 0;
+				
 				if (permuted_var_coor_size > 0) {
 					int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
 					MPI_Recv(permuted_var_coor, permuted_var_coor_size, MPI_INT, source, 7, MPI_COMM_WORLD, &status);
 				
 					for (int j = 0; j < permuted_var_coor_size/2; j++) {
 						string this_chr = int2chr(permuted_var_coor[2*j]);
+						
+						if (this_chr != chr_block) {
+							chr_block = this_chr;
+							
+							for (unsigned int k = 0; k < var_array.size(); k++) {
+								if (var_array[k][0] == chr_block) {
+									chr_pointer = k;
+									break;
+								}
+							}
+						}
 				
 						char start_str[STRSIZE];
 						sprintf(start_str, "%d", permuted_var_coor[2*j+1]-1);
@@ -790,6 +805,9 @@ int main (int argc, char* argv[]) {
 						vec.push_back(this_chr);
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
+						vec.push_back(var_array[chr_pointer][3]);
+						chr_pointer++;
+						
 						permuted_set.push_back(vec);
 					}
 
