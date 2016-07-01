@@ -833,7 +833,7 @@ int main (int argc, char* argv[]) {
 			FILE *outfile_ptr = fopen(outfile.c_str(), "w");
 			
 			for (unsigned int k = 0; k < permuted_set.size(); k++) {
-				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+				fprintf(outfile_ptr, "%s\t%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str());
 			}
 			fclose(outfile_ptr);
 			
