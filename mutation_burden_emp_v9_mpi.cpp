@@ -1270,6 +1270,25 @@ int main (int argc, char* argv[]) {
 							}
 						}
 						
+						// If no positions are available, skip
+						if (pos2.size() == 0) {
+
+							vector<string> vec;
+							vec.push_back(var_array[k][0]);
+							
+							char start_cstr[STRSIZE];
+							sprintf(start_cstr, "%d", -1);
+							vec.push_back(string(start_cstr));
+		
+							char end_cstr[STRSIZE];
+							sprintf(end_cstr, "%d", -1);
+							vec.push_back(string(end_cstr));
+							
+							permuted_set.push_back(vec);
+							
+							continue;
+						}
+						
 						// DEBUG
 // 						printf("Size check 3: pos: %d\n", (int)pos.size());
 // 						printf("Size check 3: pos2: %d\n", (int)pos2.size());
