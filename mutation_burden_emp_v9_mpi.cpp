@@ -796,7 +796,7 @@ int main (int argc, char* argv[]) {
 						}
 				
 						char start_str[STRSIZE];
-						sprintf(start_str, "%d", permuted_var_coor[2*j+1]-1);
+						sprintf(start_str, "%d", permuted_var_coor[2*j+1]);
 					
 						char end_str[STRSIZE];
 						sprintf(end_str, "%d", permuted_var_coor[2*j+1]);
@@ -808,7 +808,9 @@ int main (int argc, char* argv[]) {
 						vec.push_back(var_array[chr_pointer][3]);
 						chr_pointer++;
 						
-						permuted_set.push_back(vec);
+						if (permuted_var_coor[2*j+1] != -1) {
+							permuted_set.push_back(vec);
+						}
 					}
 
 					free(permuted_var_coor);
@@ -1211,6 +1213,19 @@ int main (int argc, char* argv[]) {
 						
 						// If there is an N in this string, we skip this variant
 						if (cur_nt.find_first_of('N') != string::npos) {
+							vector<string> vec;
+							vec.push_back(var_array[k][0]);
+							
+							char start_cstr[STRSIZE];
+							sprintf(start_cstr, "%d", -1);
+							vec.push_back(string(start_cstr));
+		
+							char end_cstr[STRSIZE];
+							sprintf(end_cstr, "%d", -1);
+							vec.push_back(string(end_cstr));
+		
+							permuted_set.push_back(vec);
+							
 							continue;
 						}
 		
@@ -1223,15 +1238,29 @@ int main (int argc, char* argv[]) {
 						// DEBUG
 						// printf("Size check 2: %s: %d\n", cur_nt.c_str(), (int)local_nt[cur_nt].size());
 		
-						// If no positions are available, end program with an error and suggest
-						// a larger bin size
+						// If no positions are available, skip
 						if (pos.size()-1 == 0) {
-							char errstring[STRSIZE];
-							sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
-											ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-							printf(errstring);
-							MPI_Abort(MPI_COMM_WORLD, 1);
-							return 1;
+// 							char errstring[STRSIZE];
+// 							sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
+// 											ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+// 							printf(errstring);
+// 							MPI_Abort(MPI_COMM_WORLD, 1);
+// 							return 1;
+
+							vector<string> vec;
+							vec.push_back(var_array[k][0]);
+							
+							char start_cstr[STRSIZE];
+							sprintf(start_cstr, "%d", -1);
+							vec.push_back(string(start_cstr));
+		
+							char end_cstr[STRSIZE];
+							sprintf(end_cstr, "%d", -1);
+							vec.push_back(string(end_cstr));
+							
+							permuted_set.push_back(vec);
+							
+							continue;
 						}
 		
 						vector<int> pos2;
