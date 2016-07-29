@@ -41,6 +41,13 @@ using namespace std;
 // In v9, the trinucleotide context of the reference influences the available
 // locations
 
+// In v10, covariate inputs have been added, and the bins are clustered on these
+// criteria, and all the variants in these clusters are permuted within the cluster bins
+
+/* 
+ * Depends on bigWigAverageOverBed
+ */
+
 // vector<string> coor_search (long raw_rand_start, int ann_length) {
 // 	
 // 	// hg19 chromosome lengths
@@ -236,6 +243,16 @@ vector<int> mutation_counts (vector<vector<string> > var_array, vector<vector<st
 	return counts;
 }
 
+// Helper function that calculates the Euclidean distance between two vectors
+// Assumes the two vectors are the same length
+double euclidean(vector<double> &a, vector<double> &b) {
+	double sum = 0.0;
+	for (unsigned int i = 0; i < a.size(); i++) {
+		sum += pow(b[i]-a[i], 2.0);
+	}
+	return sqrt(sum);
+}
+
 // Get the next FASTA file in the sequence
 // void newFastaFilehandle (FILE *fasta_ptr, string chr) {
 // 	if (fasta_ptr != NULL) {
@@ -306,8 +323,11 @@ int main (int argc, char* argv[]) {
 	// Format: tab(chr, start, end)
 	string outdir;
 	
-	if (argc != 8) {
-		printf("Usage: mutation_burden_emp [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
+	// Covariate signal files in bigWig format
+	vector<string> covar_files;
+	
+	if (argc < 9) {
+		printf("Usage: mutation_burden_emp_v10 [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file] [covariate files ...]. Exiting.\n");
 		return 1;
 	} else {
 		num_permutations = atoi(argv[1]);
@@ -316,8 +336,11 @@ int main (int argc, char* argv[]) {
 		prohibited_file = string(argv[4]);
 		fasta_dir = string(argv[5]);
 		vfile = string(argv[6]);
-		// afile = string(argv[5]);
 		outdir = string(argv[7]);
+		
+		for (int i = 9; i < argc; i++) {
+			covar_files.push_back(string(argv[i]));
+		}
 	}
 	
 	// Verify files, and import data to memory
@@ -357,6 +380,14 @@ int main (int argc, char* argv[]) {
 		return 1;
 	}
 	
+	// Verify that bigWigAverageOverBed is in the same directory as this program
+	struct stat avgbuf;
+	char avgoverbed_cstr[] = "./bigWigAverageOverBed";
+	if (stat(avgoverbed_cstr, &avgbuf)) {
+		printf("Error: bigWigAverageOverBed is not in the same directory. Exiting.\n");
+		return 1;
+	}
+	
 	/* Data structures for the starting data */
 	// Variant array, contains variants of the format vector(chr, start, end)
 	vector<vector<string> > var_array;
@@ -367,6 +398,12 @@ int main (int argc, char* argv[]) {
 	
 	// Prohibited regions array, contains annotations of the format vector(chr, start, end)
 	vector<vector<string> > prohibited_regions;
+	
+	// Vector of covariate features for each bin
+	vector<vector<double> > covar_features;
+	
+	// Number of clusters to create: numclust
+	unsigned int numclust = 100;
 	
 	// Bring variant file data into memory
 	// Save the first 3 columns, ignore the rest if there are any
@@ -571,6 +608,167 @@ int main (int argc, char* argv[]) {
 		ann_array.erase(ann_array.end());
 	}
 	
+	/* Begin building covariate signal profiles of the genome bins */
+	// First step is to produce a file of genome bins
+	string regions_presig = "regions.bed";
+	int regnum = 1;
+	FILE *regions_presig_ptr = fopen(regions_presig.c_str(), "w");
+	for (unsigned int i = 0; i < genome_bins.size(); i++) {
+		char regnum_cstr[STRSIZE];
+		sprintf(regnum_cstr, "%d", regnum);
+		string outstring = genome_bins[i][0] + "\t" + genome_bins[i][1] + "\t" + genome_bins[i][2] + "\t" + "reg" + string(regnum_cstr) + "\n";
+		fprintf(regions_presig_ptr, "%s", outstring.c_str());
+		regnum++;
+	}
+	fclose(regions_presig_ptr);
+	
+	string regions_postsig = "signals.bed";
+	for (unsigned int i = 0; i < covar_files.size(); i++) {
+		string covar_file = covar_files[i];
+		
+		string command = "./bigWigAverageOverBed " + covar_file + " " + regions_presig + " " + regions_postsig;
+		system(command.c_str());
+		
+		// Next command depends on OS
+		command = "uname";
+		char buf[STRSIZE];
+		string os = "";
+		FILE* pipe = popen(command.c_str(), "r");
+		if (!pipe) throw runtime_error("Could not determine operating system. Exiting.\n");
+		try {
+			while (!feof(pipe)) {
+				if (fgets(buf, 128, pipe) != NULL) {
+					os += buf;
+				}
+			}
+		} catch (...) {
+			pclose(pipe);
+			throw;
+		}
+		pclose(pipe);
+		
+		if (os == "Darwin\n") { // OS == Mac OS X
+			command = "sed -i .bak 's/^reg//g' " + regions_postsig;
+		} else { // Assume Linux, or other OS that is compatible with this command
+			command = "sed -i 's/^reg//g' " + regions_postsig;
+		}
+		system(command.c_str());
+		
+		string regions_postsig_sorted = "signals_sorted.txt";
+		
+		command = "sort -n -k 1,1 " + regions_postsig + " > " + regions_postsig_sorted;
+		system(command.c_str());
+		
+		// Read the output into memory to add to the covariate features vector
+		int line_index = 0;
+		char linebuf_cstr[STRSIZE];
+		FILE *regions_postsig_ptr = fopen(regions_postsig_sorted.c_str(), "r");
+		while (fgets(linebuf_cstr, STRSIZE-1, regions_postsig_ptr) != NULL) {
+		
+			string linebuf = string(linebuf_cstr);
+			int col_index = 0;
+			while (col_index < 5) {
+				unsigned int pos = linebuf.find_first_of("\t");
+				linebuf = linebuf.substr(pos+1);
+				col_index++;
+			}
+	
+			// Now linebuf has the value we're looking for. Put it in the covar_features vector.
+			double feature;
+			sscanf(linebuf.c_str(), "%lf", &feature);
+			
+			if (covar_features.size() <= (unsigned int)line_index) {
+				vector<double> temp;
+				temp.push_back(feature);
+				covar_features.push_back(temp);
+			} else {
+				covar_features[line_index].push_back(feature);
+			}
+			line_index++;
+		}
+		if (!(feof(regions_postsig_ptr)) && ferror(regions_postsig_ptr)) { // This is an error
+			char preamble[STRSIZE];
+			sprintf(preamble, "There was an error reading from %s", regions_postsig_sorted.c_str());
+			perror(preamble);
+			return 1;
+		}
+		fclose(regions_postsig_ptr);
+	}
+	
+	/* Cluster the covariate matrix rows */
+	
+	// Z normalize the data
+	for (unsigned int i = 0; i < covar_features[0].size(); i++) {
+		double mean = 0.0;
+		double var = 0.0;
+		
+		for (unsigned int j = 0; j < covar_features.size(); j++) {
+			mean += covar_features[j][i];
+		}
+		mean = mean/(double)covar_features.size();
+		
+		for (unsigned int j = 0; j < covar_features.size(); j++) {
+			var += pow((covar_features[j][i]-mean), 2.0);
+		}
+		double sd = sqrt(var);
+		
+		for (unsigned int j = 0; j < covar_features.size(); j++) {
+			covar_features[j][i] = (covar_features[j][i]-mean)/sd;
+		}
+	}
+	
+	// Instantiate numclust cluster centroids
+	// i.e. Pick numclust rows from the data
+	unsigned int step_size = covar_features.size()/numclust;
+	vector<vector<double> > centroids;
+	for (int i = 0; i < numclust; i++) {
+		centroids.push_back(covar_features[i*step_size]);
+	}
+	
+	// Vector of cluster memberships
+	vector<unsigned int> member (covar_features.size(),0);
+	
+	// Run for a maximum of 10 iterations
+	for (int m = 0; m < 10; m++) {
+		// Calculate cluster memberships
+		for (unsigned int i = 0; i < covar_features.size(); i++) {
+			vector<double> row = covar_features[i];
+			unsigned int minclust;
+			double dist = DBL_MAX;
+			for (unsigned int j = 0; j < numclust; j++) {
+				vector<double> cand_centroid = centroids[j];
+				double cand_dist = euclidean(row, cand_centroid);
+				if (cand_dist < dist) {
+					minclust = j;
+					dist = cand_dist;
+				}
+			}
+			member[i] = minclust;
+		}
+	
+		// Calculate new centroid locations
+		for (unsigned int i = 0; i < numclust; i++) {
+			vector<vector<double> > rows;
+			for (unsigned int j = 0; j < covar_features.size(); j++) {
+				if (member[j] == i) {
+					rows.push_back(covar_features[j]);
+				}
+			}
+			// Average calculations
+			for (unsigned int j = 0; j < rows[0].size(); j++) {
+				double sum = 0.0;
+				for (unsigned int l = 0; l < rows.size(); l++) {
+					sum += rows[l][j];
+				}
+				double avg = sum/(double)rows.size();
+				centroids[i][j] = avg;
+			}
+		}
+	}
+	
+	// ASSERTION: "centroids" represents the converged cluster centers, and "member"
+	// indicates the closest centroid to each vector in "covar_features"
+	
 	// DEBUG
 	// printf("Breakpoint 2\n");
 	
@@ -598,79 +796,91 @@ int main (int argc, char* argv[]) {
 		
 		string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
 		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
-	
-		unsigned int variant_pointer = 0;
 		// vector<int> this_permutation_counts;
 		
-		for (unsigned int j = 0; j < ann_array.size(); j++) {
+		vector<vector<string> > permuted_set;
 		
-			vector<vector<string> > permuted_set;
+		for (unsigned int j = 0; j < minclust; j++) {
 		
-			if (last_chr != ann_array[j][0]) {
-				// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
-				// char_pointer = 0;
+			unsigned int variant_pointer = 0;
+		
+			vector<vector<string> > cluster_bins;
+		
+			// Gather up bins in this cluster
+			for (unsigned int k = 0; k < ann_array.size(); k++) {
+				if (member[k] == j) {
+					cluster_bins.push_back(ann_array[k]);
+				}
+			}
+			
+			sort(cluster_bins.begin(), cluster_bins.end(), cmpIntervals);
+			
+			// nt for this cluster
+			string concat_nt = "";
+			
+			// All the input (observed) variants spanning the cluster bins
+			vector<int> obs_var_pos;
+			
+			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+				if (last_chr != cluster_bins[l][0]) {
 				
-				string filename = fasta_dir + "/" + ann_array[j][0] + ".fa";
-				fasta_ptr = fopen(filename.c_str(), "r");
+					string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
+					fasta_ptr = fopen(filename.c_str(), "r");
 				
-				int first = 1;
-				last_chr = ann_array[j][0];
-				chr_nt = "";
-				char linebuf_cstr[STRSIZE];
-				while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-					string linebuf = string(linebuf_cstr);
-					linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-					if (first) {
-						first = 0;
-						continue;
+					int first = 1;
+					last_chr = cluster_bins[l][0];
+					chr_nt = "";
+					char linebuf_cstr[STRSIZE];
+					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+						string linebuf = string(linebuf_cstr);
+						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+						if (first) {
+							first = 0;
+							continue;
+						}
+						chr_nt += linebuf;
 					}
-					chr_nt += linebuf;
+					// Check feof of fasta_ptr
+					if (feof(fasta_ptr)) { // We're good
+						fclose(fasta_ptr);
+					} else { // It's an error
+						char errstring[STRSIZE];
+						sprintf(errstring, "Error reading from %s", filename.c_str());
+						perror(errstring);
+						return 1;
+					}
 				}
-				// Check feof of fasta_ptr
-				if (feof(fasta_ptr)) { // We're good
-					fclose(fasta_ptr);
-				} else { // It's an error
-					char errstring[STRSIZE];
-					sprintf(errstring, "Error reading from %s", filename.c_str());
-					perror(errstring);
-					return 1;
+			
+				// DEBUG
+	// 			printf("Char 11998: %c\n", chr_nt[11997]);
+	// 			printf("Char 11999: %c\n", chr_nt[11998]);
+	// 			printf("Char 12000: %c\n", chr_nt[11999]);
+	// 			printf("Char 12001: %c\n", chr_nt[12000]);
+	// 			printf("Char 12002: %c\n", chr_nt[12001]);
+			
+				int rand_range_start = atoi(cluster_bins[l][1].c_str());
+				int rand_range_end = atoi(cluster_bins[l][2].c_str());
+				
+				// Save the nt
+				concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
+			
+				vector<string> rand_range = cluster_bins[l];
+			
+				pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
+				variant_pointer = range.first;
+			
+				// DEBUG
+				// printf("Breakpoint 3\n");
+				// printf("%d,%d\n", range.first, range.second);
+			
+				int var_subset_count = range.second - range.first + 1;
+				if (var_subset_count == 0) {
+					continue;
 				}
+				
+				// Populate obs_var_pos
+				obs_var_pos.push_back();
 			}
-			
-			// DEBUG
-// 			printf("Char 11998: %c\n", chr_nt[11997]);
-// 			printf("Char 11999: %c\n", chr_nt[11998]);
-// 			printf("Char 12000: %c\n", chr_nt[11999]);
-// 			printf("Char 12001: %c\n", chr_nt[12000]);
-// 			printf("Char 12002: %c\n", chr_nt[12001]);
-			
-			int rand_range_start = atoi(ann_array[j][1].c_str());
-			int rand_range_end = atoi(ann_array[j][2].c_str());
-			
-			vector<string> rand_range;
-			rand_range.push_back(ann_array[j][0]);
-			
-			char rand_range_start_cstr[STRSIZE];
-			sprintf(rand_range_start_cstr, "%d", rand_range_start);
-			rand_range.push_back(string(rand_range_start_cstr));
-			
-			char rand_range_end_cstr[STRSIZE];
-			sprintf(rand_range_end_cstr, "%d", rand_range_end);
-			rand_range.push_back(string(rand_range_end_cstr));
-			
-			pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
-			variant_pointer = range.first;
-			
-			// DEBUG
-			// printf("Breakpoint 3\n");
-			// printf("%d,%d\n", range.first, range.second);
-			
-			int var_subset_count = range.second - range.first + 1;
-			if (var_subset_count == 0) {
-				continue;
-			}
-			
-			// BEGIN NEW CODE
 			
 			// Gather up the locations of all confidently mapped trinucleotides (capital letters)
 			// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
