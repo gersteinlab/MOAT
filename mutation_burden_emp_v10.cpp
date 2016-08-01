@@ -821,7 +821,9 @@ int main (int argc, char* argv[]) {
 			// All the input (observed) variants spanning the cluster bins
 			// Records locations in "epoch" coordinates
 			// Epoch coordinates are 1-based
-			vector<int> obs_var_pos;
+			// Also includes the trinucleotide context, so we only need to make one pass
+			// on the reference genome
+			vector<pair<int,string> > obs_var_pos;
 			
 			// This keeps track of the number of nucleotides in previously observed
 			// cluster bins so that we can calculate accurate epoch coordinates
@@ -914,7 +916,16 @@ int main (int argc, char* argv[]) {
 					int cur_var_end = atoi(var_array[m][2]);
 					int this_epoch = cur_var_end - rand_range_start;
 					this_epoch += epoch_nt;
-					obs_var_pos.push_back(this_epoch);
+					
+					stringstream ss;
+					string cur_nt;
+					ss << chr_nt[cur_var_end-2];
+					ss << chr_nt[cur_var_end-1];
+					ss << chr_nt[cur_var_end];
+					ss >> cur_nt;
+					
+					pair<int,string> variant = (this_epoch, cur_nt);
+					obs_var_pos.push_back(variant);
 				}
 				
 				string cur_chr = cluster_bins[l][0];
@@ -953,22 +964,12 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// Variant processing loop
-			for (unsigned int k = range.first; k <= range.second; k++) {
+			for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
 			
 				// DEBUG
 				// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 			
-				vector<string> cur_var = var_array[k];
-				char cur_nt1 = toupper(chr_nt[atoi(cur_var[2].c_str())-2]);
-				char cur_nt2 = toupper(chr_nt[atoi(cur_var[2].c_str())-1]); // 0-based index
-				char cur_nt3 = toupper(chr_nt[atoi(cur_var[2].c_str())]);
-				
-				stringstream ss;
-				string cur_nt;
-				ss << cur_nt1;
-				ss << cur_nt2;
-				ss << cur_nt3;
-				ss >> cur_nt;
+				string cur_nt = obs_var_pos[k].second;
 				
 				// If there is an N in this string, we skip this variant
 				if (cur_nt.find_first_of('N') != string::npos) {
@@ -993,21 +994,41 @@ int main (int argc, char* argv[]) {
 				
 				vector<int> pos2;
 				for (unsigned int l = 0; l < pos.size(); l++) {
-					if (pos[l] != atoi(cur_var[2].c_str())-1) {
+					if (pos[l] != obs_var_pos[k].first) {
 						pos2.push_back(pos[l]);
 					}
 				}
 				// Pick new position
 				int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+				
+				int new_epoch = pos2[new_index];
+				int new_end;
+				
+				string cluster_chr;
+				
+				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+					cluster_chr = cluster_bins[l][0];
+					int cluster_start = atoi(cluster_bins[l][1].c_str());
+					int cluster_end = atoi(cluster_bins[l][2].c_str());
+					int cluster_size = (cluster_end - cluster_start);
+					
+					if (new_epoch > cluster_size) {
+						new_epoch -= cluster_size;
+					} else {
+						new_end = (new_epoch - cluster_start);
+						break;
+					}
+				}
+				
 				vector<string> vec;
-				vec.push_back(var_array[k][0]);
+				vec.push_back(cluster_chr);
 				
 				char start_cstr[STRSIZE];
-				sprintf(start_cstr, "%d", pos2[new_index]); // 0-based
+				sprintf(start_cstr, "%d", new_end-1); // 0-based
 				vec.push_back(string(start_cstr));
 				
 				char end_cstr[STRSIZE];
-				sprintf(end_cstr, "%d", pos2[new_index]+1); // 1-based
+				sprintf(end_cstr, "%d", new_end); // 1-based
 				vec.push_back(string(end_cstr));
 				
 				permuted_set.push_back(vec);
@@ -1037,7 +1058,7 @@ int main (int argc, char* argv[]) {
 			for (unsigned int k = 0; k < permuted_set.size(); k++) {
 				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
 			}
-			last_chr = ann_array[j][0];
+			// last_chr = ann_array[j][0];
 		}
 		fclose(outfile_ptr);
 	}
