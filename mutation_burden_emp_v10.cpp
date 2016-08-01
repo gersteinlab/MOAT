@@ -800,7 +800,7 @@ int main (int argc, char* argv[]) {
 		
 		vector<vector<string> > permuted_set;
 		
-		for (unsigned int j = 0; j < minclust; j++) {
+		for (unsigned int j = 0; j < numclust; j++) {
 		
 			unsigned int variant_pointer = 0;
 		
@@ -1057,12 +1057,14 @@ int main (int argc, char* argv[]) {
 			local_nt["TTC"] = TTC;
 			local_nt["TTT"] = TTT;
 			
-			for (int k = rand_range_start; k < rand_range_end; k++) { // 1-based index
+			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+				string cur_chr = cluster_bins[k][0];
+				for (int k = cluster_bins[l][1]+1; k <= cluster_bins[l][2]; k++) { // 1-based index
 			
-				// Don't read in characters if it will read off either end
-				if (k == 1 || k == hg19_coor[ann_array[j][0]]) {
-					continue;
-				}
+					// Don't read in characters if it will read off either end
+					if (k == 1 || k == hg19_coor[cur_chr]) {
+						continue;
+					}
 				
 				char nt1 = toupper(chr_nt[k-2]); // 0-based index
 				char nt2 = toupper(chr_nt[k-1]); // 0-based index
