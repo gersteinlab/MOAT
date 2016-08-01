@@ -9,6 +9,9 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <sstream>
+#include <math.h>
+#include <stdexcept>
+#include <limits.h>
 #include "variant_permutation_v3.h"
 
 using namespace std;
@@ -613,7 +616,7 @@ int main (int argc, char* argv[]) {
 	string regions_presig = "regions.bed";
 	int regnum = 1;
 	FILE *regions_presig_ptr = fopen(regions_presig.c_str(), "w");
-	for (unsigned int i = 0; i < genome_bins.size(); i++) {
+	for (unsigned int i = 0; i < ann_array.size(); i++) {
 		char regnum_cstr[STRSIZE];
 		sprintf(regnum_cstr, "%d", regnum);
 		string outstring = genome_bins[i][0] + "\t" + genome_bins[i][1] + "\t" + genome_bins[i][2] + "\t" + "reg" + string(regnum_cstr) + "\n";
@@ -719,7 +722,7 @@ int main (int argc, char* argv[]) {
 	
 	// Instantiate numclust cluster centroids
 	// i.e. Pick numclust rows from the data
-	unsigned int step_size = covar_features.size()/numclust;
+	unsigned int step_size = covar_features.size()/(unsigned int)numclust;
 	vector<vector<double> > centroids;
 	for (int i = 0; i < numclust; i++) {
 		centroids.push_back(covar_features[i*step_size]);
@@ -913,7 +916,7 @@ int main (int argc, char* argv[]) {
 				
 				// Populate obs_var_pos
 				for (unsigned int m = range.first; m <= range.second; m++) {
-					int cur_var_end = atoi(var_array[m][2]);
+					int cur_var_end = atoi(var_array[m][2].c_str());
 					int this_epoch = cur_var_end - rand_range_start;
 					this_epoch += epoch_nt;
 					
@@ -924,7 +927,7 @@ int main (int argc, char* argv[]) {
 					ss << chr_nt[cur_var_end];
 					ss >> cur_nt;
 					
-					pair<int,string> variant = (this_epoch, cur_nt);
+					pair<int,string> variant (this_epoch, cur_nt);
 					obs_var_pos.push_back(variant);
 				}
 				
