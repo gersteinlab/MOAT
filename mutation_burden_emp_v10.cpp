@@ -11,6 +11,7 @@
 #include <sstream>
 #include <math.h>
 #include <stdexcept>
+#include <float.h>
 #include <limits.h>
 #include "variant_permutation_v3.h"
 
@@ -619,7 +620,7 @@ int main (int argc, char* argv[]) {
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
 		char regnum_cstr[STRSIZE];
 		sprintf(regnum_cstr, "%d", regnum);
-		string outstring = genome_bins[i][0] + "\t" + genome_bins[i][1] + "\t" + genome_bins[i][2] + "\t" + "reg" + string(regnum_cstr) + "\n";
+		string outstring = ann_array[i][0] + "\t" + ann_array[i][1] + "\t" + ann_array[i][2] + "\t" + "reg" + string(regnum_cstr) + "\n";
 		fprintf(regions_presig_ptr, "%s", outstring.c_str());
 		regnum++;
 	}
@@ -722,9 +723,9 @@ int main (int argc, char* argv[]) {
 	
 	// Instantiate numclust cluster centroids
 	// i.e. Pick numclust rows from the data
-	unsigned int step_size = covar_features.size()/(unsigned int)numclust;
+	unsigned int step_size = covar_features.size()/numclust;
 	vector<vector<double> > centroids;
-	for (int i = 0; i < numclust; i++) {
+	for (unsigned int i = 0; i < numclust; i++) {
 		centroids.push_back(covar_features[i*step_size]);
 	}
 	
