@@ -819,7 +819,13 @@ int main (int argc, char* argv[]) {
 			string concat_nt = "";
 			
 			// All the input (observed) variants spanning the cluster bins
+			// Records locations in "epoch" coordinates
+			// Epoch coordinates are 1-based
 			vector<int> obs_var_pos;
+			
+			// This keeps track of the number of nucleotides in previously observed
+			// cluster bins so that we can calculate accurate epoch coordinates
+			int epoch_nt = 0;
 			
 			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 				if (last_chr != cluster_bins[l][0]) {
@@ -879,7 +885,12 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// Populate obs_var_pos
-				obs_var_pos.push_back();
+				for (unsigned int m = range.first; m <= range.second; m++) {
+					int this_epoch = var_array[m][2] - rand_range_start;
+					this_epoch += epoch_nt;
+					obs_var_pos.push_back(this_epoch);
+				}
+				epoch_nt += (rand_range_end - rand_range_start);
 			}
 			
 			// Gather up the locations of all confidently mapped trinucleotides (capital letters)
