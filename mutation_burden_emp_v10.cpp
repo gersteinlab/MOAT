@@ -253,6 +253,9 @@ double euclidean(vector<double> &a, vector<double> &b) {
 	return sqrt(sum);
 }
 
+// Helper function that adds an epoch coordinate to the appropriate 3nt vector
+void addIndex (vector<
+
 // Get the next FASTA file in the sequence
 // void newFastaFilehandle (FILE *fasta_ptr, string chr) {
 // 	if (fasta_ptr != NULL) {
@@ -827,6 +830,31 @@ int main (int argc, char* argv[]) {
 			// cluster bins so that we can calculate accurate epoch coordinates
 			int epoch_nt = 0;
 			
+			// Gather up the locations of all confidently mapped trinucleotides (capital letters)
+			// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
+			map<string,vector<int> > local_nt;
+			
+			vector<char> base; // No treble
+			base.push_back('A');
+			base.push_back('G');
+			base.push_back('C');
+			base.push_back('T');
+			
+			for (int z = 0; z < 4; z++) {
+				for (int y = 0; y < 4; y++) {
+					for (int x = 0; x > 4; x++) {
+						stringstream ss;
+						string cur_nt;
+						ss << base[z];
+						ss << base[y];
+						ss << base[x];
+						ss >> cur_nt;
+						vector<int> temp;
+						local_nt[cur_nt] = temp;
+					}
+				}
+			}
+			
 			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 				if (last_chr != cluster_bins[l][0]) {
 				
@@ -890,172 +918,29 @@ int main (int argc, char* argv[]) {
 					this_epoch += epoch_nt;
 					obs_var_pos.push_back(this_epoch);
 				}
+				
+				string cur_chr = cluster_bins[l][0];
+				for (int k = cluster_bins[l][1]+1; k <= cluster_bins[l][2]; k++) { // 1-based index
+				
+					// Don't read in characters if it will read off either end
+					if (k == 1 || k == hg19_coor[cur_chr]) {
+						continue;
+					}
+					
+					char nt1 = toupper(chr_nt[k-2]); // 0-based index
+					char nt2 = toupper(chr_nt[k-1]); // 0-based index
+					char nt3 = toupper(chr_nt[k]); // 0-based index
+					
+					// Verify there are no invalid characters
+					if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
+						char errstring[STRSIZE];
+						sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
+						printf(errstring);
+						return 1;
+					}
+					
 				epoch_nt += (rand_range_end - rand_range_start);
 			}
-			
-			// Gather up the locations of all confidently mapped trinucleotides (capital letters)
-			// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
-			map<string,vector<int> > local_nt;
-			
-			vector<int> AAA;
-			vector<int> AAG;
-			vector<int> AAC;
-			vector<int> AAT;
-			
-			vector<int> AGA;
-			vector<int> AGG;
-			vector<int> AGC;
-			vector<int> AGT;
-			
-			vector<int> ACA;
-			vector<int> ACG;
-			vector<int> ACC;
-			vector<int> ACT; // Download from act.gersteinlab.org today!
-			
-			vector<int> ATA;
-			vector<int> ATG;
-			vector<int> ATC;
-			vector<int> ATT; // Verizon's not going to be happy about this
-			
-			vector<int> GAA;
-			vector<int> GAG;
-			vector<int> GAC;
-			vector<int> GAT;
-			
-			vector<int> GGA;
-			vector<int> GGG; // Good game Greg
-			vector<int> GGC;
-			vector<int> GGT;
-			
-			vector<int> GCA;
-			vector<int> GCG;
-			vector<int> GCC; // Your friendly neighborhood C compiler
-			vector<int> GCT;
-			
-			vector<int> GTA;
-			vector<int> GTG;
-			vector<int> GTC;
-			vector<int> GTT;
-			
-			vector<int> CAA;
-			vector<int> CAG; // Report to Lee Adama for mission briefing
-			vector<int> CAC;
-			vector<int> CAT; // Cats and dogs living together... total anarchy
-			
-			vector<int> CGA;
-			vector<int> CGG;
-			vector<int> CGC;
-			vector<int> CGT;
-			
-			vector<int> CCA;
-			vector<int> CCG;
-			vector<int> CCC;
-			vector<int> CCT;
-			
-			vector<int> CTA;
-			vector<int> CTG;
-			vector<int> CTC;
-			vector<int> CTT;
-			
-			vector<int> TAA;
-			vector<int> TAG; // You're it!
-			vector<int> TAC;
-			vector<int> TAT;
-			
-			vector<int> TGA;
-			vector<int> TGG;
-			vector<int> TGC;
-			vector<int> TGT;
-			
-			vector<int> TCA; // Is your favorite show on the bubble?
-			vector<int> TCG; // With one more letter, it could've been MTG
-			vector<int> TCC;
-			vector<int> TCT;
-			
-			vector<int> TTA;
-			vector<int> TTG;
-			vector<int> TTC; // The words of the prophet are written on the TTC
-			vector<int> TTT;
-			
-			local_nt["AAA"] = AAA;
-			local_nt["AAG"] = AAG;
-			local_nt["AAC"] = AAC;
-			local_nt["AAT"] = AAT;
-			
-			local_nt["AGA"] = AGA;
-			local_nt["AGG"] = AGG;
-			local_nt["AGC"] = AGC;
-			local_nt["AGT"] = AGT;
-			
-			local_nt["ACA"] = ACA;
-			local_nt["ACG"] = ACG;
-			local_nt["ACC"] = ACC;
-			local_nt["ACT"] = ACT;
-			
-			local_nt["ATA"] = ATA;
-			local_nt["ATG"] = ATG;
-			local_nt["ATC"] = ATC;
-			local_nt["ATT"] = ATT;
-			
-			local_nt["GAA"] = GAA;
-			local_nt["GAG"] = GAG;
-			local_nt["GAC"] = GAC;
-			local_nt["GAT"] = GAT;
-			
-			local_nt["GGA"] = GGA;
-			local_nt["GGG"] = GGG;
-			local_nt["GGC"] = GGC;
-			local_nt["GGT"] = GGT;
-			
-			local_nt["GCA"] = GCA;
-			local_nt["GCG"] = GCG;
-			local_nt["GCC"] = GCC;
-			local_nt["GCT"] = GCT;
-			
-			local_nt["GTA"] = GTA;
-			local_nt["GTG"] = GTG;
-			local_nt["GTC"] = GTC;
-			local_nt["GTT"] = GTT;
-			
-			local_nt["CAA"] = CAA;
-			local_nt["CAG"] = CAG;
-			local_nt["CAC"] = CAC;
-			local_nt["CAT"] = CAT;
-			
-			local_nt["CGA"] = CGA;
-			local_nt["CGG"] = CGG;
-			local_nt["CGC"] = CGC;
-			local_nt["CGT"] = CGT;
-			
-			local_nt["CCA"] = CCA;
-			local_nt["CCG"] = CCG;
-			local_nt["CCC"] = CCC;
-			local_nt["CCT"] = CCT;
-			
-			local_nt["CTA"] = CTA;
-			local_nt["CTG"] = CTG;
-			local_nt["CTC"] = CTC;
-			local_nt["CTT"] = CTT;
-			
-			local_nt["TAA"] = TAA;
-			local_nt["TAG"] = TAG;
-			local_nt["TAC"] = TAC;
-			local_nt["TAT"] = TAT;
-			
-			local_nt["TGA"] = TGA;
-			local_nt["TGG"] = TGG;
-			local_nt["TGC"] = TGC;
-			local_nt["TGT"] = TGT;
-			
-			local_nt["TCA"] = TCA;
-			local_nt["TCG"] = TCG;
-			local_nt["TCC"] = TCC;
-			local_nt["TCT"] = TCT;
-			
-			local_nt["TTA"] = TTA;
-			local_nt["TTG"] = TTG;
-			local_nt["TTC"] = TTC;
-			local_nt["TTT"] = TTT;
 			
 			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 				string cur_chr = cluster_bins[k][0];
