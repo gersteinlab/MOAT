@@ -253,9 +253,6 @@ double euclidean(vector<double> &a, vector<double> &b) {
 	return sqrt(sum);
 }
 
-// Helper function that adds an epoch coordinate to the appropriate 3nt vector
-void addIndex (vector<
-
 // Get the next FASTA file in the sequence
 // void newFastaFilehandle (FILE *fasta_ptr, string chr) {
 // 	if (fasta_ptr != NULL) {
@@ -914,13 +911,14 @@ int main (int argc, char* argv[]) {
 				
 				// Populate obs_var_pos
 				for (unsigned int m = range.first; m <= range.second; m++) {
-					int this_epoch = var_array[m][2] - rand_range_start;
+					int cur_var_end = atoi(var_array[m][2]);
+					int this_epoch = cur_var_end - rand_range_start;
 					this_epoch += epoch_nt;
 					obs_var_pos.push_back(this_epoch);
 				}
 				
 				string cur_chr = cluster_bins[l][0];
-				for (int k = cluster_bins[l][1]+1; k <= cluster_bins[l][2]; k++) { // 1-based index
+				for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
 				
 					// Don't read in characters if it will read off either end
 					if (k == 1 || k == hg19_coor[cur_chr]) {
@@ -939,174 +937,19 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 					
+					stringstream ss;
+					string cur_nt;
+					ss << nt1;
+					ss << nt2;
+					ss << nt3;
+					ss >> cur_nt;
+					
+					int this_epoch = k - rand_range_start;
+					this_epoch += epoch_nt;
+					local_nt[cur_nt].push_back(this_epoch);
+				}
+					
 				epoch_nt += (rand_range_end - rand_range_start);
-			}
-			
-			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-				string cur_chr = cluster_bins[k][0];
-				for (int k = cluster_bins[l][1]+1; k <= cluster_bins[l][2]; k++) { // 1-based index
-			
-					// Don't read in characters if it will read off either end
-					if (k == 1 || k == hg19_coor[cur_chr]) {
-						continue;
-					}
-				
-				char nt1 = toupper(chr_nt[k-2]); // 0-based index
-				char nt2 = toupper(chr_nt[k-1]); // 0-based index
-				char nt3 = toupper(chr_nt[k]); // 0-based index
-				
-				// Verify there are no invalid characters
-				if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
-					char errstring[STRSIZE];
-					sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
-					printf(errstring);
-					return 1;
-				}
-				
-				if (nt1 == 'A' && nt2 == 'A' && nt3 == 'A') {
-					local_nt["AAA"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'A' && nt3 == 'G') {
-					local_nt["AAG"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'A' && nt3 == 'C') {
-					local_nt["AAC"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'A' && nt3 == 'T') {
-					local_nt["AAT"].push_back(k-1);
-					
-				} else if (nt1 == 'A' && nt2 == 'G' && nt3 == 'A') {
-					local_nt["AGA"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'G' && nt3 == 'G') {
-					local_nt["AGG"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'G' && nt3 == 'C') {
-					local_nt["AGC"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'G' && nt3 == 'T') {
-					local_nt["AGT"].push_back(k-1);
-					
-				} else if (nt1 == 'A' && nt2 == 'C' && nt3 == 'A') {
-					local_nt["ACA"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'C' && nt3 == 'G') {
-					local_nt["ACG"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'C' && nt3 == 'C') {
-					local_nt["ACC"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'C' && nt3 == 'T') {
-					local_nt["ACT"].push_back(k-1);
-					
-				} else if (nt1 == 'A' && nt2 == 'T' && nt3 == 'A') {
-					local_nt["ATA"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'T' && nt3 == 'G') {
-					local_nt["ATG"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'T' && nt3 == 'C') {
-					local_nt["ATC"].push_back(k-1);
-				} else if (nt1 == 'A' && nt2 == 'T' && nt3 == 'T') {
-					local_nt["ATT"].push_back(k-1);
-					
-				} else if (nt1 == 'G' && nt2 == 'A' && nt3 == 'A') {
-					local_nt["GAA"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'A' && nt3 == 'G') {
-					local_nt["GAG"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'A' && nt3 == 'C') {
-					local_nt["GAC"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'A' && nt3 == 'T') {
-					local_nt["GAT"].push_back(k-1);
-					
-				} else if (nt1 == 'G' && nt2 == 'G' && nt3 == 'A') {
-					local_nt["GGA"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'G' && nt3 == 'G') {
-					local_nt["GGG"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'G' && nt3 == 'C') {
-					local_nt["GGC"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'G' && nt3 == 'T') {
-					local_nt["GGT"].push_back(k-1);
-					
-				} else if (nt1 == 'G' && nt2 == 'C' && nt3 == 'A') {
-					local_nt["GCA"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'C' && nt3 == 'G') {
-					local_nt["GCG"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'C' && nt3 == 'C') {
-					local_nt["GCC"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'C' && nt3 == 'T') {
-					local_nt["GCT"].push_back(k-1);
-					
-				} else if (nt1 == 'G' && nt2 == 'T' && nt3 == 'A') {
-					local_nt["GTA"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'T' && nt3 == 'G') {
-					local_nt["GTG"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'T' && nt3 == 'C') {
-					local_nt["GTC"].push_back(k-1);
-				} else if (nt1 == 'G' && nt2 == 'T' && nt3 == 'T') {
-					local_nt["GTT"].push_back(k-1);
-				
-				} else if (nt1 == 'C' && nt2 == 'A' && nt3 == 'A') {
-					local_nt["CAA"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'A' && nt3 == 'G') {
-					local_nt["CAG"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'A' && nt3 == 'C') {
-					local_nt["CAC"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'A' && nt3 == 'T') {
-					local_nt["CAT"].push_back(k-1);
-					
-				} else if (nt1 == 'C' && nt2 == 'G' && nt3 == 'A') {
-					local_nt["CGA"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'G' && nt3 == 'G') {
-					local_nt["CGG"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'G' && nt3 == 'C') {
-					local_nt["CGC"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'G' && nt3 == 'T') {
-					local_nt["CGT"].push_back(k-1);
-					
-				} else if (nt1 == 'C' && nt2 == 'C' && nt3 == 'A') {
-					local_nt["CCA"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'C' && nt3 == 'G') {
-					local_nt["CCG"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'C' && nt3 == 'C') {
-					local_nt["CCC"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'C' && nt3 == 'T') {
-					local_nt["CCT"].push_back(k-1);
-					
-				} else if (nt1 == 'C' && nt2 == 'T' && nt3 == 'A') {
-					local_nt["CTA"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'T' && nt3 == 'G') {
-					local_nt["CTG"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'T' && nt3 == 'C') {
-					local_nt["CTC"].push_back(k-1);
-				} else if (nt1 == 'C' && nt2 == 'T' && nt3 == 'T') {
-					local_nt["CTT"].push_back(k-1);
-					
-				} else if (nt1 == 'T' && nt2 == 'A' && nt3 == 'A') {
-					local_nt["TAA"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'A' && nt3 == 'G') {
-					local_nt["TAG"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'A' && nt3 == 'C') {
-					local_nt["TAC"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'A' && nt3 == 'T') {
-					local_nt["TAT"].push_back(k-1);
-					
-				} else if (nt1 == 'T' && nt2 == 'G' && nt3 == 'A') {
-					local_nt["TGA"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'G' && nt3 == 'G') {
-					local_nt["TGG"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'G' && nt3 == 'C') {
-					local_nt["TGC"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'G' && nt3 == 'T') {
-					local_nt["TGT"].push_back(k-1);
-					
-				} else if (nt1 == 'T' && nt2 == 'C' && nt3 == 'A') {
-					local_nt["TCA"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'C' && nt3 == 'G') {
-					local_nt["TCG"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'C' && nt3 == 'C') {
-					local_nt["TCC"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'C' && nt3 == 'T') {
-					local_nt["TCT"].push_back(k-1);
-					
-				} else if (nt1 == 'T' && nt2 == 'T' && nt3 == 'A') {
-					local_nt["TTA"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'T' && nt3 == 'G') {
-					local_nt["TTG"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'T' && nt3 == 'C') {
-					local_nt["TTC"].push_back(k-1);
-				} else if (nt1 == 'T' && nt2 == 'T' && nt3 == 'T') {
-					local_nt["TTT"].push_back(k-1);
-				}
 			}
 			
 			// Variant processing loop
