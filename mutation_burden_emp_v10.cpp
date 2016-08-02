@@ -331,7 +331,7 @@ int main (int argc, char* argv[]) {
 	vector<string> covar_files;
 	
 	if (argc < 9) {
-		printf("Usage: mutation_burden_emp_v10 [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file] [covariate files ...]. Exiting.\n");
+		printf("Usage: mutation_burden_emp_v10 [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 		return 1;
 	} else {
 		num_permutations = atoi(argv[1]);
@@ -342,7 +342,7 @@ int main (int argc, char* argv[]) {
 		vfile = string(argv[6]);
 		outdir = string(argv[7]);
 		
-		for (int i = 9; i < argc; i++) {
+		for (int i = 8; i < argc; i++) {
 			covar_files.push_back(string(argv[i]));
 		}
 	}
@@ -396,7 +396,7 @@ int main (int argc, char* argv[]) {
 	// Variant array, contains variants of the format vector(chr, start, end)
 	vector<vector<string> > var_array;
 	
-	// Annotation array, contains annotations of the format vector(chr, start, end, ann_name)
+	// Annotation array, contains annotations of the format vector(chr, start, end)
 	// Will be generated from the whole genome coordinates at runtime
 	vector<vector<string> > ann_array;
 	
@@ -552,6 +552,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG - check ann_array values
+	// return 0;
 // 	FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
 // 	for (unsigned int i = 0; i < ann_array.size(); i++) {
 // 		fprintf(testfile_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
@@ -612,15 +613,20 @@ int main (int argc, char* argv[]) {
 		ann_array.erase(ann_array.end());
 	}
 	
+	// DEBUG
+	// return 0;
+	
 	// DEBUG - check the genome bins
-	string debug_file = "/net/gerstein/ll426/code/moat-test/test-bin-code/debug.txt";
-	FILE *debug_ptr = fopen(debug_file.c_str(), "w");
-	for (unsigned int i = 0; i < ann_array.size(); i++) {
-		fprintf(debug_ptr, "%s\t%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str(), ann_array[i][3].c_str());
-	}
-	fclose(debug_ptr);
+	// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
+// 	string debug_file = "/net/gerstein/ll426/code/moat-test/test-bin-code/debug.txt";
+// 	FILE *debug_ptr = fopen(debug_file.c_str(), "w");
+// 	for (unsigned int i = 0; i < ann_array.size(); i++) {
+// 		// printf("%d\n", i);
+// 		fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
+// 	}
+// 	fclose(debug_ptr);
 	// Early termination
-	return 0;
+	// return 0;
 	
 	/* Begin building covariate signal profiles of the genome bins */
 	// First step is to produce a file of genome bins
@@ -672,6 +678,9 @@ int main (int argc, char* argv[]) {
 		
 		command = "sort -n -k 1,1 " + regions_postsig + " > " + regions_postsig_sorted;
 		system(command.c_str());
+		
+		// DEBUG
+		return 0;
 		
 		// Read the output into memory to add to the covariate features vector
 		int line_index = 0;
@@ -1079,6 +1088,14 @@ int main (int argc, char* argv[]) {
 	
 	// DEBUG
 	// printf("Breakpoint 3\n");
+	
+	// Wrap up by removing the temporary files created along the way
+// 	string rmcom = "rm " + regions_presig;
+// 	system(rmcom.c_str());
+// 	rmcom = "rm " + regions_postsig;
+// 	system(rmcom.c_str());
+// 	rmcom = "rm " + regions_postsig_sorted;
+// 	system(rmcom.c_str());
 	
 	// Verdun
 	return 0;
