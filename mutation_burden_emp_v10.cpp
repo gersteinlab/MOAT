@@ -252,7 +252,7 @@ vector<int> mutation_counts (vector<vector<string> > var_array, vector<vector<st
 double euclidean(vector<double> &a, vector<double> &b) {
 	double sum = 0.0;
 	for (unsigned int i = 0; i < a.size(); i++) {
-		sum += pow(b[i]-a[i], 2.0);
+		sum += pow((b[i]-a[i]), 2.0);
 	}
 	return sqrt(sum);
 }
@@ -680,7 +680,7 @@ int main (int argc, char* argv[]) {
 		system(command.c_str());
 		
 		// DEBUG
-		return 0;
+		// return 0;
 		
 		// Read the output into memory to add to the covariate features vector
 		int line_index = 0;
@@ -718,6 +718,14 @@ int main (int argc, char* argv[]) {
 		fclose(regions_postsig_ptr);
 	}
 	
+	// DEBUG - check the covariate vector
+// 	for (unsigned int i = 0; i < covar_features.size(); i++) {
+// 		for (unsigned int j = 0; j < covar_features[i].size(); j++) {
+// 			printf("%f\n", covar_features[i][j]);
+// 		}
+// 	}
+// 	return 0;
+		
 	/* Cluster the covariate matrix rows */
 	
 	// Z normalize the data
@@ -751,14 +759,26 @@ int main (int argc, char* argv[]) {
 	// Vector of cluster memberships
 	vector<unsigned int> member (covar_features.size(),0);
 	
+	// Map of the empty clusters
+	map<unsigned int,int> empty;
+	
+	// DEBUG
+	// return 0;
+	
 	// Run for a maximum of 10 iterations
 	for (int m = 0; m < 10; m++) {
+		// printf("%d\n", m); // DEBUG
 		// Calculate cluster memberships
 		for (unsigned int i = 0; i < covar_features.size(); i++) {
 			vector<double> row = covar_features[i];
 			unsigned int minclust;
 			double dist = DBL_MAX;
 			for (unsigned int j = 0; j < numclust; j++) {
+			
+				if (empty[j]) {
+					continue;
+				}
+			
 				vector<double> cand_centroid = centroids[j];
 				double cand_dist = euclidean(row, cand_centroid);
 				if (cand_dist < dist) {
@@ -768,22 +788,44 @@ int main (int argc, char* argv[]) {
 			}
 			member[i] = minclust;
 		}
+		
+		// DEBUG
+		// return 0;
 	
 		// Calculate new centroid locations
 		for (unsigned int i = 0; i < numclust; i++) {
+		
+			if (empty[i]) {
+				continue;
+			}
+		
 			vector<vector<double> > rows;
 			for (unsigned int j = 0; j < covar_features.size(); j++) {
 				if (member[j] == i) {
 					rows.push_back(covar_features[j]);
 				}
 			}
+			
+			if (rows.empty()) {
+				empty[i] = 1;
+				continue;
+			}
+			
+			// DEBUG
+// 			printf("Number of rows: %d\n", (int)rows.size());
+// 			printf("Number of columns: %d\n", (int)rows[0].size());
+// 			printf("First row/col: %f\n", rows[0][0]);
+			// return 0; // DEBUG
+			
 			// Average calculations
 			for (unsigned int j = 0; j < rows[0].size(); j++) {
 				double sum = 0.0;
 				for (unsigned int l = 0; l < rows.size(); l++) {
 					sum += rows[l][j];
 				}
+				// printf("Sum: %f\n", sum); // DEBUG
 				double avg = sum/(double)rows.size();
+				// printf("Average: %f\n", avg); // DEBUG
 				centroids[i][j] = avg;
 			}
 		}
@@ -794,6 +836,23 @@ int main (int argc, char* argv[]) {
 	
 	// DEBUG
 	// printf("Breakpoint 2\n");
+	// return 0;
+	string centroids_file = "/net/gerstein/ll426/code/moat/centroids.txt";
+	FILE *centroids_ptr = fopen(centroids_file.c_str(), "w");
+	for (unsigned int i = 0; i < centroids.size(); i++) {
+		for (unsigned int j = 0; j < centroids[i].size(); j++) {
+			fprintf(centroids_ptr, "%f\n", centroids[i][j]);
+		}
+	}
+	fclose(centroids_ptr);
+	
+	string cluster_file = "/net/gerstein/ll426/code/moat/clusters.txt";
+	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+	for (unsigned int i = 0; i < member.size(); i++) {
+		fprintf(cluster_ptr, "%d\n", member[i]);
+	}
+	fclose(cluster_ptr);
+	return 0;
 	
 	// DEBUG - check ann_array values after prohibited region subtraction
 // 	FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
