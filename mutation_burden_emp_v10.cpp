@@ -741,12 +741,22 @@ int main (int argc, char* argv[]) {
 		for (unsigned int j = 0; j < covar_features.size(); j++) {
 			var += pow((covar_features[j][i]-mean), 2.0);
 		}
+		var = var/(double)covar_features.size();
 		double sd = sqrt(var);
 		
 		for (unsigned int j = 0; j < covar_features.size(); j++) {
 			covar_features[j][i] = (covar_features[j][i]-mean)/sd;
 		}
 	}
+	
+	// DEBUG - check scaled values
+	string scaled_file = "/net/gerstein/ll426/code/moat/scaled.txt";
+	FILE *scaled_ptr = fopen(scaled_file.c_str(), "w");
+	for (unsigned int i = 0; i < covar_features.size(); i++) {
+		fprintf(scaled_ptr, "%f\n", covar_features[i][0]);
+	}
+	fclose(scaled_ptr);
+	return 0;
 	
 	// Instantiate numclust cluster centroids
 	// i.e. Pick numclust rows from the data
@@ -840,6 +850,9 @@ int main (int argc, char* argv[]) {
 	string centroids_file = "/net/gerstein/ll426/code/moat/centroids.txt";
 	FILE *centroids_ptr = fopen(centroids_file.c_str(), "w");
 	for (unsigned int i = 0; i < centroids.size(); i++) {
+		if (empty[i]) {
+			continue;
+		}
 		for (unsigned int j = 0; j < centroids[i].size(); j++) {
 			fprintf(centroids_ptr, "%f\n", centroids[i][j]);
 		}
