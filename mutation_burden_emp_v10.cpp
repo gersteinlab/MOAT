@@ -562,6 +562,10 @@ int main (int argc, char* argv[]) {
 	
 	// Subtract the portions of each annotation that overlap prohibited regions
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
+	
+		// DEBUG
+		// printf("Loop 1: %d\n", (int)i);
+	
 		vector<vector<string> > int_intervals = intersecting_intervals(prohibited_regions, ann_array[i]);
 		sort(int_intervals.begin(), int_intervals.end(), cmpIntervals);
 		vector<vector<string> > allowed_regions = subtract_intervals(ann_array[i], int_intervals);
@@ -588,6 +592,10 @@ int main (int argc, char* argv[]) {
 	
 	// Detect those below the min threshold and join with a contiguous neighbor
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
+	
+		// DEBUG
+		// printf("Loop 2: %d\n", (int)i);
+	
 		// Unpack
 		string cur_chr = ann_array[i][0];
 		int cur_start = atoi(ann_array[i][1].c_str());
@@ -610,6 +618,10 @@ int main (int argc, char* argv[]) {
 	// Removal operations again
 	sort(ann_array.begin(), ann_array.end(), cmpIntervals);
 	while (ann_array[ann_array.size()-1][0] == "chrNo") {
+		
+		// DEBUG
+		// printf("Loop 3\n");
+		
 		ann_array.erase(ann_array.end());
 	}
 	
@@ -859,12 +871,12 @@ int main (int argc, char* argv[]) {
 // 	}
 // 	fclose(centroids_ptr);
 // 	
-// 	string cluster_file = "/net/gerstein/ll426/code/moat/clusters.txt";
-// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
-// 	for (unsigned int i = 0; i < member.size(); i++) {
-// 		fprintf(cluster_ptr, "%d\n", member[i]);
-// 	}
-// 	fclose(cluster_ptr);
+	string cluster_file = "/net/gerstein/ll426/code/moat/clusters.txt";
+	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+	for (unsigned int i = 0; i < member.size(); i++) {
+		fprintf(cluster_ptr, "%d\n", member[i]);
+	}
+	fclose(cluster_ptr);
 // 	return 0;
 	
 	// DEBUG - check ann_array values after prohibited region subtraction
@@ -1166,12 +1178,12 @@ int main (int argc, char* argv[]) {
 	// printf("Breakpoint 3\n");
 	
 	// Wrap up by removing the temporary files created along the way
-// 	string rmcom = "rm " + regions_presig;
-// 	system(rmcom.c_str());
-// 	rmcom = "rm " + regions_postsig;
-// 	system(rmcom.c_str());
-// 	rmcom = "rm " + regions_postsig_sorted;
-// 	system(rmcom.c_str());
+	string rmcom = "rm " + regions_presig;
+	system(rmcom.c_str());
+	rmcom = "rm " + regions_postsig;
+	system(rmcom.c_str());
+	rmcom = "rm " + regions_postsig_sorted;
+	system(rmcom.c_str());
 	
 	// Verdun
 	return 0;
