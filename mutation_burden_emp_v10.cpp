@@ -655,6 +655,7 @@ int main (int argc, char* argv[]) {
 	fclose(regions_presig_ptr);
 	
 	string regions_postsig = "signals.bed";
+	string regions_postsig_sorted = "signals_sorted.txt";
 	for (unsigned int i = 0; i < covar_files.size(); i++) {
 		string covar_file = covar_files[i];
 		
@@ -685,8 +686,6 @@ int main (int argc, char* argv[]) {
 			command = "sed -i 's/^reg//g' " + regions_postsig;
 		}
 		system(command.c_str());
-		
-		string regions_postsig_sorted = "signals_sorted.txt";
 		
 		command = "sort -n -k 1,1 " + regions_postsig + " > " + regions_postsig_sorted;
 		system(command.c_str());
@@ -1079,6 +1078,7 @@ int main (int argc, char* argv[]) {
 			
 				// DEBUG
 				// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
+				printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
 			
 				string cur_nt = obs_var_pos[k].second;
 				
