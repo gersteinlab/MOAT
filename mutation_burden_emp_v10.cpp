@@ -908,6 +908,9 @@ int main (int argc, char* argv[]) {
 		
 		for (unsigned int j = 0; j < numclust; j++) {
 		
+			// DEBUG
+			// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
+		
 			if (empty[j]) {
 				continue;
 			}
@@ -1078,7 +1081,7 @@ int main (int argc, char* argv[]) {
 			
 				// DEBUG
 				// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-				printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
+				// printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
 			
 				string cur_nt = obs_var_pos[k].second;
 				
@@ -1166,10 +1169,14 @@ int main (int argc, char* argv[]) {
 	// 		return 0;
 			// printf("Permutation %d, Permuted set size: %d\n", i+1, (int)permuted_set.size());
 		
-			for (unsigned int k = 0; k < permuted_set.size(); k++) {
-				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
-			}
 			// last_chr = ann_array[j][0];
+		}
+		for (unsigned int k = 0; k < permuted_set.size(); k++) {
+			
+			// DEBUG
+			// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
+		
+			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
 		}
 		fclose(outfile_ptr);
 	}
