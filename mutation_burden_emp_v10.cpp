@@ -1009,37 +1009,6 @@ int main (int argc, char* argv[]) {
 				
 				// Save the nt
 				concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
-			
-				vector<string> rand_range = cluster_bins[l];
-			
-				pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
-				variant_pointer = range.first;
-			
-				// DEBUG
-				// printf("Breakpoint 3\n");
-				// printf("%d,%d\n", range.first, range.second);
-			
-				int var_subset_count = range.second - range.first + 1;
-				if (var_subset_count == 0) {
-					continue;
-				}
-				
-				// Populate obs_var_pos
-				for (unsigned int m = range.first; m <= range.second; m++) {
-					int cur_var_end = atoi(var_array[m][2].c_str());
-					int this_epoch = cur_var_end - rand_range_start;
-					this_epoch += epoch_nt;
-					
-					stringstream ss;
-					string cur_nt;
-					ss << chr_nt[cur_var_end-2];
-					ss << chr_nt[cur_var_end-1];
-					ss << chr_nt[cur_var_end];
-					ss >> cur_nt;
-					
-					pair<int,string> variant (this_epoch, cur_nt);
-					obs_var_pos.push_back(variant);
-				}
 				
 				string cur_chr = cluster_bins[l][0];
 				for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
@@ -1071,6 +1040,37 @@ int main (int argc, char* argv[]) {
 					int this_epoch = k - rand_range_start;
 					this_epoch += epoch_nt;
 					local_nt[cur_nt].push_back(this_epoch);
+				}
+			
+				vector<string> rand_range = cluster_bins[l];
+			
+				pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
+				variant_pointer = range.first;
+			
+				// DEBUG
+				// printf("Breakpoint 3\n");
+				// printf("%d,%d\n", range.first, range.second);
+			
+				int var_subset_count = range.second - range.first + 1;
+// 				if (var_subset_count == 0) {
+// 					continue;
+// 				}
+				
+				// Populate obs_var_pos
+				for (unsigned int m = range.first; m <= range.second; m++) {
+					int cur_var_end = atoi(var_array[m][2].c_str());
+					int this_epoch = cur_var_end - rand_range_start;
+					this_epoch += epoch_nt;
+					
+					stringstream ss;
+					string cur_nt;
+					ss << chr_nt[cur_var_end-2];
+					ss << chr_nt[cur_var_end-1];
+					ss << chr_nt[cur_var_end];
+					ss >> cur_nt;
+					
+					pair<int,string> variant (this_epoch, cur_nt);
+					obs_var_pos.push_back(variant);
 				}
 					
 				epoch_nt += (rand_range_end - rand_range_start);
@@ -1185,12 +1185,12 @@ int main (int argc, char* argv[]) {
 	// printf("Breakpoint 3\n");
 	
 	// Wrap up by removing the temporary files created along the way
-	string rmcom = "rm " + regions_presig;
-	system(rmcom.c_str());
-	rmcom = "rm " + regions_postsig;
-	system(rmcom.c_str());
-	rmcom = "rm " + regions_postsig_sorted;
-	system(rmcom.c_str());
+// 	string rmcom = "rm " + regions_presig;
+// 	system(rmcom.c_str());
+// 	rmcom = "rm " + regions_postsig;
+// 	system(rmcom.c_str());
+// 	rmcom = "rm " + regions_postsig_sorted;
+// 	system(rmcom.c_str());
 	
 	// Verdun
 	return 0;
