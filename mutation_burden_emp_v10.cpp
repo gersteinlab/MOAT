@@ -896,14 +896,6 @@ int main (int argc, char* argv[]) {
 	
 	for (int i = 0; i < num_permutations; i++) {
 		
-		// Open new output file
-		char perm_num[STRSIZE];
-		sprintf(perm_num, "%d", i+1);
-		
-		string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
-		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
-		// vector<int> this_permutation_counts;
-		
 		vector<vector<string> > permuted_set;
 		
 		for (unsigned int j = 0; j < numclust; j++) {
@@ -968,11 +960,60 @@ int main (int argc, char* argv[]) {
 			}
 			
 			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-				if (last_chr != cluster_bins[l][0]) {
+			
+				int rand_range_start = atoi(cluster_bins[l][1].c_str());
+				int rand_range_end = atoi(cluster_bins[l][2].c_str());
+			
+				vector<string> rand_range = cluster_bins[l];
+			
+				pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
+				variant_pointer = range.first;
+			
+				// DEBUG
+				// printf("Breakpoint 3\n");
+				// printf("%d,%d\n", range.first, range.second);
+			
+				// int var_subset_count = range.second - range.first + 1;
+// 				if (var_subset_count == 0) {
+// 					continue;
+// 				}
 				
+				// Populate obs_var_pos
+				for (unsigned int m = range.first; m <= range.second; m++) {
+					int cur_var_end = atoi(var_array[m][2].c_str());
+					int this_epoch = cur_var_end - rand_range_start;
+					this_epoch += epoch_nt;
+					
+// 					stringstream ss;
+// 					string cur_nt;
+// 					ss << chr_nt[cur_var_end-2];
+// 					ss << chr_nt[cur_var_end-1];
+// 					ss << chr_nt[cur_var_end];
+// 					ss >> cur_nt;
+					string placeholder = "";
+					
+					pair<int,string> variant (this_epoch, placeholder);
+					obs_var_pos.push_back(variant);
+				}
+					
+				epoch_nt += (rand_range_end - rand_range_start);
+			}
+			
+			if (obs_var_pos.size() == 0) {
+				continue;
+			}
+			
+			// Reset epoch_nt
+			epoch_nt = 0;
+			
+			// Read in reference
+			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+				// FASTA import here
+				if (last_chr != cluster_bins[l][0]) {
+			
 					string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
 					fasta_ptr = fopen(filename.c_str(), "r");
-				
+			
 					int first = 1;
 					last_chr = cluster_bins[l][0];
 					chr_nt = "";
@@ -996,32 +1037,27 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 				}
-			
-				// DEBUG
-	// 			printf("Char 11998: %c\n", chr_nt[11997]);
-	// 			printf("Char 11999: %c\n", chr_nt[11998]);
-	// 			printf("Char 12000: %c\n", chr_nt[11999]);
-	// 			printf("Char 12001: %c\n", chr_nt[12000]);
-	// 			printf("Char 12002: %c\n", chr_nt[12001]);
-			
+				
 				int rand_range_start = atoi(cluster_bins[l][1].c_str());
 				int rand_range_end = atoi(cluster_bins[l][2].c_str());
 				
+				// Begin indexing
+			
 				// Save the nt
 				concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
-				
+			
 				string cur_chr = cluster_bins[l][0];
 				for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
-				
+			
 					// Don't read in characters if it will read off either end
 					if (k == 1 || k == hg19_coor[cur_chr]) {
 						continue;
 					}
-					
+				
 					char nt1 = toupper(chr_nt[k-2]); // 0-based index
 					char nt2 = toupper(chr_nt[k-1]); // 0-based index
 					char nt3 = toupper(chr_nt[k]); // 0-based index
-					
+				
 					// Verify there are no invalid characters
 					if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
 						char errstring[STRSIZE];
@@ -1029,50 +1065,20 @@ int main (int argc, char* argv[]) {
 						printf(errstring);
 						return 1;
 					}
-					
+				
 					stringstream ss;
 					string cur_nt;
 					ss << nt1;
 					ss << nt2;
 					ss << nt3;
 					ss >> cur_nt;
-					
+				
 					int this_epoch = k - rand_range_start;
 					this_epoch += epoch_nt;
 					local_nt[cur_nt].push_back(this_epoch);
 				}
 			
-				vector<string> rand_range = cluster_bins[l];
-			
-				pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
-				variant_pointer = range.first;
-			
-				// DEBUG
-				// printf("Breakpoint 3\n");
-				// printf("%d,%d\n", range.first, range.second);
-			
-				int var_subset_count = range.second - range.first + 1;
-// 				if (var_subset_count == 0) {
-// 					continue;
-// 				}
-				
-				// Populate obs_var_pos
-				for (unsigned int m = range.first; m <= range.second; m++) {
-					int cur_var_end = atoi(var_array[m][2].c_str());
-					int this_epoch = cur_var_end - rand_range_start;
-					this_epoch += epoch_nt;
-					
-					stringstream ss;
-					string cur_nt;
-					ss << chr_nt[cur_var_end-2];
-					ss << chr_nt[cur_var_end-1];
-					ss << chr_nt[cur_var_end];
-					ss >> cur_nt;
-					
-					pair<int,string> variant (this_epoch, cur_nt);
-					obs_var_pos.push_back(variant);
-				}
-					
+				// End indexing
 				epoch_nt += (rand_range_end - rand_range_start);
 			}
 			
@@ -1083,7 +1089,18 @@ int main (int argc, char* argv[]) {
 				// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 				// printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
 			
-				string cur_nt = obs_var_pos[k].second;
+				// string cur_nt = obs_var_pos[k].second;
+				
+				char cur_nt1 = toupper(chr_nt[obs_var_pos[k].first-2]);
+				char cur_nt2 = toupper(chr_nt[obs_var_pos[k].first-1]); // 0-based index
+				char cur_nt3 = toupper(chr_nt[obs_var_pos[k].first]);
+				
+				stringstream ss;
+				string cur_nt;
+				ss << cur_nt1;
+				ss << cur_nt2;
+				ss << cur_nt3;
+				ss >> cur_nt;
 				
 				// If there is an N in this string, we skip this variant
 				if (cur_nt.find_first_of('N') != string::npos) {
@@ -1171,6 +1188,15 @@ int main (int argc, char* argv[]) {
 		
 			// last_chr = ann_array[j][0];
 		}
+		
+		// Open new output file
+		char perm_num[STRSIZE];
+		sprintf(perm_num, "%d", i+1);
+		
+		string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
+		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
+		// vector<int> this_permutation_counts;
+		
 		for (unsigned int k = 0; k < permuted_set.size(); k++) {
 			
 			// DEBUG
