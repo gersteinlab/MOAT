@@ -1091,9 +1091,9 @@ int main (int argc, char* argv[]) {
 			
 				// string cur_nt = obs_var_pos[k].second;
 				
-				char cur_nt1 = toupper(chr_nt[obs_var_pos[k].first-2]);
-				char cur_nt2 = toupper(chr_nt[obs_var_pos[k].first-1]); // 0-based index
-				char cur_nt3 = toupper(chr_nt[obs_var_pos[k].first]);
+				char cur_nt1 = toupper(concat_nt[obs_var_pos[k].first-2]);
+				char cur_nt2 = toupper(concat_nt[obs_var_pos[k].first-1]); // 0-based index
+				char cur_nt3 = toupper(concat_nt[obs_var_pos[k].first]);
 				
 				stringstream ss;
 				string cur_nt;
@@ -1146,7 +1146,7 @@ int main (int argc, char* argv[]) {
 					if (new_epoch > cluster_size) {
 						new_epoch -= cluster_size;
 					} else {
-						new_end = (new_epoch - cluster_start);
+						// new_end = (new_epoch - cluster_start);
 						break;
 					}
 				}
