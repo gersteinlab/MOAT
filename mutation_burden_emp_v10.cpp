@@ -1146,7 +1146,7 @@ int main (int argc, char* argv[]) {
 					if (new_epoch > cluster_size) {
 						new_epoch -= cluster_size;
 					} else {
-						// new_end = (new_epoch - cluster_start);
+						new_epoch += cluster_start;
 						break;
 					}
 				}
