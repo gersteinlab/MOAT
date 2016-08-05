@@ -1133,7 +1133,7 @@ int main (int argc, char* argv[]) {
 				int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 				
 				int new_epoch = pos2[new_index];
-				int new_end;
+				// int new_end;
 				
 				string cluster_chr;
 				
@@ -1155,11 +1155,11 @@ int main (int argc, char* argv[]) {
 				vec.push_back(cluster_chr);
 				
 				char start_cstr[STRSIZE];
-				sprintf(start_cstr, "%d", new_end-1); // 0-based
+				sprintf(start_cstr, "%d", new_epoch-1); // 0-based
 				vec.push_back(string(start_cstr));
 				
 				char end_cstr[STRSIZE];
-				sprintf(end_cstr, "%d", new_end); // 1-based
+				sprintf(end_cstr, "%d", new_epoch); // 1-based
 				vec.push_back(string(end_cstr));
 				
 				permuted_set.push_back(vec);
