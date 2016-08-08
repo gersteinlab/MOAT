@@ -665,7 +665,7 @@ int main (int argc, char* argv[]) {
 			// printf("Breakpoint 3\n");
 			// printf("%d,%d\n", range.first, range.second);
 			
-			int var_subset_count = range.second - range.first + 1;
+			int var_subset_count = range.second - range.first;
 			if (var_subset_count == 0) {
 				continue;
 			}
@@ -1002,7 +1002,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// Variant processing loop
-			for (unsigned int k = range.first; k <= range.second; k++) {
+			for (unsigned int k = range.first; k < range.second; k++) {
 			
 				// DEBUG
 				// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());

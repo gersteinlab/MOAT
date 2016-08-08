@@ -979,7 +979,7 @@ int main (int argc, char* argv[]) {
 // 				}
 				
 				// Populate obs_var_pos
-				for (unsigned int m = range.first; m <= range.second; m++) {
+				for (unsigned int m = range.first; m < range.second; m++) {
 					int cur_var_end = atoi(var_array[m][2].c_str());
 					int this_epoch = cur_var_end - rand_range_start;
 					this_epoch += epoch_nt;

@@ -969,7 +969,7 @@ int main (int argc, char* argv[]) {
 					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
 				
-					int var_subset_count = range.second - range.first + 1;
+					int var_subset_count = range.second - range.first;
 					if (var_subset_count == 0) {
 						continue;
 					}
@@ -1174,7 +1174,7 @@ int main (int argc, char* argv[]) {
 // 					return 1;
 				
 					// Variant processing loop
-					for (unsigned int k = range.first; k <= range.second; k++) {
+					for (unsigned int k = range.first; k < range.second; k++) {
 	
 						// DEBUG
 						// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());

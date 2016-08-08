@@ -205,7 +205,7 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 	int region_start_num = atoi(region_start.c_str());
 	int region_end_num = atoi(region_end.c_str());
 	
-	unsigned int right_pointer = left_pointer - 1;
+	unsigned int right_pointer = left_pointer;
 	
 	// Main loop
 	// vector<vector<string> > variants = *intervals;
