@@ -314,6 +314,35 @@ int main (int argc, char* argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 	
+	// hg19 coordinates
+	map<string,int> hg19_coor;
+
+	hg19_coor["chr1"] = 249250621;
+	hg19_coor["chr2"] = 243199373;
+	hg19_coor["chr3"] =	198022430;
+	hg19_coor["chr4"] =	191154276;
+	hg19_coor["chr5"] =	180915260;
+	hg19_coor["chr6"] =	171115067;
+	hg19_coor["chr7"] =	159138663;
+	hg19_coor["chr8"] =	146364022;
+	hg19_coor["chr9"] =	141213431;
+	hg19_coor["chr10"] = 135534747;
+	hg19_coor["chr11"] = 135006516;
+	hg19_coor["chr12"] = 133851895;
+	hg19_coor["chr13"] = 115169878;
+	hg19_coor["chr14"] = 107349540;
+	hg19_coor["chr15"] = 102531392;
+	hg19_coor["chr16"] = 90354753;
+	hg19_coor["chr17"] = 81195210;
+	hg19_coor["chr18"] = 78077248;
+	hg19_coor["chr19"] = 59128983;
+	hg19_coor["chr20"] = 63025520;
+	hg19_coor["chr21"] = 48129895;
+	hg19_coor["chr22"] = 51304566;
+	hg19_coor["chrX"] = 155270560;
+	hg19_coor["chrY"] = 59373566;
+	hg19_coor["chrM"] = 16571;
+	
 	if (mpi_rank == 0) { // Parent process
 	
 		/* User-supplied arguments */
@@ -501,35 +530,6 @@ int main (int argc, char* argv[]) {
 	
 		// Merge prohibited regions
 		prohibited_regions = merge_intervals(prohibited_regions);
-	
-		// hg19 coordinates
-		map<string,int> hg19_coor;
-	
-		hg19_coor["chr1"] = 249250621;
-		hg19_coor["chr2"] = 243199373;
-		hg19_coor["chr3"] =	198022430;
-		hg19_coor["chr4"] =	191154276;
-		hg19_coor["chr5"] =	180915260;
-		hg19_coor["chr6"] =	171115067;
-		hg19_coor["chr7"] =	159138663;
-		hg19_coor["chr8"] =	146364022;
-		hg19_coor["chr9"] =	141213431;
-		hg19_coor["chr10"] = 135534747;
-		hg19_coor["chr11"] = 135006516;
-		hg19_coor["chr12"] = 133851895;
-		hg19_coor["chr13"] = 115169878;
-		hg19_coor["chr14"] = 107349540;
-		hg19_coor["chr15"] = 102531392;
-		hg19_coor["chr16"] = 90354753;
-		hg19_coor["chr17"] = 81195210;
-		hg19_coor["chr18"] = 78077248;
-		hg19_coor["chr19"] = 59128983;
-		hg19_coor["chr20"] = 63025520;
-		hg19_coor["chr21"] = 48129895;
-		hg19_coor["chr22"] = 51304566;
-		hg19_coor["chrX"] = 155270560;
-		hg19_coor["chrY"] = 59373566;
-		hg19_coor["chrM"] = 16571;
 	
 		for (int i = 1; i <= 25; i++) {
 			string chr = int2chr(i);
