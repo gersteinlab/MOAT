@@ -870,12 +870,12 @@ int main (int argc, char* argv[]) {
 // 	}
 // 	fclose(centroids_ptr);
 // 	
-	string cluster_file = "/net/gerstein/ll426/code/moat/clusters.txt";
-	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
-	for (unsigned int i = 0; i < member.size(); i++) {
-		fprintf(cluster_ptr, "%d\n", member[i]);
-	}
-	fclose(cluster_ptr);
+// 	string cluster_file = "/net/gerstein/ll426/code/moat/clusters.txt";
+// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+// 	for (unsigned int i = 0; i < member.size(); i++) {
+// 		fprintf(cluster_ptr, "%d\n", member[i]);
+// 	}
+// 	fclose(cluster_ptr);
 // 	return 0;
 	
 	// DEBUG - check ann_array values after prohibited region subtraction
@@ -1211,12 +1211,12 @@ int main (int argc, char* argv[]) {
 	// printf("Breakpoint 3\n");
 	
 	// Wrap up by removing the temporary files created along the way
-// 	string rmcom = "rm " + regions_presig;
-// 	system(rmcom.c_str());
-// 	rmcom = "rm " + regions_postsig;
-// 	system(rmcom.c_str());
-// 	rmcom = "rm " + regions_postsig_sorted;
-// 	system(rmcom.c_str());
+	string rmcom = "rm " + regions_presig;
+	system(rmcom.c_str());
+	rmcom = "rm " + regions_postsig;
+	system(rmcom.c_str());
+	rmcom = "rm " + regions_postsig_sorted;
+	system(rmcom.c_str());
 	
 	// Verdun
 	return 0;
