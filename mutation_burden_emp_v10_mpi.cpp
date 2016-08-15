@@ -1126,9 +1126,9 @@ int main (int argc, char* argv[]) {
 		free(var_coor);
 		
 		// DEBUG
-		for (unsigned int i = 0; i < var_array.size(); i++) {
-			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
-		}
+// 		for (unsigned int i = 0; i < var_array.size(); i++) {
+// 			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
+// 		}
 		
 		FILE *fasta_ptr = NULL;
 		string last_chr = "";
@@ -1194,7 +1194,7 @@ int main (int argc, char* argv[]) {
 				free(cluster_coor);
 				
 				// DEBUG
-				// printf("Cluster bins: %d\n", (int)cluster_bins.size());
+				printf("Cluster bins: %d\n", (int)cluster_bins.size());
 				
 				// Any code to change the order of cluster_bins would go here
 				
