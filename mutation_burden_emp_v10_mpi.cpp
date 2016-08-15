@@ -1156,7 +1156,7 @@ int main (int argc, char* argv[]) {
 			while (flag == 0) {
 				
 				// DEBUG
-				// printf("Breakpoint Kamikawa\n");
+				printf("Breakpoint Kamikawa\n");
 				
 				// Receive cluster bins
 				int cluster_bin_vecsize;
@@ -1274,6 +1274,9 @@ int main (int argc, char* argv[]) {
 					
 					epoch_nt += (rand_range_end - rand_range_start);
 				}
+				
+				// DEBUG
+				printf("Number of observed variants: %d\n", (int)obs_var_pos.size());
 			
 				if (obs_var_pos.size() == 0) {
 					MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
