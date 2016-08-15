@@ -756,6 +756,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		// DEBUG - check the covariate vector
+		printf("Breakpoint 1\n");
 	// 	for (unsigned int i = 0; i < covar_features.size(); i++) {
 	// 		for (unsigned int j = 0; j < covar_features[i].size(); j++) {
 	// 			printf("%f\n", covar_features[i][j]);
@@ -882,7 +883,7 @@ int main (int argc, char* argv[]) {
 		// indicates the closest centroid to each vector in "covar_features"
 	
 		// DEBUG
-		// printf("Breakpoint 2\n");
+		printf("Breakpoint 2\n");
 		// return 0;
 	// 	string centroids_file = "/net/gerstein/ll426/code/moat/centroids.txt";
 	// 	FILE *centroids_ptr = fopen(centroids_file.c_str(), "w");
@@ -954,7 +955,7 @@ int main (int argc, char* argv[]) {
 			for (unsigned int j = 0; j < numclust; j++) {
 		
 				// DEBUG
-				// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
+				printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
 		
 				if (empty[j]) {
 					continue;
