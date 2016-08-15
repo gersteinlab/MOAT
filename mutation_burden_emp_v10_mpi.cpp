@@ -1138,7 +1138,7 @@ int main (int argc, char* argv[]) {
 		while (permutation_flag) {
 		
 			// DEBUG
-			// printf("Breakpoint Sigma\n");
+			printf("Breakpoint Sigma\n");
 		
 			// The output vector
 			vector<vector<string> > permuted_set;
