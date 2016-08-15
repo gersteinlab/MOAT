@@ -1200,6 +1200,7 @@ int main (int argc, char* argv[]) {
 // 				}
 				
 				// Any code to change the order of cluster_bins would go here
+				sort(cluster_bins.begin(), cluster_bins.end(), cmpIntervals);
 				
 				/* Variant processing */
 				// nt for this cluster
@@ -1255,7 +1256,7 @@ int main (int argc, char* argv[]) {
 			
 					// DEBUG
 					// printf("Breakpoint 3\n");
-					printf("%d,%d\n", range.first, range.second);
+					// printf("%d,%d\n", range.first, range.second);
 			
 					// int var_subset_count = range.second - range.first + 1;
 	// 				if (var_subset_count == 0) {
