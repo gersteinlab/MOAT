@@ -1125,6 +1125,11 @@ int main (int argc, char* argv[]) {
 		}
 		free(var_coor);
 		
+		// DEBUG
+		for (unsigned int i = 0; i < var_array.size(); i++) {
+			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
+		}
+		
 		FILE *fasta_ptr = NULL;
 		string last_chr = "";
 		// int char_pointer;
@@ -1138,7 +1143,7 @@ int main (int argc, char* argv[]) {
 		while (permutation_flag) {
 		
 			// DEBUG
-			printf("Breakpoint Sigma\n");
+			// printf("Breakpoint Sigma\n");
 		
 			// The output vector
 			vector<vector<string> > permuted_set;
@@ -1156,7 +1161,7 @@ int main (int argc, char* argv[]) {
 			while (flag == 0) {
 				
 				// DEBUG
-				printf("Breakpoint Kamikawa\n");
+				// printf("Breakpoint Kamikawa\n");
 				
 				// Receive cluster bins
 				int cluster_bin_vecsize;
@@ -1247,7 +1252,7 @@ int main (int argc, char* argv[]) {
 			
 					// DEBUG
 					// printf("Breakpoint 3\n");
-					// printf("%d,%d\n", range.first, range.second);
+					printf("%d,%d\n", range.first, range.second);
 			
 					// int var_subset_count = range.second - range.first + 1;
 	// 				if (var_subset_count == 0) {
@@ -1456,7 +1461,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			printf("Breakpoint Zeta\n");
+			// printf("Breakpoint Zeta\n");
 			
 			// Sending time
 			// Send chr and end coordinates of the permuted variants
