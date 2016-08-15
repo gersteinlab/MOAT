@@ -955,7 +955,7 @@ int main (int argc, char* argv[]) {
 			for (unsigned int j = 0; j < numclust; j++) {
 		
 				// DEBUG
-				printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
+				// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
 		
 				if (empty[j]) {
 					continue;
