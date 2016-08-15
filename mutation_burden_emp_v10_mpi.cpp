@@ -1189,7 +1189,7 @@ int main (int argc, char* argv[]) {
 				free(cluster_coor);
 				
 				// DEBUG
-				printf("Cluster bins: %d\n", (int)cluster_bins.size());
+				// printf("Cluster bins: %d\n", (int)cluster_bins.size());
 				
 				// Any code to change the order of cluster_bins would go here
 				
@@ -1280,6 +1280,9 @@ int main (int argc, char* argv[]) {
 					MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
 					continue;
 				}
+				
+				// DEBUG
+				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
 			
 				// Reset epoch_nt
 				epoch_nt = 0;
@@ -1366,6 +1369,7 @@ int main (int argc, char* argv[]) {
 				for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
 			
 					// DEBUG
+					printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 					// printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
 			
