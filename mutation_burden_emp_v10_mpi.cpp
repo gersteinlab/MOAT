@@ -1137,6 +1137,9 @@ int main (int argc, char* argv[]) {
 		MPI_Recv(&permutation_flag, 1, MPI_INT, 0, 8, MPI_COMM_WORLD, &status);
 		while (permutation_flag) {
 		
+			// DEBUG
+			printf("Breakpoint Sigma\n");
+		
 			// The output vector
 			vector<vector<string> > permuted_set;
 		
@@ -1151,6 +1154,9 @@ int main (int argc, char* argv[]) {
 	
 			// BEGIN CHILD CODE
 			while (flag == 0) {
+				
+				// DEBUG
+				printf("Breakpoint Kamikawa\n");
 				
 				// Receive cluster bins
 				int cluster_bin_vecsize;
@@ -1453,6 +1459,10 @@ int main (int argc, char* argv[]) {
 			}
 			
 			MPI_Recv(&permutation_flag, 1, MPI_INT, 0, 8, MPI_COMM_WORLD, &status);
+			
+			// DEBUG
+			printf("Breakpoint Tau\n");
+			
 			// END CHILD CODE
 		}
 	}
