@@ -1189,12 +1189,15 @@ int main (int argc, char* argv[]) {
 					sprintf(cur_end_cstr, "%d", cur_cluster_end_num);
 					temp.push_back(string(cur_end_cstr));
 			
-					var_array.push_back(temp);
+					cluster_bins.push_back(temp);
 				}
 				free(cluster_coor);
 				
 				// DEBUG
-				printf("Cluster bins: %d\n", (int)cluster_bins.size());
+// 				printf("Cluster bins: %d\n", (int)cluster_bins.size());
+// 				for (unsigned int i = 0; i < cluster_bins.size(); i++) {
+// 					printf("%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
+// 				}
 				
 				// Any code to change the order of cluster_bins would go here
 				
