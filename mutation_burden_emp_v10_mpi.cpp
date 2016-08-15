@@ -1188,6 +1188,9 @@ int main (int argc, char* argv[]) {
 				}
 				free(cluster_coor);
 				
+				// DEBUG
+				printf("Cluster bins: %d\n", (int)cluster_bins.size());
+				
 				// Any code to change the order of cluster_bins would go here
 				
 				/* Variant processing */
