@@ -1222,7 +1222,7 @@ int main (int argc, char* argv[]) {
 			
 				for (int z = 0; z < 4; z++) {
 					for (int y = 0; y < 4; y++) {
-						for (int x = 0; x > 4; x++) {
+						for (int x = 0; x < 4; x++) {
 							stringstream ss;
 							string cur_nt;
 							ss << base[z];
