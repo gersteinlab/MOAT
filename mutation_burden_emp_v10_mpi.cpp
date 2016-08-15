@@ -1403,7 +1403,7 @@ int main (int argc, char* argv[]) {
 					}
 					
 					// DEBUG
-					printf("Available positions: %d\n", pos2.size());
+					printf("Available positions: %d\n", (int)pos2.size());
 					
 					// Pick new position
 					int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
