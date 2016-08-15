@@ -376,6 +376,7 @@ int main (int argc, char* argv[]) {
 	
 		if (argc < 9) {
 			printf("Usage: mutation_burden_emp_v10 [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
 			num_permutations = atoi(argv[1]);
@@ -395,22 +396,26 @@ int main (int argc, char* argv[]) {
 		struct stat vbuf;
 		if (stat(vfile.c_str(), &vbuf)) { // Report the error and exit
 			printf("Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 		// Check that the file is not empty
 		if (vbuf.st_size == 0) {
 			printf("Error: Variant file cannot be empty. Exiting.\n");
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
 		struct stat pbuf;
 		if (stat(prohibited_file.c_str(), &pbuf)) { // Report the error and exit
 			printf("Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 		// Check that the file is not empty
 		if (pbuf.st_size == 0) {
 			printf("Error: Prohibited regions file cannot be empty. Exiting.\n");
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
@@ -418,6 +423,7 @@ int main (int argc, char* argv[]) {
 		struct stat fbuf;
 		if (stat(fasta_dir.c_str(), &fbuf)) { // Report the error and exit
 			printf("Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
@@ -425,6 +431,7 @@ int main (int argc, char* argv[]) {
 		struct stat obuf;
 		if (stat(outdir.c_str(), &obuf)) { // Report the error and exit
 			printf("Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
@@ -433,6 +440,7 @@ int main (int argc, char* argv[]) {
 		char avgoverbed_cstr[] = "./bigWigAverageOverBed";
 		if (stat(avgoverbed_cstr, &avgbuf)) {
 			printf("Error: bigWigAverageOverBed is not in the same directory. Exiting.\n");
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
@@ -486,6 +494,7 @@ int main (int argc, char* argv[]) {
 			char errstring[STRSIZE];
 			sprintf(errstring, "Error reading from %s", vfile.c_str());
 			perror(errstring);
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
@@ -518,6 +527,7 @@ int main (int argc, char* argv[]) {
 			char errstring[STRSIZE];
 			sprintf(errstring, "Error reading from %s", prohibited_file.c_str());
 			perror(errstring);
+			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
@@ -739,6 +749,7 @@ int main (int argc, char* argv[]) {
 				char preamble[STRSIZE];
 				sprintf(preamble, "There was an error reading from %s", regions_postsig_sorted.c_str());
 				perror(preamble);
+				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			fclose(regions_postsig_ptr);
@@ -1289,6 +1300,7 @@ int main (int argc, char* argv[]) {
 							char errstring[STRSIZE];
 							sprintf(errstring, "Error reading from %s", filename.c_str());
 							perror(errstring);
+							MPI_Abort(MPI_COMM_WORLD, 1);
 							return 1;
 						}
 					}
@@ -1318,6 +1330,7 @@ int main (int argc, char* argv[]) {
 							char errstring[STRSIZE];
 							sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
 							printf(errstring);
+							MPI_Abort(MPI_COMM_WORLD, 1);
 							return 1;
 						}
 				
