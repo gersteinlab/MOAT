@@ -1273,6 +1273,8 @@ int main (int argc, char* argv[]) {
 				}
 			
 				if (obs_var_pos.size() == 0) {
+					MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
+					MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
 					continue;
 				}
 			
