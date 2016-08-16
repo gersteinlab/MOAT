@@ -984,9 +984,9 @@ int main (int argc, char* argv[]) {
 				int cluster_bin_vecsize = cluster_bins.size();
 				int *cluster_coor = (int *)malloc(3*cluster_bin_vecsize*sizeof(int));
 				for (int k = 0; k < cluster_bin_vecsize; k++) {
-					cluster_coor[2*k] = chr2int(cluster_bins[k][0]);
-					cluster_coor[2*k+1] = atoi(cluster_bins[k][1].c_str());
-					cluster_coor[2*k+2] = atoi(cluster_bins[k][2].c_str());
+					cluster_coor[3*k] = chr2int(cluster_bins[k][0]);
+					cluster_coor[3*k+1] = atoi(cluster_bins[k][1].c_str());
+					cluster_coor[3*k+2] = atoi(cluster_bins[k][2].c_str());
 				}
 				
 				MPI_Send(cluster_coor, 3*cluster_bin_vecsize, MPI_INT, next_child, 2, MPI_COMM_WORLD);
