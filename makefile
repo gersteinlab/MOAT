@@ -1,7 +1,7 @@
 CUDA := $(shell echo `command -v nvcc`)
 MPI := $(shell echo `command -v mpic++`)
 
-all: run_moat moat_a_cpu moat_a_gpu moat_v_serial moat_v_parallel
+all: run_moat moat_a_cpu moat_a_gpu moat_v_serial moat_v_parallel moatsim moatsim_parallel
 
 run_moat: run_moat.cpp
 	g++ -Wall -o run_moat run_moat.cpp
@@ -30,3 +30,14 @@ endif
 	
 moat_v_pval: p_value_emp.cpp variant_permutation_v3.h variant_permutation_v3.cpp
 	g++ -Wall -o p_value_emp p_value_emp.cpp variant_permutation_v3.cpp
+
+moatsim: mutation_burden_emp_v10.cpp variant_permutation_v3.h variant_permutation_v3.cpp
+	g++ -Wall -o moatsim mutation_burden_emp_v10.cpp variant_permutation_v3.cpp
+
+moatsim_parallel: mutation_burden_emp_v10_mpi.cpp variant_permutation_v3.h variant_permutation_v3.cpp
+ifndef MPI
+	@echo "No OpenMPI installation detected: Can only use serial version of MOAT-sim"
+else
+	mpic++ -Wall -o moatsim_parallel mutation_burden_emp_v10_mpi.cpp variant_permutation_v3.cpp
+	@echo "OpenMPI-accelerated MOAT-sim is available"
+endif
