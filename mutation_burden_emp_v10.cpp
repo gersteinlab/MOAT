@@ -916,7 +916,6 @@ int main (int argc, char* argv[]) {
 			char errstring[STRSIZE];
 			sprintf(errstring, "Error reading from %s", filename.c_str());
 			perror(errstring);
-			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 		chr_nt.push_back(this_chr_nt);
