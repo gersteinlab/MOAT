@@ -887,9 +887,40 @@ int main (int argc, char* argv[]) {
 // 	return 0;
 	
 	FILE *fasta_ptr = NULL;
-	string last_chr = "";
+	// string last_chr = "";
 	// int char_pointer;
-	string chr_nt;
+	vector<string> chr_nt;
+	
+	// FASTA import here
+	for (int i = 1; i <= 25; i++) {
+
+		string filename = fasta_dir + "/" + int2chr(i) + ".fa";
+		fasta_ptr = fopen(filename.c_str(), "r");
+
+		int first = 1;
+		string this_chr_nt = "";
+		char linebuf_cstr[STRSIZE];
+		while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+			string linebuf = string(linebuf_cstr);
+			linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+			if (first) {
+				first = 0;
+				continue;
+			}
+			this_chr_nt += linebuf;
+		}
+		// Check feof of fasta_ptr
+		if (feof(fasta_ptr)) { // We're good
+			fclose(fasta_ptr);
+		} else { // It's an error
+			char errstring[STRSIZE];
+			sprintf(errstring, "Error reading from %s", filename.c_str());
+			perror(errstring);
+			MPI_Abort(MPI_COMM_WORLD, 1);
+			return 1;
+		}
+		chr_nt.push_back(this_chr_nt);
+	}
 	
 	/* Permutate variant locations */
 	srand(0);
@@ -1009,34 +1040,34 @@ int main (int argc, char* argv[]) {
 			// Read in reference
 			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 				// FASTA import here
-				if (last_chr != cluster_bins[l][0]) {
-			
-					string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
-					fasta_ptr = fopen(filename.c_str(), "r");
-			
-					int first = 1;
-					last_chr = cluster_bins[l][0];
-					chr_nt = "";
-					char linebuf_cstr[STRSIZE];
-					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-						string linebuf = string(linebuf_cstr);
-						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-						if (first) {
-							first = 0;
-							continue;
-						}
-						chr_nt += linebuf;
-					}
-					// Check feof of fasta_ptr
-					if (feof(fasta_ptr)) { // We're good
-						fclose(fasta_ptr);
-					} else { // It's an error
-						char errstring[STRSIZE];
-						sprintf(errstring, "Error reading from %s", filename.c_str());
-						perror(errstring);
-						return 1;
-					}
-				}
+// 				if (last_chr != cluster_bins[l][0]) {
+// 			
+// 					string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
+// 					fasta_ptr = fopen(filename.c_str(), "r");
+// 			
+// 					int first = 1;
+// 					last_chr = cluster_bins[l][0];
+// 					chr_nt = "";
+// 					char linebuf_cstr[STRSIZE];
+// 					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+// 						string linebuf = string(linebuf_cstr);
+// 						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+// 						if (first) {
+// 							first = 0;
+// 							continue;
+// 						}
+// 						chr_nt += linebuf;
+// 					}
+// 					// Check feof of fasta_ptr
+// 					if (feof(fasta_ptr)) { // We're good
+// 						fclose(fasta_ptr);
+// 					} else { // It's an error
+// 						char errstring[STRSIZE];
+// 						sprintf(errstring, "Error reading from %s", filename.c_str());
+// 						perror(errstring);
+// 						return 1;
+// 					}
+// 				}
 				
 				int rand_range_start = atoi(cluster_bins[l][1].c_str());
 				int rand_range_end = atoi(cluster_bins[l][2].c_str());
@@ -1044,9 +1075,9 @@ int main (int argc, char* argv[]) {
 				// Begin indexing
 			
 				// Save the nt
-				concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
-			
 				string cur_chr = cluster_bins[l][0];
+				concat_nt += chr_nt[chr2int(cur_chr)-1].substr(rand_range_start, rand_range_end - rand_range_start);
+			
 				for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
 			
 					// Don't read in characters if it will read off either end
@@ -1054,9 +1085,9 @@ int main (int argc, char* argv[]) {
 						continue;
 					}
 				
-					char nt1 = toupper(chr_nt[k-2]); // 0-based index
-					char nt2 = toupper(chr_nt[k-1]); // 0-based index
-					char nt3 = toupper(chr_nt[k]); // 0-based index
+					char nt1 = toupper(chr_nt[chr2int(cur_chr)-1][k-2]); // 0-based index
+					char nt2 = toupper(chr_nt[chr2int(cur_chr)-1][k-1]); // 0-based index
+					char nt3 = toupper(chr_nt[chr2int(cur_chr)-1][k]); // 0-based index
 				
 					// Verify there are no invalid characters
 					if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {

@@ -652,6 +652,42 @@ int main (int argc, char* argv[]) {
 	
 		// DEBUG
 		// return 0;
+		
+		/* Import the entire reference genome into the parent */
+		FILE *fasta_ptr = NULL;
+		// int char_pointer;
+		vector<string> chr_nt;
+		
+		// FASTA import here
+		for (int i = 1; i <= 25; i++) {
+
+			string filename = fasta_dir + "/" + int2chr(i) + ".fa";
+			fasta_ptr = fopen(filename.c_str(), "r");
+
+			int first = 1;
+			string this_chr_nt = "";
+			char linebuf_cstr[STRSIZE];
+			while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+				string linebuf = string(linebuf_cstr);
+				linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+				if (first) {
+					first = 0;
+					continue;
+				}
+				this_chr_nt += linebuf;
+			}
+			// Check feof of fasta_ptr
+			if (feof(fasta_ptr)) { // We're good
+				fclose(fasta_ptr);
+			} else { // It's an error
+				char errstring[STRSIZE];
+				sprintf(errstring, "Error reading from %s", filename.c_str());
+				perror(errstring);
+				MPI_Abort(MPI_COMM_WORLD, 1);
+				return 1;
+			}
+			chr_nt.push_back(this_chr_nt);
+		}
 	
 		// DEBUG - check the genome bins
 		// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
@@ -1129,11 +1165,6 @@ int main (int argc, char* argv[]) {
 // 		for (unsigned int i = 0; i < var_array.size(); i++) {
 // 			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
 // 		}
-		
-		FILE *fasta_ptr = NULL;
-		string last_chr = "";
-		// int char_pointer;
-		string chr_nt;
 		
 		// Flag that indicates if all permutations are complete
 		// 1 = permutations to do, 0 = all permutations done
