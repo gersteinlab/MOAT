@@ -533,6 +533,14 @@ int main (int argc, char* argv[]) {
 	
 		// DEBUG
 		// printf("Breakpoint 1\n");
+		
+		// First, give the FASTA directory location to the reference genome feeder (tag = 10)
+		int strlen = fasta_dir.size() + 1;
+		char *strbuf = (char *)malloc((strlen)*sizeof(char));
+		strcpy(strbuf, fasta_dir.c_str());
+		// for (int i = 1; i < mpi_size; i++) {
+		MPI_Send(strbuf, strlen, MPI_CHAR, 1, 10, MPI_COMM_WORLD);
+		// }
 	
 		// Sort the arrays
 		sort(var_array.begin(), var_array.end(), cmpIntervals);
@@ -652,42 +660,6 @@ int main (int argc, char* argv[]) {
 	
 		// DEBUG
 		// return 0;
-		
-		/* Import the entire reference genome into the parent */
-		FILE *fasta_ptr = NULL;
-		// int char_pointer;
-		vector<string> chr_nt;
-		
-		// FASTA import here
-		for (int i = 1; i <= 25; i++) {
-
-			string filename = fasta_dir + "/" + int2chr(i) + ".fa";
-			fasta_ptr = fopen(filename.c_str(), "r");
-
-			int first = 1;
-			string this_chr_nt = "";
-			char linebuf_cstr[STRSIZE];
-			while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-				string linebuf = string(linebuf_cstr);
-				linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-				if (first) {
-					first = 0;
-					continue;
-				}
-				this_chr_nt += linebuf;
-			}
-			// Check feof of fasta_ptr
-			if (feof(fasta_ptr)) { // We're good
-				fclose(fasta_ptr);
-			} else { // It's an error
-				char errstring[STRSIZE];
-				sprintf(errstring, "Error reading from %s", filename.c_str());
-				perror(errstring);
-				MPI_Abort(MPI_COMM_WORLD, 1);
-				return 1;
-			}
-			chr_nt.push_back(this_chr_nt);
-		}
 	
 		// DEBUG - check the genome bins
 		// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
@@ -948,14 +920,6 @@ int main (int argc, char* argv[]) {
 	// 	}
 	// 	fclose(testfile_ptr);
 	// 	return 0;
-	
-		// First, give the FASTA directory location to all children (tag = 10)
-		int strlen = fasta_dir.size() + 1;
-		char *strbuf = (char *)malloc((strlen)*sizeof(char));
-		strcpy(strbuf, fasta_dir.c_str());
-		for (int i = 1; i < mpi_size; i++) {
-			MPI_Send(strbuf, strlen, MPI_CHAR, i, 10, MPI_COMM_WORLD);
-		}
 		
 		// Now send the variant data
 		int var_array_size = var_array.size();
@@ -968,7 +932,7 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// Transmit variant data
-		for (int i = 1; i < mpi_size; i++) {
+		for (int i = 2; i < mpi_size; i++) {
 			MPI_Send(var_coor, 2*var_array_size, MPI_INT, i, 12, MPI_COMM_WORLD);
 		}
 		
@@ -1035,7 +999,7 @@ int main (int argc, char* argv[]) {
 			// Begin receiving data and produce output
 			// First flip the send/receive roles
 			int counter = 0;
-			while (counter < mpi_size-1) {
+			while (counter < mpi_size-2) {
 				int available_flag;
 				MPI_Recv(&available_flag, 1, MPI_INT, MPI_ANY_SOURCE, 9, MPI_COMM_WORLD, &status);
 				int next_child = status.MPI_SOURCE;
@@ -1046,7 +1010,7 @@ int main (int argc, char* argv[]) {
 			
 			// Count how many processes we've heard back from
 			counter = 0;
-			while (counter < mpi_size-1) {
+			while (counter < mpi_size-2) {
 				int permuted_var_coor_size;
 				MPI_Recv(&permuted_var_coor_size, 1, MPI_INT, MPI_ANY_SOURCE, 6, MPI_COMM_WORLD, &status);
 				int source = status.MPI_SOURCE;
@@ -1108,9 +1072,15 @@ int main (int argc, char* argv[]) {
 		
 		/* Signal child processes to end */
 		int permutation_flag = 0;
-		for (int j = 1; j < mpi_size; j++) {
+		for (int j = 2; j < mpi_size; j++) {
 			MPI_Send(&permutation_flag, 1, MPI_INT, j, 8, MPI_COMM_WORLD);
 		}
+		
+		/* Also stop the reference genome feeder */
+		int *stopping_array = (int *)malloc(2*sizeof(int));
+		stopping_array[0] = 0;
+		stopping_array[1] = 0;
+		MPI_Send(stopping_array, 3, MPI_INT, 1, 15, MPI_COMM_WORLD);
 		
 		// Wrap up by removing the temporary files created along the way
 		string rmcom = "rm " + regions_presig;
@@ -1120,10 +1090,8 @@ int main (int argc, char* argv[]) {
 		rmcom = "rm " + regions_postsig_sorted;
 		system(rmcom.c_str());
 		
-	} else { // Child process
-		
-		srand(0);
-		
+	} else if (mpi_rank == 1) { // This is the reference genome feeder
+	
 		// Receive directory with wg FASTA files
 		char strbuf[STRSIZE];
 		int strlen;
@@ -1131,6 +1099,65 @@ int main (int argc, char* argv[]) {
 		MPI_Get_count(&status, MPI_CHAR, &strlen);
 		MPI_Recv(strbuf, strlen, MPI_CHAR, 0, 10, MPI_COMM_WORLD, &status);
 		string fasta_dir = string(strbuf);
+		
+		/* Import the entire reference genome into the parent */
+		FILE *fasta_ptr = NULL;
+		// int char_pointer;
+		vector<string> chr_nt;
+		
+		// FASTA import here
+		for (int i = 1; i <= 25; i++) {
+
+			string filename = fasta_dir + "/" + int2chr(i) + ".fa";
+			fasta_ptr = fopen(filename.c_str(), "r");
+
+			int first = 1;
+			string this_chr_nt = "";
+			char linebuf_cstr[STRSIZE];
+			while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+				string linebuf = string(linebuf_cstr);
+				linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+				if (first) {
+					first = 0;
+					continue;
+				}
+				this_chr_nt += linebuf;
+			}
+			// Check feof of fasta_ptr
+			if (feof(fasta_ptr)) { // We're good
+				fclose(fasta_ptr);
+			} else { // It's an error
+				char errstring[STRSIZE];
+				sprintf(errstring, "Error reading from %s", filename.c_str());
+				perror(errstring);
+				MPI_Abort(MPI_COMM_WORLD, 1);
+				return 1;
+			}
+			chr_nt.push_back(this_chr_nt);
+		}
+		
+		// Serve up requests for reference genome
+		int *receiving_array = (int *)malloc(2*sizeof(int));
+		while (1) {
+			MPI_Recv(receiving_array, 2, MPI_INT, MPI_ANY_SOURCE, 15, MPI_COMM_WORLD, &status);
+			int source = status.MPI_SOURCE;
+			if (source == 0) {
+				break;
+			}
+			string cur_chr = int2chr(receiving_array[0]);
+			int anchor = receiving_array[1];
+			char *nt = (char *)malloc(3*sizeof(char));
+			nt[0] = toupper(chr_nt[int2chr(cur_chr)-1][anchor-2]);
+			nt[1] = toupper(chr_nt[int2chr(cur_chr)-1][anchor-1]);
+			nt[2] = toupper(chr_nt[int2chr(cur_chr)-1][anchor]);
+			MPI_Send(nt, 3, MPI_CHAR, source, 16, MPI_COMM_WORLD);
+			free(nt);
+		}
+		free(receiving_array);
+	
+	} else { // Child process
+		
+		srand(0);
 		
 		// Receive variant data
 		// MPI_Probe first
@@ -1235,7 +1262,7 @@ int main (int argc, char* argv[]) {
 				
 				/* Variant processing */
 				// nt for this cluster
-				string concat_nt = "";
+				// string concat_nt = "";
 			
 				// All the input (observed) variants spanning the cluster bins
 				// Records locations in "epoch" coordinates
@@ -1338,43 +1365,43 @@ int main (int argc, char* argv[]) {
 				// Read in reference
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 					// FASTA import here
-					if (last_chr != cluster_bins[l][0]) {
-			
-						string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
-						fasta_ptr = fopen(filename.c_str(), "r");
-			
-						int first = 1;
-						last_chr = cluster_bins[l][0];
-						chr_nt = "";
-						char linebuf_cstr[STRSIZE];
-						while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-							string linebuf = string(linebuf_cstr);
-							linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-							if (first) {
-								first = 0;
-								continue;
-							}
-							chr_nt += linebuf;
-						}
-						// Check feof of fasta_ptr
-						if (feof(fasta_ptr)) { // We're good
-							fclose(fasta_ptr);
-						} else { // It's an error
-							char errstring[STRSIZE];
-							sprintf(errstring, "Error reading from %s", filename.c_str());
-							perror(errstring);
-							MPI_Abort(MPI_COMM_WORLD, 1);
-							return 1;
-						}
-					}
-				
+// 					if (last_chr != cluster_bins[l][0]) {
+// 			
+// 						string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
+// 						fasta_ptr = fopen(filename.c_str(), "r");
+// 			
+// 						int first = 1;
+// 						last_chr = cluster_bins[l][0];
+// 						chr_nt = "";
+// 						char linebuf_cstr[STRSIZE];
+// 						while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+// 							string linebuf = string(linebuf_cstr);
+// 							linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+// 							if (first) {
+// 								first = 0;
+// 								continue;
+// 							}
+// 							chr_nt += linebuf;
+// 						}
+// 						// Check feof of fasta_ptr
+// 						if (feof(fasta_ptr)) { // We're good
+// 							fclose(fasta_ptr);
+// 						} else { // It's an error
+// 							char errstring[STRSIZE];
+// 							sprintf(errstring, "Error reading from %s", filename.c_str());
+// 							perror(errstring);
+// 							MPI_Abort(MPI_COMM_WORLD, 1);
+// 							return 1;
+// 						}
+// 					}
+					
 					int rand_range_start = atoi(cluster_bins[l][1].c_str());
 					int rand_range_end = atoi(cluster_bins[l][2].c_str());
 				
 					// Begin indexing
 			
 					// Save the nt
-					concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
+					// concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
 			
 					string cur_chr = cluster_bins[l][0];
 					for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
@@ -1383,10 +1410,21 @@ int main (int argc, char* argv[]) {
 						if (k == 1 || k == hg19_coor[cur_chr]) {
 							continue;
 						}
+						
+						// Request reference from rank 1
+						int *request = (int *)malloc(2*sizeof(int));
+						request[0] = chr2int(cur_chr);
+						request[1] = k; // 1-based index
+						MPI_Send(request, 2, MPI_INT, 1, 15, MPI_COMM_WORLD);
+						char *incoming = (char *)malloc(3*sizeof(char));
+						MPI_Recv(incoming, 3, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
 				
-						char nt1 = toupper(chr_nt[k-2]); // 0-based index
-						char nt2 = toupper(chr_nt[k-1]); // 0-based index
-						char nt3 = toupper(chr_nt[k]); // 0-based index
+						char nt1 = incoming[0];
+						char nt2 = incoming[1];
+						char nt3 = incoming[2];
+						
+						free(request);
+						free(incoming);
 				
 						// Verify there are no invalid characters
 						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
@@ -1422,10 +1460,39 @@ int main (int argc, char* argv[]) {
 					// printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
 			
 					// string cur_nt = obs_var_pos[k].second;
+					
+					// Need to translate epoch coordinates into genome coordinates here
+					int epoch = obs_var_pos[k].first;
+					string cluster_chr;
+					
+					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+						cluster_chr = cluster_bins[l][0];
+						int cluster_start = atoi(cluster_bins[l][1].c_str());
+						int cluster_end = atoi(cluster_bins[l][2].c_str());
+						int cluster_size = (cluster_end - cluster_start);
+						
+						if (epoch > cluster_size) {
+							epoch -= cluster_size;
+						} else {
+							epoch += cluster_start;
+							break;
+						}
+					}
+					
+					// Request reference from rank 1
+					int *request = (int *)malloc(2*sizeof(int));
+					request[0] = chr2int(cluster_chr);
+					request[1] = epoch; // 1-based index
+					MPI_Send(request, 2, MPI_INT, 1, 15, MPI_COMM_WORLD);
+					char *incoming = (char *)malloc(3*sizeof(char));
+					MPI_Recv(incoming, 3, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
 				
-					char cur_nt1 = toupper(concat_nt[obs_var_pos[k].first-2]);
-					char cur_nt2 = toupper(concat_nt[obs_var_pos[k].first-1]); // 0-based index
-					char cur_nt3 = toupper(concat_nt[obs_var_pos[k].first]);
+					char cur_nt1 = incoming[0];
+					char cur_nt2 = incoming[1]; // 0-based index
+					char cur_nt3 = incoming[2];
+					
+					free(request);
+					free(incoming);
 				
 					stringstream ss;
 					string cur_nt;
