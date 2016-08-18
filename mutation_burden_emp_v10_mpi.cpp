@@ -1147,9 +1147,9 @@ int main (int argc, char* argv[]) {
 			string cur_chr = int2chr(receiving_array[0]);
 			int anchor = receiving_array[1];
 			char *nt = (char *)malloc(3*sizeof(char));
-			nt[0] = toupper(chr_nt[int2chr(cur_chr)-1][anchor-2]);
-			nt[1] = toupper(chr_nt[int2chr(cur_chr)-1][anchor-1]);
-			nt[2] = toupper(chr_nt[int2chr(cur_chr)-1][anchor]);
+			nt[0] = toupper(chr_nt[chr2int(cur_chr)-1][anchor-2]);
+			nt[1] = toupper(chr_nt[chr2int(cur_chr)-1][anchor-1]);
+			nt[2] = toupper(chr_nt[chr2int(cur_chr)-1][anchor]);
 			MPI_Send(nt, 3, MPI_CHAR, source, 16, MPI_COMM_WORLD);
 			free(nt);
 		}
@@ -1533,7 +1533,7 @@ int main (int argc, char* argv[]) {
 					int new_epoch = pos2[new_index];
 					// int new_end;
 				
-					string cluster_chr;
+					// string cluster_chr;
 				
 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 						cluster_chr = cluster_bins[l][0];
