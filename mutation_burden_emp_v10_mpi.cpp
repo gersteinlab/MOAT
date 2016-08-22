@@ -1149,7 +1149,7 @@ int main (int argc, char* argv[]) {
 			const char *nt = (char *)malloc((chr_nt[cur_chr_num].size()+1)*sizeof(char));
 			nt = chr_nt[cur_chr_num].c_str();
 			MPI_Send(nt, chr_nt[cur_chr_num].size()+1, MPI_CHAR, source, 16, MPI_COMM_WORLD);
-			free(nt);
+			// free(nt);
 		}
 		free(receiving_array);
 	
