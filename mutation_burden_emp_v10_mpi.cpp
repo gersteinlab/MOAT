@@ -1137,20 +1137,18 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// Serve up requests for reference genome
-		int *receiving_array = (int *)malloc(2*sizeof(int));
+		int *receiving_array = (int *)malloc(sizeof(int));
 		while (1) {
-			MPI_Recv(receiving_array, 2, MPI_INT, MPI_ANY_SOURCE, 15, MPI_COMM_WORLD, &status);
+			MPI_Recv(receiving_array, 1, MPI_INT, MPI_ANY_SOURCE, 15, MPI_COMM_WORLD, &status);
 			int source = status.MPI_SOURCE;
 			if (source == 0) {
 				break;
 			}
-			string cur_chr = int2chr(receiving_array[0]);
-			int anchor = receiving_array[1];
-			char *nt = (char *)malloc(3*sizeof(char));
-			nt[0] = toupper(chr_nt[chr2int(cur_chr)-1][anchor-2]);
-			nt[1] = toupper(chr_nt[chr2int(cur_chr)-1][anchor-1]);
-			nt[2] = toupper(chr_nt[chr2int(cur_chr)-1][anchor]);
-			MPI_Send(nt, 3, MPI_CHAR, source, 16, MPI_COMM_WORLD);
+			// int anchor = receiving_array[1];
+			int cur_chr_num = (*receiving_array)-1;
+			char *nt = (char *)malloc((chr_nt[cur_chr_num].size()+1)*sizeof(char));
+			nt = chr_nt[cur_chr_num].c_str();
+			MPI_Send(nt, chr_nt[cur_chr_num].size()+1, MPI_CHAR, source, 16, MPI_COMM_WORLD);
 			free(nt);
 		}
 		free(receiving_array);
@@ -1301,8 +1299,29 @@ int main (int argc, char* argv[]) {
 						}
 					}
 				}
+				
+				string last_chr;
+				char *chr_nt = malloc(sizeof(char));
 			
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+				
+					// FASTA import here
+					if (last_chr != cluster_bins[l][0]) {
+					
+ 						last_chr = cluster_bins[l][0];
+						free(chr_nt);
+						
+						// Request reference from rank 1
+						int *request = (int *)malloc(sizeof(int));
+						*request = chr2int(cur_chr);
+						MPI_Send(request, 1, MPI_INT, 1, 15, MPI_COMM_WORLD);
+						MPI_Probe(1, 16, MPI_COMM_WORLD, &status);
+						int nt_length;
+						MPI_Get_count(&status, MPI_CHAR, &nt_length);
+						chr_nt = malloc(nt_length*sizeof(char));
+						MPI_Recv(chr_nt, nt_length, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
+						free(request);
+					}
 			
 					int rand_range_start = atoi(cluster_bins[l][1].c_str());
 					int rand_range_end = atoi(cluster_bins[l][2].c_str());
@@ -1332,77 +1351,24 @@ int main (int argc, char* argv[]) {
 						int this_epoch = cur_var_end - rand_range_start;
 						this_epoch += epoch_nt;
 					
-	// 					stringstream ss;
-	// 					string cur_nt;
-	// 					ss << chr_nt[cur_var_end-2];
-	// 					ss << chr_nt[cur_var_end-1];
-	// 					ss << chr_nt[cur_var_end];
-	// 					ss >> cur_nt;
-						string placeholder = "";
+						stringstream ss;
+						string cur_nt;
+						ss << chr_nt[cur_var_end-2];
+						ss << chr_nt[cur_var_end-1];
+						ss << chr_nt[cur_var_end];
+						ss >> cur_nt;
+						// string placeholder = "";
 					
 						pair<int,string> variant (this_epoch, placeholder);
 						obs_var_pos.push_back(variant);
 					}
 					
-					epoch_nt += (rand_range_end - rand_range_start);
-				}
-				
-				// DEBUG
-				// printf("Number of observed variants: %d\n", (int)obs_var_pos.size());
-			
-				if (obs_var_pos.size() == 0) {
-					MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
-					MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
-					continue;
-				}
-				
-				// DEBUG
-				// printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
-			
-				// Reset epoch_nt
-				epoch_nt = 0;
-			
-				// Read in reference
-				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-					// FASTA import here
-// 					if (last_chr != cluster_bins[l][0]) {
-// 			
-// 						string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
-// 						fasta_ptr = fopen(filename.c_str(), "r");
-// 			
-// 						int first = 1;
-// 						last_chr = cluster_bins[l][0];
-// 						chr_nt = "";
-// 						char linebuf_cstr[STRSIZE];
-// 						while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-// 							string linebuf = string(linebuf_cstr);
-// 							linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-// 							if (first) {
-// 								first = 0;
-// 								continue;
-// 							}
-// 							chr_nt += linebuf;
-// 						}
-// 						// Check feof of fasta_ptr
-// 						if (feof(fasta_ptr)) { // We're good
-// 							fclose(fasta_ptr);
-// 						} else { // It's an error
-// 							char errstring[STRSIZE];
-// 							sprintf(errstring, "Error reading from %s", filename.c_str());
-// 							perror(errstring);
-// 							MPI_Abort(MPI_COMM_WORLD, 1);
-// 							return 1;
-// 						}
-// 					}
+					if (obs_var_pos.size() == 0) {
+// 						MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
+// 						MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
+						continue;
+					}
 					
-					int rand_range_start = atoi(cluster_bins[l][1].c_str());
-					int rand_range_end = atoi(cluster_bins[l][2].c_str());
-				
-					// Begin indexing
-			
-					// Save the nt
-					// concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
-			
 					string cur_chr = cluster_bins[l][0];
 					for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
 			
@@ -1412,19 +1378,19 @@ int main (int argc, char* argv[]) {
 						}
 						
 						// Request reference from rank 1
-						int *request = (int *)malloc(2*sizeof(int));
-						request[0] = chr2int(cur_chr);
-						request[1] = k; // 1-based index
-						MPI_Send(request, 2, MPI_INT, 1, 15, MPI_COMM_WORLD);
-						char *incoming = (char *)malloc(3*sizeof(char));
-						MPI_Recv(incoming, 3, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
+// 						int *request = (int *)malloc(2*sizeof(int));
+// 						request[0] = chr2int(cur_chr);
+// 						request[1] = k; // 1-based index
+// 						MPI_Send(request, 2, MPI_INT, 1, 15, MPI_COMM_WORLD);
+// 						char *incoming = (char *)malloc(3*sizeof(char));
+// 						MPI_Recv(incoming, 3, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
 				
-						char nt1 = incoming[0];
-						char nt2 = incoming[1];
-						char nt3 = incoming[2];
+						char nt1 = toupper(chr_nt[k-2]); // 0-based index
+						char nt2 = toupper(chr_nt[k-1]); // 0-based index
+						char nt3 = toupper(chr_nt[k]); // 0-based index
 						
-						free(request);
-						free(incoming);
+// 						free(request);
+// 						free(incoming);
 				
 						// Verify there are no invalid characters
 						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
@@ -1446,10 +1412,63 @@ int main (int argc, char* argv[]) {
 						this_epoch += epoch_nt;
 						local_nt[cur_nt].push_back(this_epoch);
 					}
-			
-					// End indexing
+					
 					epoch_nt += (rand_range_end - rand_range_start);
 				}
+				
+				// DEBUG
+				// printf("Number of observed variants: %d\n", (int)obs_var_pos.size());
+				
+				// DEBUG
+				// printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+			
+				// Reset epoch_nt
+				// epoch_nt = 0;
+			
+				// Read in reference
+// 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+// // 			
+// // 						string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
+// // 						fasta_ptr = fopen(filename.c_str(), "r");
+// // 			
+// // 						int first = 1;
+// // 						last_chr = cluster_bins[l][0];
+// // 						chr_nt = "";
+// // 						char linebuf_cstr[STRSIZE];
+// // 						while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+// // 							string linebuf = string(linebuf_cstr);
+// // 							linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+// // 							if (first) {
+// // 								first = 0;
+// // 								continue;
+// // 							}
+// // 							chr_nt += linebuf;
+// // 						}
+// // 						// Check feof of fasta_ptr
+// // 						if (feof(fasta_ptr)) { // We're good
+// // 							fclose(fasta_ptr);
+// // 						} else { // It's an error
+// // 							char errstring[STRSIZE];
+// // 							sprintf(errstring, "Error reading from %s", filename.c_str());
+// // 							perror(errstring);
+// // 							MPI_Abort(MPI_COMM_WORLD, 1);
+// // 							return 1;
+// // 						}
+// // 					}
+// 					
+// 					int rand_range_start = atoi(cluster_bins[l][1].c_str());
+// 					int rand_range_end = atoi(cluster_bins[l][2].c_str());
+// 				
+// 					// Begin indexing
+// 			
+// 					// Save the nt
+// 					// concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
+// 			
+// 					
+// 			
+// 					// End indexing
+// 					epoch_nt += (rand_range_end - rand_range_start);
+// 				}
 			
 				// Variant processing loop
 				for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
@@ -1459,47 +1478,47 @@ int main (int argc, char* argv[]) {
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 					// printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
 			
-					// string cur_nt = obs_var_pos[k].second;
+					string cur_nt = obs_var_pos[k].second;
 					
 					// Need to translate epoch coordinates into genome coordinates here
-					int epoch = obs_var_pos[k].first;
-					string cluster_chr;
-					
-					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-						cluster_chr = cluster_bins[l][0];
-						int cluster_start = atoi(cluster_bins[l][1].c_str());
-						int cluster_end = atoi(cluster_bins[l][2].c_str());
-						int cluster_size = (cluster_end - cluster_start);
-						
-						if (epoch > cluster_size) {
-							epoch -= cluster_size;
-						} else {
-							epoch += cluster_start;
-							break;
-						}
-					}
-					
-					// Request reference from rank 1
-					int *request = (int *)malloc(2*sizeof(int));
-					request[0] = chr2int(cluster_chr);
-					request[1] = epoch; // 1-based index
-					MPI_Send(request, 2, MPI_INT, 1, 15, MPI_COMM_WORLD);
-					char *incoming = (char *)malloc(3*sizeof(char));
-					MPI_Recv(incoming, 3, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
+// 					int epoch = obs_var_pos[k].first;
+// 					string cluster_chr;
+// 					
+// 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+// 						cluster_chr = cluster_bins[l][0];
+// 						int cluster_start = atoi(cluster_bins[l][1].c_str());
+// 						int cluster_end = atoi(cluster_bins[l][2].c_str());
+// 						int cluster_size = (cluster_end - cluster_start);
+// 						
+// 						if (epoch > cluster_size) {
+// 							epoch -= cluster_size;
+// 						} else {
+// 							epoch += cluster_start;
+// 							break;
+// 						}
+// 					}
+// 					
+// 					// Request reference from rank 1
+// 					int *request = (int *)malloc(2*sizeof(int));
+// 					request[0] = chr2int(cluster_chr);
+// 					request[1] = epoch; // 1-based index
+// 					MPI_Send(request, 2, MPI_INT, 1, 15, MPI_COMM_WORLD);
+// 					char *incoming = (char *)malloc(3*sizeof(char));
+// 					MPI_Recv(incoming, 3, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
 				
-					char cur_nt1 = incoming[0];
-					char cur_nt2 = incoming[1]; // 0-based index
-					char cur_nt3 = incoming[2];
-					
-					free(request);
-					free(incoming);
-				
-					stringstream ss;
-					string cur_nt;
-					ss << cur_nt1;
-					ss << cur_nt2;
-					ss << cur_nt3;
-					ss >> cur_nt;
+// 					char cur_nt1 = incoming[0];
+// 					char cur_nt2 = incoming[1]; // 0-based index
+// 					char cur_nt3 = incoming[2];
+// 					
+// 					free(request);
+// 					free(incoming);
+// 				
+// 					stringstream ss;
+// 					string cur_nt;
+// 					ss << cur_nt1;
+// 					ss << cur_nt2;
+// 					ss << cur_nt3;
+// 					ss >> cur_nt;
 				
 					// If there is an N in this string, we skip this variant
 					if (cur_nt.find_first_of('N') != string::npos) {
