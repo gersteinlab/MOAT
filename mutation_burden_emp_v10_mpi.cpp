@@ -1190,6 +1190,9 @@ int main (int argc, char* argv[]) {
 // 		for (unsigned int i = 0; i < var_array.size(); i++) {
 // 			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
 // 		}
+
+		string last_chr = "";
+		char *chr_nt = (char *)malloc(sizeof(char));
 		
 		// Flag that indicates if all permutations are complete
 		// 1 = permutations to do, 0 = all permutations done
@@ -1299,9 +1302,6 @@ int main (int argc, char* argv[]) {
 						}
 					}
 				}
-				
-				string last_chr;
-				char *chr_nt = (char *)malloc(sizeof(char));
 			
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 				
