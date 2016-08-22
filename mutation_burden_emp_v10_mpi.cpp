@@ -1146,7 +1146,7 @@ int main (int argc, char* argv[]) {
 			}
 			// int anchor = receiving_array[1];
 			int cur_chr_num = (*receiving_array)-1;
-			char *nt = (char *)malloc((chr_nt[cur_chr_num].size()+1)*sizeof(char));
+			const char *nt = (char *)malloc((chr_nt[cur_chr_num].size()+1)*sizeof(char));
 			nt = chr_nt[cur_chr_num].c_str();
 			MPI_Send(nt, chr_nt[cur_chr_num].size()+1, MPI_CHAR, source, 16, MPI_COMM_WORLD);
 			free(nt);
@@ -1301,7 +1301,7 @@ int main (int argc, char* argv[]) {
 				}
 				
 				string last_chr;
-				char *chr_nt = malloc(sizeof(char));
+				char *chr_nt = (char *)malloc(sizeof(char));
 			
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 				
@@ -1313,12 +1313,12 @@ int main (int argc, char* argv[]) {
 						
 						// Request reference from rank 1
 						int *request = (int *)malloc(sizeof(int));
-						*request = chr2int(cur_chr);
+						*request = chr2int(last_chr);
 						MPI_Send(request, 1, MPI_INT, 1, 15, MPI_COMM_WORLD);
 						MPI_Probe(1, 16, MPI_COMM_WORLD, &status);
 						int nt_length;
 						MPI_Get_count(&status, MPI_CHAR, &nt_length);
-						chr_nt = malloc(nt_length*sizeof(char));
+						chr_nt = (char *)malloc(nt_length*sizeof(char));
 						MPI_Recv(chr_nt, nt_length, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
 						free(request);
 					}
@@ -1359,7 +1359,7 @@ int main (int argc, char* argv[]) {
 						ss >> cur_nt;
 						// string placeholder = "";
 					
-						pair<int,string> variant (this_epoch, placeholder);
+						pair<int,string> variant (this_epoch, cur_nt);
 						obs_var_pos.push_back(variant);
 					}
 					
@@ -1552,7 +1552,7 @@ int main (int argc, char* argv[]) {
 					int new_epoch = pos2[new_index];
 					// int new_end;
 				
-					// string cluster_chr;
+					string cluster_chr;
 				
 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 						cluster_chr = cluster_bins[l][0];
