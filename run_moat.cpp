@@ -13,14 +13,27 @@ using namespace std;
 /* This code serves as the front end for users. The user passes all their arguments
  * here, regardless of which version of MOAT they want to run, and this code will
  * set everything up with the appropriate executable on the back end.
+ *
  * Type checking performed here
  * Arguments can be in any order
- * Synopsis: run_moat --algo=[a/v] --parallel=[y/n] -n=NUM_PERMUTATIONS 
- * [--dmin=MIN_DIST_FOR_RANDOM_BINS] [--dmax=MAX_DIST_FOR_RANDOM_BINS]
- * [--width=WG_BIN_WIDTH] [--min_width=MIN_WG_BIN_WIDTH] [--fasta=WG_FASTA_DIR] 
+ * [] indicates a list of valid user options
+ * CAPITAL_LETTERS indicates a user-supplied number or file
+ *
+ * Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS 
+ * --dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS
  * --blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE
- * --out=[OUTPUT_FILE (if using MOAT-a)/OUTPUT_DIRECTORY (if using MOAT-v)]
- * [--ncpu=NUMBER_OF_PARALLEL_CPU_CORES]
+ * --out=OUTPUT_FILE
+ *
+ * Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS 
+ * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR
+ * --blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY 
+ * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES
+ *
+ * Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS 
+ * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR 
+ * --blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY
+ * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --covar_file=COVARIATE_FILE_1 
+ * [--covar_file=COVARIATE_FILE_2 ...]
  */
 int main (int argc, char* argv[]) {
 
@@ -75,8 +88,12 @@ int main (int argc, char* argv[]) {
 	// Alternatively, one can use --ncpu=MAX to get the max number of available CPU cores
 	int ncpu = INT_MIN;
 	
-	if (argc != 10 && argc != 11) {
-		printf("Usage: run_moat --algo=[a/v] --parallel=[y/n] -n=NUM_PERMUTATIONS ");
+	// Covariate files to use for clustering whole genome bins in MOATsim
+	// Must have at least one of these
+	vector<string> covar_files;
+	
+	if (argc >= 10) {
+		printf("Usage: run_moat --algo=[a/v/s] --parallel=[y/n] -n=NUM_PERMUTATIONS ");
  		printf("[--dmin=MIN_DIST_FOR_RANDOM_BINS] [--dmax=MAX_DIST_FOR_RANDOM_BINS] ");
  		printf("[--width=WG_BIN_WIDTH] [--min_width=MIN_WG_BIN_WIDTH] [--fasta=WG_FASTA_DIR] ");
  		printf("--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE [--afile=ANNOTATION_FILE] ");
@@ -127,6 +144,8 @@ int main (int argc, char* argv[]) {
 			} else {
 				ncpu = atoi(value.c_str());
 			}
+		} else if (name == "--covar_file") {
+			covar_files.push_back(value);
 		} else { // User put in an invalid argument
 			printf("Error: Invalid argument name: %s. Exiting.\n", name.c_str());
 			return 1;
@@ -207,14 +226,23 @@ int main (int argc, char* argv[]) {
 		string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out;
 		return system(command.c_str());
 	
-	} else if (algo == 'v') { // MOAT-v
+	} else if (algo == 'v' || algo == 's') { // MOAT-v/MOATsim
 		
 		// Check parallel compatibility
 		if (parallel == 'y') {
-			string parallel_program = "./moat_v_parallel";
+			string parallel_program;
+			if (algo == 'v') {
+				parallel_program = "./moat_v_parallel";
+			} else if (algo == 's') {
+				parallel_program = "./moatsim_parallel";
+			}
 			struct stat buf;
 			if (stat(parallel_program.c_str(), &buf)) { // Report the error and exit
-				printf("Error: No parallel MOAT-v available. Exiting.\n");
+				if (algo == 'v') {
+					printf("Error: No parallel MOAT-v available. Exiting.\n");
+				} else if (algo == 's') {
+					printf("Error: No parallel MOATsim available. Exiting.\n");
+				}
 				return 1;
 			}
 			
@@ -222,7 +250,11 @@ int main (int argc, char* argv[]) {
 			if (ncpu == INT_MIN) {
 				ncpu = sysconf( _SC_NPROCESSORS_ONLN );
 			} else if (ncpu < 2) {
-				printf("Error: Cannot use less than two CPU cores in parallel MOAT-v. Exiting.\n");
+				if (algo == 'v') {
+					printf("Error: Cannot use less than two CPU cores in parallel MOAT-v. Exiting.\n");
+				} else if (algo == 's') {
+					printf("Error: Cannot use less than two CPU cores in parallel MOATsim. Exiting.\n");
+				}
 				return 1;
 			}
 			
@@ -270,6 +302,21 @@ int main (int argc, char* argv[]) {
 			return 1;
 		}
 		
+		// MOATsim check for required covariate files
+		if (algo == 's') {
+			if (covar_files.size() < 1) {
+				printf("Error: Must have at least one covariate signal file for MOATsim. Exiting.\n");
+				return 1;
+			}
+			for (unsigned int i = 0; i < covar_files.size(); i++) {
+				struct stat cbuf;
+				if (stat(covar_files[i].c_str(), &cbuf)) { // Report the error and exit
+					printf("Error trying to stat %s: %s\n", covar_files[i].c_str(), strerror(errno));
+					return 1;
+				}
+			}
+		}
+		
 		char num_permutations_cstr[STRSIZE];
 		sprintf(num_permutations_cstr, "%d", num_permutations);
 		
@@ -285,13 +332,27 @@ int main (int argc, char* argv[]) {
 			char ncpu_cstr[STRSIZE];
 			sprintf(ncpu_cstr, "%d", ncpu);
 		
-			exe = "mpirun -n " + string(ncpu_cstr) + " ./moat_v_parallel";
+			if (algo == 'v') {
+				exe = "mpirun -n " + string(ncpu_cstr) + " ./moat_v_parallel";
+			} else if (algo == 's') {
+				exe = "mpirun -n " + string(ncpu_cstr) + " ./moatsim_parallel";
+			}
 		} else if (parallel == 'n') {
-			exe = "./moat_v_serial";
+			if (algo == 'v') {
+				exe = "./moat_v_serial";
+			} else if (algo == 's') {
+				exe = "./moatsim";
+			}
 		}
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
 		string command = exe + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+		if (algo == 's') {
+			for (unsigned int i = 0; i < covar_files.size(); i++) {
+				command += " ";
+				command += covar_files[i];
+			}
+		}
 		return system(command.c_str());
 		
 	} else { // Algo has an invalid value

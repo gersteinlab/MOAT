@@ -2,7 +2,7 @@
 Mutations Overburdening Annotations Tool (MOAT)
 README
 
-February 5, 2016
+August 23, 2016
 
 Lucas Lochovsky	and Jing Zhang
 Gerstein Lab
@@ -18,12 +18,15 @@ D) Build Instructions
 E) Prerequisite User-supplied Data
 F) MOAT-a
 G) MOAT-v
+H) MOATsim
 
 (A) Description
 
 MOAT (Mutations Overburdening Annotations Tool) is a computational system for identifying significant mutation burdens in genomic elements with an empirical, nonparametric method. Taking a set of variant calls and a set of annotations, both of which may be drawn from anywhere in the human genome, MOAT calculates the observed mutation counts of each annotation, and compares them to the expected mutation counts to detect elevated mutation burdens. The expected mutation count is derived by simulating the expected distribution of background mutations. To produce this expected distribution, MOAT offers two types of permutation algorithm: one that permutes the locations of annotations (MOAT-a), and one that permutes the locations of variants (MOAT-v).
 
 MOAT's annotation permutation algorithm was amenable to parallelization on graphics processing units (GPUs) using Nvidia's CUDA framework due to its high computational intensity and low memory requirements. MOAT's variant permutation algorithm, however, required importing the human reference genome into memory, which made it better suited to parallelization across multiple CPUs with the OpenMPI framework.
+
+Additionally, we provide a variant distribution simulator called MOATsim, which produces permutations of the input variants taking into account trinucleotide identity preservation (similar to MOAT-v), as well as the distribution of whole genome covariates that influence the background mutation rate. Whole genome regions are clustered into groups with similar covariate signal profiles, and intersecting input variants are permuted within all regions in the same cluster, with their new locations preserving the original trinucleotide identity. MOATsim's parallel implementation utilizes the OpenMPI framework.
 
 (B) Prerequisite Software
 
@@ -51,23 +54,27 @@ The following software are required to run MOAT. The "version tested" fields ind
 
 1) makefile: The script that compiles the C++ source code.
 
-2) mutation_burden_emp.cpp: The C++ source code for the serial version of MOAT-a.
+2) moat_a.cpp: The C++ source code for the serial version of MOAT-a.
 
-3) mutation_burden_emp.cu: The source code for the parallel CUDA version of MOAT-a.
+3) moat_a.cu: The source code for the parallel CUDA version of MOAT-a.
 
-4) mutation_burden_emp_v9.cpp: The C++ source code for the serial version of MOAT-v.
+4) moat_v.cpp: The C++ source code for the serial version of MOAT-v.
 
-5) mutation_burden_emp_v9_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOAT-v.
+5) moat_v_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOAT-v.
 
-6) p_value_emp.cpp: The C++ source code for doing p-value calculations in MOAT-v.
+6) moatsim.cpp: The C++ source code for the serial version of MOATsim.
 
-7) README.txt: This file. Contains compilation and usage instructions.
+7) moatsim_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOATsim.
 
-8) run_moat.cpp: The universal frontend for all versions of MOAT. Input checks and organization are performed here before transferring execution into one of the other executables.
+8) p_value_emp.cpp: The C++ source code for doing p-value calculations in MOAT-v.
 
-9) variant_permutation_v3.cpp: A collection of helper methods common to all versions of MOAT.
+9) README.txt: This file. Contains compilation and usage instructions.
 
-10) variant_permutation_v3.h: Header file corresponding to "variant_permutation_v3.cpp" methods.
+10) run_moat.cpp: The universal frontend for all versions of MOAT. Input checks and data organization are performed here before transferring execution into one of the other executables.
+
+11) variant_permutation_v3.cpp: A collection of helper methods common to all versions of MOAT.
+
+12) variant_permutation_v3.h: Header file corresponding to "variant_permutation_v3.cpp" methods.
 
 (D) Build Instructions
 
@@ -82,7 +89,7 @@ The makefile will compile all the serial source code, and detect any CUDA or Ope
 
 (E) Prerequisite User-supplied Data
 
-MOAT-v's algorithm depends on the human reference genome in order to preserve the dinucleotide context of the input variants when they are permuted. Therefore, MOAT-v requires a local copy of the human genome reference sequence FASTA files to operate. For our analyses, we used the hg19 FASTA files available from the UCSC Genome Browser at:
+MOAT-v's algorithm depends on the human reference genome in order to preserve the trinucleotide context of the input variants when they are permuted. Therefore, MOAT-v requires a local copy of the human genome reference sequence FASTA files to operate. For our analyses, we used the hg19 FASTA files available from the UCSC Genome Browser at:
 
 http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/chromFa.tar.gz
 
@@ -100,11 +107,11 @@ Additionally, [algo] specifies which permutation algorithm to use: [a] for MOAT-
 
 [] = user-defined parameter
 
-Usage: run_moat --algo=v --parallel=[y/n] -n=[number of permutations] --width=[width of whole genome bins] --min_width=[minimum width of whole genome bins] --blacklist_file=[blacklist file] --vfile=[variant file] --out=[output directory] --ncpu=[]
+Usage: run_moat --algo=v --parallel=[y/n] -n=[number of permutations] --width=[width of whole genome bins] --min_width=[minimum width of whole genome bins] --fasta=[reference genome FASTA file directory] --blacklist_file=[blacklist file] --vfile=[variant file] --out=[output directory] --ncpu=[number of parallel CPU cores to use]
 
 MOAT-v is the implementation of the variant-based permutation algorithm. It divides the human genome into bins of size [width of whole genome bins], and permutes variants within each bin. Essentially, [width] controls the size of the local genome context, in which we assume the covariates affecting the background mutation rate are more or less constant. The [min_width] parameter influences what MOAT-v will do when it produces bins less than [width], which can happen at the ends of chromosomes, or if a blacklist region is encountered as defined in the [blacklist file]. If the bin's size is higher than [min_width], MOAT-v will proceed with the bin as is. Otherwise, it will attempt to merge the bin with an adjoining neighbor bin to avoid having a bin size below [min_width]. If there are no adjoining neighbors available, the bin will be deleted.
 
-Within each bin, variants from the [variant file] are shuffled to new locations to form [number of permutations (n)] permuted variant datasets. These new locations are chosen uniformly over the available trinucleotides that match the trinucleotide identity of the original variant. The [n] permuted variant datasets are produced as [n] files in the [output directory].
+Within each bin, variants from the [variant file] are shuffled to new locations to form [number of permutations (n)] permuted variant datasets. These new locations are chosen uniformly over the available trinucleotides that match the trinucleotide identity of the original variant. Trinucleotide identities are derived from the sequence data imported from the [reference genome FASTA file directory]. The [n] permuted variant datasets are produced as [n] files in the [output directory].
 
 Additionally, [algo] specifies which permutation algorithm to use: [a] for MOAT-a and [v] for MOAT-v. The [parallel] flag indicates whether to use the OpenMPI-accelerated version [y] (recommended) or the much slower single CPU version [n]. Finally, the [ncpu] option gives the user control over the number of CPU cores to use in the parallel version. This parameter can be omitted, in which case MOAT-v will automatically use all available CPU cores. This can also be achieved by setting --ncpu to MAX. Alternatively, the user can specify any number between 2 and the maximum number of cores available.
 
@@ -113,3 +120,15 @@ Using run_moat in this way will produce the permuted variant datasets, but to ob
 Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file]
 
 [variant file] is the same variant file used in run_moat, and the [annotation file] contains the annotations whose mutation burdens you want to evaluate. [prohibited regions file] works the same as [blacklist file], and [permutation variants' directory] corresponds to the [output directory] used in run_moat. The p-values are written to the [output file].
+
+H) MOATsim
+
+[] = user-defined parameter
+
+Usage: run_moat --algo=s --parallel=[y/n] -n=[number of permutations] --width=[width of whole genome bins] --min_width=[minimum width of whole genome bins] --fasta=[reference genome FASTA file directory] --blacklist_file=[blacklist file] --vfile=[variant file] --out=[output directory] --ncpu=[number of parallel CPU cores to use] --covar_file=[covariate signal file 1] [--covar_file=[covariate_signal_file_2] ...]
+
+MOATsim is a somatic variant simulator that produces [n] permutations of the input [variant file]. Like MOAT-v, it divides the human genome into bins of size [width of whole genome bins]. [width] controls the size of the local genome context, in which we assume the covariates affecting the background mutation rate are more or less constant. The [min_width] parameter influences what MOATsim will do when it produces bins less than [width], which can happen at the ends of chromosomes, or if a blacklist region is encountered as defined in the [blacklist file]. If the bin's size is higher than [min_width], MOATsim will proceed with the bin as is. Otherwise, it will attempt to merge the bin with an adjoining neighbor bin to avoid having a bin size below [min_width]. If there are no adjoining neighbors available, the bin will be deleted.
+
+Bins are clustered using k-means clustering based on the similarity of their covariate signal profiles derived from the [covariate signal files]. At least one such file must be provided when invoking MOATsim. The variants from the [variant file] are relocated within their cluster's bins to locations with the same trinucleotide identity as their original sites. Trinucleotide identities are derived from the sequence data imported from the [reference genome FASTA file directory]. The [n] permuted variant datasets are produced as [n] files in the [output directory].
+
+The [parallel] flag indicates whether to use the OpenMPI-accelerated version [y] (recommended) or the much slower single CPU version [n]. Finally, the [ncpu] option gives the user control over the number of CPU cores to use in the parallel version. This parameter can be omitted, in which case MOATsim will automatically use all available CPU cores. This can also be achieved by setting --ncpu to MAX. Alternatively, the user can specify any number between 2 and the maximum number of cores available.
