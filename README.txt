@@ -52,29 +52,33 @@ The following software are required to run MOAT. The "version tested" fields ind
 
 (C) File List
 
-1) makefile: The script that compiles the C++ source code.
+1) bigWigAverageOverBed: Required to compute the covariate signals of each genome bin in MOATsim. Must be in the same directory as MOATsim or it will fail to run.
+	*** THE 64-BIT LINUX VERSION OF THIS SCRIPT IS INCLUDED WITH MOAT. FOR OTHER VERSIONS USE THE FOLLOWING LINK.
+	Link: http://genome.ucsc.edu/goldenpath/help/bigWig.html (scroll to end of page)
 
-2) moat_a.cpp: The C++ source code for the serial version of MOAT-a.
+2) makefile: The script that compiles the C++ source code.
 
-3) moat_a.cu: The source code for the parallel CUDA version of MOAT-a.
+3) moat_a.cpp: The C++ source code for the serial version of MOAT-a.
 
-4) moat_v.cpp: The C++ source code for the serial version of MOAT-v.
+4) moat_a.cu: The source code for the parallel CUDA version of MOAT-a.
 
-5) moat_v_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOAT-v.
+5) moat_v.cpp: The C++ source code for the serial version of MOAT-v.
 
-6) moatsim.cpp: The C++ source code for the serial version of MOATsim.
+6) moat_v_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOAT-v.
 
-7) moatsim_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOATsim.
+7) moatsim.cpp: The C++ source code for the serial version of MOATsim.
 
-8) p_value_emp.cpp: The C++ source code for doing p-value calculations in MOAT-v.
+8) moatsim_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOATsim.
 
-9) README.txt: This file. Contains compilation and usage instructions.
+9) p_value_emp.cpp: The C++ source code for doing p-value calculations in MOAT-v.
 
-10) run_moat.cpp: The universal frontend for all versions of MOAT. Input checks and data organization are performed here before transferring execution into one of the other executables.
+10) README.txt: This file. Contains compilation and usage instructions.
 
-11) variant_permutation_v3.cpp: A collection of helper methods common to all versions of MOAT.
+11) run_moat.cpp: The universal frontend for all versions of MOAT. Input checks and data organization are performed here before transferring execution into one of the other executables.
 
-12) variant_permutation_v3.h: Header file corresponding to "variant_permutation_v3.cpp" methods.
+12) variant_permutation_v3.cpp: A collection of helper methods common to all versions of MOAT.
+
+13) variant_permutation_v3.h: Header file corresponding to "variant_permutation_v3.cpp" methods.
 
 (D) Build Instructions
 
