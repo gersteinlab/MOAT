@@ -331,7 +331,7 @@ int main (int argc, char* argv[]) {
 	vector<string> covar_files;
 	
 	if (argc < 9) {
-		printf("Usage: mutation_burden_emp_v10 [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+		fprintf(stderr, "Usage: mutation_burden_emp_v10 [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 		return 1;
 	} else {
 		num_permutations = atoi(argv[1]);
@@ -350,37 +350,37 @@ int main (int argc, char* argv[]) {
 	// Verify files, and import data to memory
 	struct stat vbuf;
 	if (stat(vfile.c_str(), &vbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (vbuf.st_size == 0) {
-		printf("Error: Variant file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Variant file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
 	struct stat pbuf;
 	if (stat(prohibited_file.c_str(), &pbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (pbuf.st_size == 0) {
-		printf("Error: Prohibited regions file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Prohibited regions file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
 	// Check that the FASTA directory is a valid path
 	struct stat fbuf;
 	if (stat(fasta_dir.c_str(), &fbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
 		return 1;
 	}
 	
 	// Check that the outdir is a valid path
 	struct stat obuf;
 	if (stat(outdir.c_str(), &obuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
 		return 1;
 	}
 	
@@ -388,7 +388,7 @@ int main (int argc, char* argv[]) {
 	struct stat avgbuf;
 	char avgoverbed_cstr[] = "./bigWigAverageOverBed";
 	if (stat(avgoverbed_cstr, &avgbuf)) {
-		printf("Error: bigWigAverageOverBed is not in the same directory. Exiting.\n");
+		fprintf(stderr, "Error: bigWigAverageOverBed is not in the same directory. Exiting.\n");
 		return 1;
 	}
 	
@@ -1062,7 +1062,7 @@ int main (int argc, char* argv[]) {
 					if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
 						char errstring[STRSIZE];
 						sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
-						printf(errstring);
+						fprintf(stderr, errstring);
 						return 1;
 					}
 				

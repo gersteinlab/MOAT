@@ -576,7 +576,7 @@ int main (int argc, char* argv[]) {
 	string outfile;
 	
 	if (argc != 8) {
-		printf("Usage: moat_a_gpu [# of permutations] [d_min] [d_max] [prohibited regions file] [variant file] [annotation file] [output file]. Exiting.\n");
+		fprintf(stderr, "Usage: moat_a_gpu [# of permutations] [d_min] [d_max] [prohibited regions file] [variant file] [annotation file] [output file]. Exiting.\n");
 		return 1;
 	} else {
 		n = atoi(argv[1]);
@@ -591,34 +591,34 @@ int main (int argc, char* argv[]) {
 	// Verify files, and import data to memory
 	struct stat vbuf;
 	if (stat(vfile.c_str(), &vbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (vbuf.st_size == 0) {
-		printf("Error: Variant file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Variant file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
 	struct stat abuf;
 	if (stat(afile.c_str(), &abuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", afile.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", afile.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (abuf.st_size == 0) {
-		printf("Error: Annotation file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Annotation file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
 	struct stat pbuf;
 	if (stat(prohibited_file.c_str(), &pbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (pbuf.st_size == 0) {
-		printf("Error: Prohibited regions file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Prohibited regions file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
