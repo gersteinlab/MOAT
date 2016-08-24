@@ -104,6 +104,7 @@ int main (int argc, char* argv[]) {
 	char vers_string[] = "1.0";
 	
 	if (argc == 2 && (strcmp(argv[1], h_string) == 0 || strcmp(argv[1], help_string) == 0)) {
+		fprintf(stderr, "*** run_moat ***\n");
 		fprintf(stderr, "This code serves as the front end for users. The user passes all their arguments\n");
 		fprintf(stderr, "here, regardless of which version of MOAT they want to run, and this code will\n");
 		fprintf(stderr, "set everything up with the appropriate executable on the back end.\n");
