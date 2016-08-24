@@ -12,7 +12,8 @@ using namespace std;
 
 #define STRSIZE 256
 
-/* This code serves as the front end for users. The user passes all their arguments
+/*
+ * This code serves as the front end for users. The user passes all their arguments
  * here, regardless of which version of MOAT they want to run, and this code will
  * set everything up with the appropriate executable on the back end.
  *
@@ -94,15 +95,48 @@ int main (int argc, char* argv[]) {
 	// Must have at least one of these
 	vector<string> covar_files;
 	
-	if (argc < 10) {
-		printf("Usage: run_moat --algo=[a/v/s] --parallel=[y/n] -n=NUM_PERMUTATIONS ");
- 		printf("[--dmin=MIN_DIST_FOR_RANDOM_BINS] [--dmax=MAX_DIST_FOR_RANDOM_BINS] ");
- 		printf("[--width=WG_BIN_WIDTH] [--min_width=MIN_WG_BIN_WIDTH] [--fasta=WG_FASTA_DIR] ");
- 		printf("--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE [--afile=ANNOTATION_FILE] ");
- 		printf("--out=[OUTPUT_FILE (if using MOAT-a)/OUTPUT_DIRECTORY (if using MOAT-v)] ");
- 		printf("[--ncpu=NUMBER_OF_PARALLEL_CPU_CORES] Exiting.\n");
+	// String constants for comparisons in argument handling
+	char h_string[] = "-h";
+	char help_string[] = "--help";
+	
+	char v_string[] = "-v";
+	char version_string[] = "--version";
+	char vers_string[] = "1.0";
+	
+	if (argc == 2 && (strcmp(argv[1], h_string) == 0 || strcmp(argv[1], help_string) == 0)) {
+		fprintf(stderr, "This code serves as the front end for users. The user passes all their arguments\n");
+		fprintf(stderr, "here, regardless of which version of MOAT they want to run, and this code will\n");
+		fprintf(stderr, "set everything up with the appropriate executable on the back end.\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Arguments can be in any order\n");
+		fprintf(stderr, "[] indicates a list of valid user options\n");
+		fprintf(stderr, "CAPITAL_LETTERS indicates a user-supplied number or file\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
+		fprintf(stderr, "--dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS\n");
+		fprintf(stderr, "--blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE\n");
+		fprintf(stderr, "--out=OUTPUT_FILE\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
+		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR\n");
+		fprintf(stderr, "--blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY \n");
+		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
+		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR \n");
+		fprintf(stderr, "--blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY\n");
+		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --covar_file=COVARIATE_FILE_1 \n");
+		fprintf(stderr, "[--covar_file=COVARIATE_FILE_2 ...]\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Details on each of MOAT\'s algorithms are included in the accompanying README.txt.\n");
 		return 1;
-	}
+	} else if (argc == 2 && (strcmp(argv[1], v_string) == 0 || strcmp(argv[1], version_string) == 0)) {
+		fprintf(stderr, "%s\n", vers_string);
+		return 1;
+	} else if (argc < 10) {
+		fprintf(stderr, "Incorrect number of arguments. Use -h or --help for usage information.\n");
+		return 1;
+	} 
 	
 	// Process the input
 	// Split into name and value, and store
