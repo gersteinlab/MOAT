@@ -331,7 +331,7 @@ int main (int argc, char* argv[]) {
 		string outdir;
 	
 		if (argc != 8) {
-			printf("Usage: mutation_burden_emp [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
+			fprintf(stderr, "Usage: mutation_burden_emp [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
@@ -348,26 +348,26 @@ int main (int argc, char* argv[]) {
 		// Verify files, and import data to memory
 		struct stat vbuf;
 		if (stat(vfile.c_str(), &vbuf)) { // Report the error and exit
-			printf("Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
+			fprintf(stderr, "Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 		// Check that the file is not empty
 		if (vbuf.st_size == 0) {
-			printf("Error: Variant file cannot be empty. Exiting.\n");
+			fprintf(stderr, "Error: Variant file cannot be empty. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
 		struct stat pbuf;
 		if (stat(prohibited_file.c_str(), &pbuf)) { // Report the error and exit
-			printf("Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+			fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 		// Check that the file is not empty
 		if (pbuf.st_size == 0) {
-			printf("Error: Prohibited regions file cannot be empty. Exiting.\n");
+			fprintf(stderr, "Error: Prohibited regions file cannot be empty. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
@@ -375,7 +375,7 @@ int main (int argc, char* argv[]) {
 		// Check that the FASTA directory is a valid path
 		struct stat fbuf;
 		if (stat(fasta_dir.c_str(), &fbuf)) { // Report the error and exit
-			printf("Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
+			fprintf(stderr, "Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
@@ -383,7 +383,7 @@ int main (int argc, char* argv[]) {
 		// Check that the outdir is a valid path
 		struct stat obuf;
 		if (stat(outdir.c_str(), &obuf)) { // Report the error and exit
-			printf("Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
+			fprintf(stderr, "Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
@@ -1147,7 +1147,7 @@ int main (int argc, char* argv[]) {
 						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
 							char errstring[STRSIZE];
 							sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
-							printf(errstring);
+							fprintf(stderr, errstring);
 							return 1;
 						}
 						
@@ -1211,7 +1211,7 @@ int main (int argc, char* argv[]) {
 							char errstring[STRSIZE];
 							sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
 											ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-							printf(errstring);
+							fprintf(stderr, errstring);
 							MPI_Abort(MPI_COMM_WORLD, 1);
 							return 1;
 						}
