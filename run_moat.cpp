@@ -110,7 +110,7 @@ int main (int argc, char* argv[]) {
 		string arg = string(argv[i]);
 		size_t pos_equals = arg.find('=');
 		if (pos_equals == string::npos) {
-			printf("Error: Argument missing value: %s. Exiting.\n", arg.c_str());
+			fprintf(stderr, "Error: Argument missing value: %s. Exiting.\n", arg.c_str());
 			return 1;
 		}
 		string name = arg.substr(0, pos_equals);
@@ -149,7 +149,7 @@ int main (int argc, char* argv[]) {
 		} else if (name == "--covar_file") {
 			covar_files.push_back(value);
 		} else { // User put in an invalid argument
-			printf("Error: Invalid argument name: %s. Exiting.\n", name.c_str());
+			fprintf(stderr, "Error: Invalid argument name: %s. Exiting.\n", name.c_str());
 			return 1;
 		}
 	}
@@ -161,50 +161,50 @@ int main (int argc, char* argv[]) {
 			string parallel_program = "./moat_a_gpu";
 			struct stat buf;
 			if (stat(parallel_program.c_str(), &buf)) { // Report the error and exit
-				printf("Error: No parallel MOAT-a available. Exiting.\n");
+				fprintf(stderr, "Error: No parallel MOAT-a available. Exiting.\n");
 				return 1;
 			}
 		} else if (parallel != 'n') { // Invalid value for parallel flag
-			printf("Error: Invalid value for \"--parallel\": %c. Exiting.\n", parallel);
+			fprintf(stderr, "Error: Invalid value for \"--parallel\": %c. Exiting.\n", parallel);
 			return 1;
 		}
 			
 		// Verify all relevant variables are defined
 		if (num_permutations == INT_MIN) {
-			printf("Error: n is not defined. Exiting.\n");
+			fprintf(stderr, "Error: n is not defined. Exiting.\n");
 			return 1;
 		} else if (num_permutations <= 0) { // Out of range
-			printf("Error: n must be at least 1. Exiting.\n");
+			fprintf(stderr, "Error: n must be at least 1. Exiting.\n");
 			return 1;
 		}
 		if (dmin == INT_MIN) {
-			printf("Error: dmin is not defined. Exiting.\n");
+			fprintf(stderr, "Error: dmin is not defined. Exiting.\n");
 			return 1;
 		} else if (dmin < 0) { // Out of range
-			printf("Error: dmin cannot be negative. Exiting.\n");
+			fprintf(stderr, "Error: dmin cannot be negative. Exiting.\n");
 			return 1;
 		}
 		if (dmax == INT_MIN) {
-			printf("Error: dmax is not defined. Exiting.\n");
+			fprintf(stderr, "Error: dmax is not defined. Exiting.\n");
 			return 1;
 		} else if (dmax < 0) { // Out of range
-			printf("Error: dmax cannot be negative. Exiting.\n");
+			fprintf(stderr, "Error: dmax cannot be negative. Exiting.\n");
 			return 1;
 		}
 		if (prohibited_file.empty()) {
-			printf("Error: Blacklist file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Blacklist file is not defined. Exiting.\n");
 			return 1;
 		}
 		if (vfile.empty()) {
-			printf("Error: Variant file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Variant file is not defined. Exiting.\n");
 			return 1;
 		}
 		if (afile.empty()) {
-			printf("Error: Annotation file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Annotation file is not defined. Exiting.\n");
 			return 1;
 		}
 		if (out.empty()) {
-			printf("Error: Output file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Output file is not defined. Exiting.\n");
 			return 1;
 		}
 		
@@ -241,9 +241,9 @@ int main (int argc, char* argv[]) {
 			struct stat buf;
 			if (stat(parallel_program.c_str(), &buf)) { // Report the error and exit
 				if (algo == 'v') {
-					printf("Error: No parallel MOAT-v available. Exiting.\n");
+					fprintf(stderr, "Error: No parallel MOAT-v available. Exiting.\n");
 				} else if (algo == 's') {
-					printf("Error: No parallel MOATsim available. Exiting.\n");
+					fprintf(stderr, "Error: No parallel MOATsim available. Exiting.\n");
 				}
 				return 1;
 			}
@@ -253,67 +253,67 @@ int main (int argc, char* argv[]) {
 				ncpu = sysconf( _SC_NPROCESSORS_ONLN );
 			} else if (ncpu < 2) {
 				if (algo == 'v') {
-					printf("Error: Cannot use less than two CPU cores in parallel MOAT-v. Exiting.\n");
+					fprintf(stderr, "Error: Cannot use less than two CPU cores in parallel MOAT-v. Exiting.\n");
 				} else if (algo == 's') {
-					printf("Error: Cannot use less than two CPU cores in parallel MOATsim. Exiting.\n");
+					fprintf(stderr, "Error: Cannot use less than two CPU cores in parallel MOATsim. Exiting.\n");
 				}
 				return 1;
 			}
 			
 		} else if (parallel != 'n') { // Invalid value for parallel flag
-			printf("Error: Invalid value for \"--parallel\": %c. Exiting.\n", parallel);
+			fprintf(stderr, "Error: Invalid value for \"--parallel\": %c. Exiting.\n", parallel);
 			return 1;
 		}
 		
 		// Verify all relevant variables are defined
 		if (num_permutations == INT_MIN) {
-			printf("Error: n is not defined. Exiting.\n");
+			fprintf(stderr, "Error: n is not defined. Exiting.\n");
 			return 1;
 		} else if (num_permutations <= 0) { // Out of range
-			printf("Error: n must be at least 1. Exiting.\n");
+			fprintf(stderr, "Error: n must be at least 1. Exiting.\n");
 			return 1;
 		}
 		if (width == INT_MIN) {
-			printf("Error: width is not defined. Exiting.\n");
+			fprintf(stderr, "Error: width is not defined. Exiting.\n");
 			return 1;
 		} else if (width <= 0) { // Out of range
-			printf("Error: width must be positive. Exiting.\n");
+			fprintf(stderr, "Error: width must be positive. Exiting.\n");
 			return 1;
 		}
 		if (min_width == INT_MIN) {
-			printf("Error: min_width is not defined. Exiting.\n");
+			fprintf(stderr, "Error: min_width is not defined. Exiting.\n");
 			return 1;
 		} else if (min_width <= 0) { // Out of range
-			printf("Error: min_width must be positive. Exiting.\n");
+			fprintf(stderr, "Error: min_width must be positive. Exiting.\n");
 			return 1;
 		}
 		if (fasta_dir.empty()) {
-			printf("WG FASTA directory is not defined. Exiting.\n");
+			fprintf(stderr, "WG FASTA directory is not defined. Exiting.\n");
 			return 1;
 		}
 		if (prohibited_file.empty()) {
-			printf("Error: Blacklist file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Blacklist file is not defined. Exiting.\n");
 			return 1;
 		}
 		if (vfile.empty()) {
-			printf("Error: Variant file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Variant file is not defined. Exiting.\n");
 			return 1;
 		}
 		if (out.empty()) {
-			printf("Error: Output directory is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Output directory is not defined. Exiting.\n");
 			return 1;
 		}
 		
 		// MOATsim check for required covariate files
 		if (algo == 's') {
 			if (covar_files.size() < 1) {
-				printf("Error: Must have at least one covariate signal file for MOATsim. Exiting.\n");
+				fprintf(stderr, "Error: Must have at least one covariate signal file for MOATsim. Exiting.\n");
 				return 1;
 			}
 			for (unsigned int i = 0; i < covar_files.size(); i++) {
 				struct stat cbuf;
 				if (stat(covar_files[i].c_str(), &cbuf)) { // Report the error and exit
-					printf("Error trying to stat %s: %s\n", covar_files[i].c_str(), strerror(errno));
+					fprintf(stderr, "Error trying to stat %s: %s\n", covar_files[i].c_str(), strerror(errno));
 					return 1;
 				}
 			}
@@ -358,7 +358,7 @@ int main (int argc, char* argv[]) {
 		return system(command.c_str());
 		
 	} else { // Algo has an invalid value
-		printf("Error: Invalid value for \"--algo\": %c. Exiting.\n", algo);
+		fprintf(stderr, "Error: Invalid value for \"--algo\": %c. Exiting.\n", algo);
 		return 1;
 	}
 	return 0;
