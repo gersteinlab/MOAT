@@ -24,17 +24,17 @@ using namespace std;
  *
  * Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS
- * --blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE
+ * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE
  * --out=OUTPUT_FILE
  *
  * Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR
- * --blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY 
+ * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY 
  * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES
  *
  * Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR 
- * --blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY
+ * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY
  * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --covar_file=COVARIATE_FILE_1 
  * [--covar_file=COVARIATE_FILE_2 ...]
  */
@@ -115,17 +115,17 @@ int main (int argc, char* argv[]) {
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS\n");
-		fprintf(stderr, "--blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE\n");
+		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE\n");
 		fprintf(stderr, "--out=OUTPUT_FILE\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR\n");
-		fprintf(stderr, "--blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY \n");
+		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY \n");
 		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR \n");
-		fprintf(stderr, "--blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY\n");
+		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY\n");
 		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --covar_file=COVARIATE_FILE_1 \n");
 		fprintf(stderr, "[--covar_file=COVARIATE_FILE_2 ...]\n");
 		fprintf(stderr, "\n");
