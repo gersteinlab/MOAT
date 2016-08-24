@@ -94,7 +94,7 @@ int main (int argc, char* argv[]) {
 	// Must have at least one of these
 	vector<string> covar_files;
 	
-	if (argc >= 10) {
+	if (argc < 10) {
 		printf("Usage: run_moat --algo=[a/v/s] --parallel=[y/n] -n=NUM_PERMUTATIONS ");
  		printf("[--dmin=MIN_DIST_FOR_RANDOM_BINS] [--dmax=MAX_DIST_FOR_RANDOM_BINS] ");
  		printf("[--width=WG_BIN_WIDTH] [--min_width=MIN_WG_BIN_WIDTH] [--fasta=WG_FASTA_DIR] ");
