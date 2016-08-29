@@ -136,3 +136,9 @@ MOATsim is a somatic variant simulator that produces [n] permutations of the inp
 Bins are clustered using k-means clustering based on the similarity of their covariate signal profiles derived from the [covariate signal files]. At least one such file must be provided when invoking MOATsim. The variants from the [variant file] are relocated within their cluster's bins to locations with the same trinucleotide identity as their original sites. Trinucleotide identities are derived from the sequence data imported from the [reference genome FASTA file directory]. The [n] permuted variant datasets are produced as [n] files in the [output directory].
 
 The [parallel] flag indicates whether to use the OpenMPI-accelerated version [y] (recommended) or the much slower single CPU version [n]. Finally, the [ncpu] option gives the user control over the number of CPU cores to use in the parallel version. This parameter can be omitted, in which case MOATsim will automatically use all available CPU cores. This can also be achieved by setting --ncpu to MAX. Alternatively, the user can specify any number between 2 and the maximum number of cores available.
+
+NOTE: MOATsim relies on the "bigWigAverageOverBed" program to generate the covariate signal profiles for the whole genome bins. The 64-bit Linux version is provided with the MOAT distribution, but if you need another version, other versions are available from:
+
+http://genome.ucsc.edu/goldenpath/help/bigWig.html (scroll to end of page)
+
+Additionally, the use of "bigWigAverageOverBed" will result in the generation of temporary files in the MOAT directory. Therefore, if you attempt to run multiple instances of MOATsim, this will likely cause the data interference between the instances, thereby corrupting the results. Naturally, we recommend you not do this. ;)
