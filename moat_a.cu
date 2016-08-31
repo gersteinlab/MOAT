@@ -246,7 +246,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		// Upstream bin selection
 		// Configure where the start of this range is
 		// int rand_range_chr = this_ann_chr;
-		int rand_range_start = this_ann_start - dmax;
+		int rand_range_start = ((this_ann_start + this_ann_end)/2) - dmax;
 		
 		curandState *d_state;
 		d_state = (curandState *)malloc(sizeof(curandState));
@@ -268,7 +268,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		// Downstream bin selection
 		// Configure where the start of this range is
 		// rand_range_chr = this_ann_chr;
-		rand_range_start = this_ann_end + dmin;
+		rand_range_start = ((this_ann_start + this_ann_end)/2) + dmin;
 		
 		for (int j = 0; j < n/2; j++) {
 			float this_rand = curand_uniform(d_state);

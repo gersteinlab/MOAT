@@ -427,7 +427,7 @@ int main (int argc, char* argv[]) {
 		// Upstream bin selection
 		// Configure where the start of this range is
 		string rand_range_chr = cur_ann_chr;
-		int rand_range_start = cur_ann_start_num - dmax;
+		int rand_range_start = ((cur_ann_start_num + cur_ann_end_num)/2) - dmax;
 		
 		for (int j = 0; j < n/2; j++) {
 			int rand_start = rand() % range;
@@ -454,7 +454,7 @@ int main (int argc, char* argv[]) {
 		// Downstream bin selection
 		// Configure where the start of this range is
 		rand_range_chr = cur_ann_chr;
-		rand_range_start = cur_ann_start_num + dmin;
+		rand_range_start = ((cur_ann_start_num + cur_ann_end_num)/2) + dmin;
 		
 		for (int j = 0; j < n/2; j++) {
 			int rand_start = rand() % range;
