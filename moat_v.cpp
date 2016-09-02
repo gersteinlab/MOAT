@@ -683,13 +683,12 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// BEGIN 3MER CODE
+			map<string,vector<int> > local_nt;
 			
 			if (trimer) {
 			
 				// Gather up the locations of all confidently mapped trinucleotides (capital letters)
 				// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
-				map<string,vector<int> > local_nt;
-			
 				vector<int> AAA;
 				vector<int> AAG;
 				vector<int> AAC;
@@ -1025,6 +1024,7 @@ int main (int argc, char* argv[]) {
 				// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 				
 				int new_index;
+				vector<int> pos2;
 				
 				// BEGIN 3MER CODE
 				if (trimer) {
@@ -1062,7 +1062,7 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 				
-					vector<int> pos2;
+					// vector<int> pos2;
 					for (unsigned int l = 0; l < pos.size(); l++) {
 						if (pos[l] != atoi(cur_var[2].c_str())-1) {
 							pos2.push_back(pos[l]);
