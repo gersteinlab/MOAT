@@ -282,6 +282,9 @@ int main (int argc, char* argv[]) {
 	
 	/* User-supplied arguments */
 	
+	// Is the trinucleotide preservation option enabled?
+	bool trimer;
+	
 	// Number of permuted variant datasets to create
 	int num_permutations;
 	
@@ -306,18 +309,27 @@ int main (int argc, char* argv[]) {
 	// Format: tab(chr, start, end)
 	string outdir;
 	
-	if (argc != 8) {
-		fprintf(stderr, "Usage: mutation_burden_emp [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
+	if (argc != 9) {
+		fprintf(stderr, "Usage: mutation_burden_emp [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
 		return 1;
 	} else {
-		num_permutations = atoi(argv[1]);
-		window_radius = atoi(argv[2]);
-		min_width = atoi(argv[3]);
-		prohibited_file = string(argv[4]);
-		fasta_dir = string(argv[5]);
-		vfile = string(argv[6]);
-		// afile = string(argv[5]);
-		outdir = string(argv[7]);
+	
+		if (argv[1][0] == 'y') {
+			trimer = true;
+		} else if (argv[1][0] == 'n') {
+			trimer = false;
+		} else {
+			fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
+			return 1;
+		}
+			
+		num_permutations = atoi(argv[2]);
+		window_radius = atoi(argv[3]);
+		min_width = atoi(argv[4]);
+		prohibited_file = string(argv[5]);
+		fasta_dir = string(argv[6]);
+		vfile = string(argv[7]);
+		outdir = string(argv[8]);
 	}
 	
 	// Verify files, and import data to memory
