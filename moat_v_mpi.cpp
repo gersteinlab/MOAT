@@ -305,6 +305,9 @@ int main (int argc, char* argv[]) {
 	if (mpi_rank == 0) { // Parent process: farm work to the child processes
 	
 		/* User-supplied arguments */
+		
+		// Is the trinucleotide preservation option enabled?
+		bool trimer;
 	
 		// Number of permuted variant datasets to create
 		int num_permutations;
@@ -330,19 +333,29 @@ int main (int argc, char* argv[]) {
 		// Format: tab(chr, start, end)
 		string outdir;
 	
-		if (argc != 8) {
-			fprintf(stderr, "Usage: mutation_burden_emp [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
+		if (argc != 9) {
+			fprintf(stderr, "Usage: moat_v_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
-			num_permutations = atoi(argv[1]);
-			window_radius = atoi(argv[2]);
-			min_width = atoi(argv[3]);
-			prohibited_file = string(argv[4]);
-			fasta_dir = string(argv[5]);
-			vfile = string(argv[6]);
+		
+			if (argv[1][0] == 'y') {
+				trimer = true;
+			} else if (argv[1][0] == 'n') {
+				trimer = false;
+			} else {
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
+				return 1;
+			}
+		
+			num_permutations = atoi(argv[2]);
+			window_radius = atoi(argv[3]);
+			min_width = atoi(argv[4]);
+			prohibited_file = string(argv[5]);
+			fasta_dir = string(argv[6]);
+			vfile = string(argv[7]);
 			// afile = string(argv[5]);
-			outdir = string(argv[7]);
+			outdir = string(argv[8]);
 		}
 	
 		// Verify files, and import data to memory
@@ -632,13 +645,15 @@ int main (int argc, char* argv[]) {
 		// Has corresponding increment method that ensures the circular list property
 		// int next_child = 1;
 		
-		// First, give the FASTA directory location to all children (tag = 10)
+		// First, give the trimer boolean flag to all children
+		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+		
+		// Second, give the FASTA directory location to all children
 		int strlen = fasta_dir.size() + 1;
-		char *strbuf = (char *)malloc((strlen)*sizeof(char));
-		strcpy(strbuf, fasta_dir.c_str());
-		for (int i = 1; i < mpi_size; i++) {
-			MPI_Send(strbuf, strlen, MPI_CHAR, i, 10, MPI_COMM_WORLD);
-		}
+		char *fasta_dir_cstr = (char *)malloc((strlen)*sizeof(char));
+		strcpy(fasta_dir_cstr, fasta_dir.c_str());
+		MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(fasta_dir_cstr, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
 	
 		/* Permute variant locations */
 		srand(0);
@@ -647,9 +662,7 @@ int main (int argc, char* argv[]) {
 		
 			/* Signal child processes to begin */
 			int permutation_flag = 1;
-			for (int j = 1; j < mpi_size; j++) {
-				MPI_Send(&permutation_flag, 1, MPI_INT, j, 8, MPI_COMM_WORLD);
-			}
+			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	
 			/* Begin dividing work for MPI processes */
 			
@@ -835,21 +848,24 @@ int main (int argc, char* argv[]) {
 	} else { // Child process, do a subdivision of the work
 	
 		srand(0);
+		
+		// Receive the trimer boolean flag
+		bool trimer;
+		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 	
 		// Receive directory with wg FASTA files
-		char strbuf[STRSIZE];
+		char fasta_dir_cstr[STRSIZE];
 		int strlen;
-		MPI_Probe(0, 10, MPI_COMM_WORLD, &status);
-		MPI_Get_count(&status, MPI_CHAR, &strlen);
-		MPI_Recv(strbuf, strlen, MPI_CHAR, 0, 10, MPI_COMM_WORLD, &status);
-		string fasta_dir = string(strbuf);
+		MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(fasta_dir_cstr, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
+		string fasta_dir = string(fasta_dir_cstr);
 		// string(argv[5]);
 		
 		// Flag that indicates if all permutations are complete
 		// 1 = permutations to do, 0 = all permutations done
 		// Until all permutations done, loop
 		int permutation_flag;
-		MPI_Recv(&permutation_flag, 1, MPI_INT, 0, 8, MPI_COMM_WORLD, &status);
+		MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		while (permutation_flag) {
 		
 			// The output vector
@@ -924,31 +940,33 @@ int main (int argc, char* argv[]) {
 					ann_array.push_back(vec);
 				}
 			
-				// Load FASTA
-				string filename = fasta_dir + "/" + chr + ".fa";
-				FILE *fasta_ptr = fopen(filename.c_str(), "r");
+				if (trimer) {
+					// Load FASTA
+					string filename = fasta_dir + "/" + chr + ".fa";
+					FILE *fasta_ptr = fopen(filename.c_str(), "r");
 		
-				int first = 1;
-				string chr_nt = "";
-				char linebuf_cstr[STRSIZE];
-				while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-					string linebuf = string(linebuf_cstr);
-					linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-					if (first) {
-						first = 0;
-						continue;
+					int first = 1;
+					string chr_nt = "";
+					char linebuf_cstr[STRSIZE];
+					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+						string linebuf = string(linebuf_cstr);
+						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+						if (first) {
+							first = 0;
+							continue;
+						}
+						chr_nt += linebuf;
 					}
-					chr_nt += linebuf;
-				}
-				// Check feof of fasta_ptr
-				if (feof(fasta_ptr)) { // We're good
-					fclose(fasta_ptr);
-				} else { // It's an error
-					char errstring[STRSIZE];
-					sprintf(errstring, "Error reading from %s", filename.c_str());
-					perror(errstring);
-					MPI_Abort(MPI_COMM_WORLD, 1);
-					return 1;
+					// Check feof of fasta_ptr
+					if (feof(fasta_ptr)) { // We're good
+						fclose(fasta_ptr);
+					} else { // It's an error
+						char errstring[STRSIZE];
+						sprintf(errstring, "Error reading from %s", filename.c_str());
+						perror(errstring);
+						MPI_Abort(MPI_COMM_WORLD, 1);
+						return 1;
+					}
 				}
 			
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
@@ -973,199 +991,205 @@ int main (int argc, char* argv[]) {
 					if (var_subset_count == 0) {
 						continue;
 					}
+					
+					// BEGIN 3MER CODE
 				
-					// Gather up the locations of all confidently mapped dinucleotides (capital letters)
-					// Coordinates are for the first letter in the dinucleotide
-					map<string,vector<int> > local_nt;
+					if (trimer) {
+						// Gather up the locations of all confidently mapped dinucleotides (capital letters)
+						// Coordinates are for the first letter in the dinucleotide
+						map<string,vector<int> > local_nt;
 	
-					vector<int> AAA;
-					vector<int> AAG;
-					vector<int> AAC;
-					vector<int> AAT;
+						vector<int> AAA;
+						vector<int> AAG;
+						vector<int> AAC;
+						vector<int> AAT;
 					
-					vector<int> AGA;
-					vector<int> AGG;
-					vector<int> AGC;
-					vector<int> AGT;
+						vector<int> AGA;
+						vector<int> AGG;
+						vector<int> AGC;
+						vector<int> AGT;
 					
-					vector<int> ACA;
-					vector<int> ACG;
-					vector<int> ACC;
-					vector<int> ACT;
+						vector<int> ACA;
+						vector<int> ACG;
+						vector<int> ACC;
+						vector<int> ACT;
 					
-					vector<int> ATA;
-					vector<int> ATG;
-					vector<int> ATC;
-					vector<int> ATT;
+						vector<int> ATA;
+						vector<int> ATG;
+						vector<int> ATC;
+						vector<int> ATT;
 	
-					vector<int> GAA;
-					vector<int> GAG;
-					vector<int> GAC;
-					vector<int> GAT;
+						vector<int> GAA;
+						vector<int> GAG;
+						vector<int> GAC;
+						vector<int> GAT;
 					
-					vector<int> GGA;
-					vector<int> GGG;
-					vector<int> GGC;
-					vector<int> GGT;
+						vector<int> GGA;
+						vector<int> GGG;
+						vector<int> GGC;
+						vector<int> GGT;
 					
-					vector<int> GCA;
-					vector<int> GCG;
-					vector<int> GCC;
-					vector<int> GCT;
+						vector<int> GCA;
+						vector<int> GCG;
+						vector<int> GCC;
+						vector<int> GCT;
 					
-					vector<int> GTA;
-					vector<int> GTG;
-					vector<int> GTC;
-					vector<int> GTT;
+						vector<int> GTA;
+						vector<int> GTG;
+						vector<int> GTC;
+						vector<int> GTT;
 	
-					vector<int> CAA;
-					vector<int> CAG;
-					vector<int> CAC;
-					vector<int> CAT;
+						vector<int> CAA;
+						vector<int> CAG;
+						vector<int> CAC;
+						vector<int> CAT;
 					
-					vector<int> CGA;
-					vector<int> CGG;
-					vector<int> CGC;
-					vector<int> CGT;
+						vector<int> CGA;
+						vector<int> CGG;
+						vector<int> CGC;
+						vector<int> CGT;
 					
-					vector<int> CCA;
-					vector<int> CCG;
-					vector<int> CCC;
-					vector<int> CCT;
+						vector<int> CCA;
+						vector<int> CCG;
+						vector<int> CCC;
+						vector<int> CCT;
 					
-					vector<int> CTA;
-					vector<int> CTG;
-					vector<int> CTC;
-					vector<int> CTT;
+						vector<int> CTA;
+						vector<int> CTG;
+						vector<int> CTC;
+						vector<int> CTT;
 	
-					vector<int> TAA;
-					vector<int> TAG;
-					vector<int> TAC;
-					vector<int> TAT;
+						vector<int> TAA;
+						vector<int> TAG;
+						vector<int> TAC;
+						vector<int> TAT;
 					
-					vector<int> TGA;
-					vector<int> TGG;
-					vector<int> TGC;
-					vector<int> TGT;
+						vector<int> TGA;
+						vector<int> TGG;
+						vector<int> TGC;
+						vector<int> TGT;
 					
-					vector<int> TCA;
-					vector<int> TCG;
-					vector<int> TCC;
-					vector<int> TCT;
+						vector<int> TCA;
+						vector<int> TCG;
+						vector<int> TCC;
+						vector<int> TCT;
 					
-					vector<int> TTA;
-					vector<int> TTG;
-					vector<int> TTC;
-					vector<int> TTT;
+						vector<int> TTA;
+						vector<int> TTG;
+						vector<int> TTC;
+						vector<int> TTT;
 	
-					local_nt["AAA"] = AAA;
-					local_nt["AAG"] = AAG;
-					local_nt["AAC"] = AAC;
-					local_nt["AAT"] = AAT;
+						local_nt["AAA"] = AAA;
+						local_nt["AAG"] = AAG;
+						local_nt["AAC"] = AAC;
+						local_nt["AAT"] = AAT;
 					
-					local_nt["AGA"] = AGA;
-					local_nt["AGG"] = AGG;
-					local_nt["AGC"] = AGC;
-					local_nt["AGT"] = AGT;
+						local_nt["AGA"] = AGA;
+						local_nt["AGG"] = AGG;
+						local_nt["AGC"] = AGC;
+						local_nt["AGT"] = AGT;
 					
-					local_nt["ACA"] = ACA;
-					local_nt["ACG"] = ACG;
-					local_nt["ACC"] = ACC;
-					local_nt["ACT"] = ACT;
+						local_nt["ACA"] = ACA;
+						local_nt["ACG"] = ACG;
+						local_nt["ACC"] = ACC;
+						local_nt["ACT"] = ACT;
 					
-					local_nt["ATA"] = ATA;
-					local_nt["ATG"] = ATG;
-					local_nt["ATC"] = ATC;
-					local_nt["ATT"] = ATT;
+						local_nt["ATA"] = ATA;
+						local_nt["ATG"] = ATG;
+						local_nt["ATC"] = ATC;
+						local_nt["ATT"] = ATT;
 	
-					local_nt["GAA"] = GAA;
-					local_nt["GAG"] = GAG;
-					local_nt["GAC"] = GAC;
-					local_nt["GAT"] = GAT;
+						local_nt["GAA"] = GAA;
+						local_nt["GAG"] = GAG;
+						local_nt["GAC"] = GAC;
+						local_nt["GAT"] = GAT;
 					
-					local_nt["GGA"] = GGA;
-					local_nt["GGG"] = GGG;
-					local_nt["GGC"] = GGC;
-					local_nt["GGT"] = GGT;
+						local_nt["GGA"] = GGA;
+						local_nt["GGG"] = GGG;
+						local_nt["GGC"] = GGC;
+						local_nt["GGT"] = GGT;
 					
-					local_nt["GCA"] = GCA;
-					local_nt["GCG"] = GCG;
-					local_nt["GCC"] = GCC;
-					local_nt["GCT"] = GCT;
+						local_nt["GCA"] = GCA;
+						local_nt["GCG"] = GCG;
+						local_nt["GCC"] = GCC;
+						local_nt["GCT"] = GCT;
 					
-					local_nt["GTA"] = GTA;
-					local_nt["GTG"] = GTG;
-					local_nt["GTC"] = GTC;
-					local_nt["GTT"] = GTT;
+						local_nt["GTA"] = GTA;
+						local_nt["GTG"] = GTG;
+						local_nt["GTC"] = GTC;
+						local_nt["GTT"] = GTT;
 	
-					local_nt["CAA"] = CAA;
-					local_nt["CAG"] = CAG;
-					local_nt["CAC"] = CAC;
-					local_nt["CAT"] = CAT;
+						local_nt["CAA"] = CAA;
+						local_nt["CAG"] = CAG;
+						local_nt["CAC"] = CAC;
+						local_nt["CAT"] = CAT;
 					
-					local_nt["CGA"] = CGA;
-					local_nt["CGG"] = CGG;
-					local_nt["CGC"] = CGC;
-					local_nt["CGT"] = CGT;
+						local_nt["CGA"] = CGA;
+						local_nt["CGG"] = CGG;
+						local_nt["CGC"] = CGC;
+						local_nt["CGT"] = CGT;
 					
-					local_nt["CCA"] = CCA;
-					local_nt["CCG"] = CCG;
-					local_nt["CCC"] = CCC;
-					local_nt["CCT"] = CCT;
+						local_nt["CCA"] = CCA;
+						local_nt["CCG"] = CCG;
+						local_nt["CCC"] = CCC;
+						local_nt["CCT"] = CCT;
 					
-					local_nt["CTA"] = CTA;
-					local_nt["CTG"] = CTG;
-					local_nt["CTC"] = CTC;
-					local_nt["CTT"] = CTT;
+						local_nt["CTA"] = CTA;
+						local_nt["CTG"] = CTG;
+						local_nt["CTC"] = CTC;
+						local_nt["CTT"] = CTT;
 	
-					local_nt["TAA"] = TAA;
-					local_nt["TAG"] = TAG;
-					local_nt["TAC"] = TAC;
-					local_nt["TAT"] = TAT;
+						local_nt["TAA"] = TAA;
+						local_nt["TAG"] = TAG;
+						local_nt["TAC"] = TAC;
+						local_nt["TAT"] = TAT;
 					
-					local_nt["TGA"] = TGA;
-					local_nt["TGG"] = TGG;
-					local_nt["TGC"] = TGC;
-					local_nt["TGT"] = TGT;
+						local_nt["TGA"] = TGA;
+						local_nt["TGG"] = TGG;
+						local_nt["TGC"] = TGC;
+						local_nt["TGT"] = TGT;
 					
-					local_nt["TCA"] = TCA;
-					local_nt["TCG"] = TCG;
-					local_nt["TCC"] = TCC;
-					local_nt["TCT"] = TCT;
+						local_nt["TCA"] = TCA;
+						local_nt["TCG"] = TCG;
+						local_nt["TCC"] = TCC;
+						local_nt["TCT"] = TCT;
 					
-					local_nt["TTA"] = TTA;
-					local_nt["TTG"] = TTG;
-					local_nt["TTC"] = TTC;
-					local_nt["TTT"] = TTT;
+						local_nt["TTA"] = TTA;
+						local_nt["TTG"] = TTG;
+						local_nt["TTC"] = TTC;
+						local_nt["TTT"] = TTT;
 	
-					for (int k = rand_range_start; k < rand_range_end; k++) { // 1-based index
-						char nt1 = toupper(chr_nt[k-2]); // 0-based index
-						char nt2 = toupper(chr_nt[k-1]); // 0-based index
-						char nt3 = toupper(chr_nt[k]); // 0-based index
+						for (int k = rand_range_start; k < rand_range_end; k++) { // 1-based index
+							char nt1 = toupper(chr_nt[k-2]); // 0-based index
+							char nt2 = toupper(chr_nt[k-1]); // 0-based index
+							char nt3 = toupper(chr_nt[k]); // 0-based index
 						
-						// Verify there are no invalid characters
-						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
-							char errstring[STRSIZE];
-							sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
-							fprintf(stderr, errstring);
-							return 1;
+							// Verify there are no invalid characters
+							if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
+								char errstring[STRSIZE];
+								sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
+								fprintf(stderr, errstring);
+								return 1;
+							}
+						
+							stringstream ss;
+							string nt;
+							ss << nt1;
+							ss << nt2;
+							ss << nt3;
+							ss >> nt;
+						
+							// DEBUG
+	// 						printf("char1: %c\n", nt1);
+	// 						printf("char2: %c\n", nt2);
+	// 						printf("char3: %c\n", nt3);
+	// 						printf("full string: %s\n\n", nt.c_str());
+						
+							local_nt[nt].push_back(k-1);
 						}
-						
-						stringstream ss;
-						string nt;
-						ss << nt1;
-						ss << nt2;
-						ss << nt3;
-						ss >> nt;
-						
-						// DEBUG
-// 						printf("char1: %c\n", nt1);
-// 						printf("char2: %c\n", nt2);
-// 						printf("char3: %c\n", nt3);
-// 						printf("full string: %s\n\n", nt.c_str());
-						
-						local_nt[nt].push_back(k-1);
 					}
+					
+					// END 3MER CODE
 					
 					// DEBUG
 // 					printf("Size check 1: TTT: %d\n", (int)local_nt["TTT"].size());
@@ -1178,67 +1202,92 @@ int main (int argc, char* argv[]) {
 	
 						// DEBUG
 						// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-	
-						vector<string> cur_var = var_array[k];
-						char cur_nt1 = toupper(chr_nt[atoi(cur_var[2].c_str())-2]);
-						char cur_nt2 = toupper(chr_nt[atoi(cur_var[2].c_str())-1]); // 0-based index
-						char cur_nt3 = toupper(chr_nt[atoi(cur_var[2].c_str())]);
-		
-						stringstream ss;
-						string cur_nt;
-						ss << cur_nt1;
-						ss << cur_nt2;
-						ss << cur_nt3;
-						ss >> cur_nt;
-						
-						// If there is an N in this string, we skip this variant
-						if (cur_nt.find_first_of('N') != string::npos) {
-							continue;
-						}
-		
-						// DEBUG
-						// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-						// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
-		
-						vector<int> pos = local_nt[cur_nt];
-						
-						// DEBUG
-						// printf("Size check 2: %s: %d\n", cur_nt.c_str(), (int)local_nt[cur_nt].size());
-		
-						// If no positions are available, end program with an error and suggest
-						// a larger bin size
-						if (pos.size()-1 == 0) {
-							char errstring[STRSIZE];
-							sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
-											ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-							fprintf(stderr, errstring);
-							MPI_Abort(MPI_COMM_WORLD, 1);
-							return 1;
-						}
-		
+						int new_index;
 						vector<int> pos2;
-						for (unsigned int l = 0; l < pos.size(); l++) {
-							if (pos[l] != atoi(cur_var[2].c_str())-1) {
-								pos2.push_back(pos[l]);
+						
+						// BEGIN 3MER CODE
+						
+						if (trimer) {
+							vector<string> cur_var = var_array[k];
+							char cur_nt1 = toupper(chr_nt[atoi(cur_var[2].c_str())-2]);
+							char cur_nt2 = toupper(chr_nt[atoi(cur_var[2].c_str())-1]); // 0-based index
+							char cur_nt3 = toupper(chr_nt[atoi(cur_var[2].c_str())]);
+		
+							stringstream ss;
+							string cur_nt;
+							ss << cur_nt1;
+							ss << cur_nt2;
+							ss << cur_nt3;
+							ss >> cur_nt;
+						
+							// If there is an N in this string, we skip this variant
+							if (cur_nt.find_first_of('N') != string::npos) {
+								continue;
 							}
+		
+							// DEBUG
+							// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
+							// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+		
+							vector<int> pos = local_nt[cur_nt];
+						
+							// DEBUG
+							// printf("Size check 2: %s: %d\n", cur_nt.c_str(), (int)local_nt[cur_nt].size());
+		
+							// If no positions are available, end program with an error and suggest
+							// a larger bin size
+							if (pos.size()-1 == 0) {
+								char errstring[STRSIZE];
+								sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
+												ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+								fprintf(stderr, errstring);
+								MPI_Abort(MPI_COMM_WORLD, 1);
+								return 1;
+							}
+		
+							// vector<int> pos2;
+							for (unsigned int l = 0; l < pos.size(); l++) {
+								if (pos[l] != atoi(cur_var[2].c_str())-1) {
+									pos2.push_back(pos[l]);
+								}
+							}
+						
+							// DEBUG
+	// 						printf("Size check 3: pos: %d\n", (int)pos.size());
+	// 						printf("Size check 3: pos2: %d\n", (int)pos2.size());
+						
+							// Pick new position
+							new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+						} else {
+							new_index = rand() % (rand_range_end-rand_range_start); // Selection in interval [0,(rand_range_end-rand_range_start)-1]
 						}
 						
-						// DEBUG
-// 						printf("Size check 3: pos: %d\n", (int)pos.size());
-// 						printf("Size check 3: pos2: %d\n", (int)pos2.size());
+						// END 3MER CODE
 						
-						// Pick new position
-						int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 						vector<string> vec;
 						vec.push_back(var_array[k][0]);
 		
-						char start_cstr[STRSIZE];
-						sprintf(start_cstr, "%d", pos2[new_index]); // 0-based
-						vec.push_back(string(start_cstr));
+						if (trimer) {
+						
+							char start_cstr[STRSIZE];
+							sprintf(start_cstr, "%d", pos2[new_index]); // 0-based
+							vec.push_back(string(start_cstr));
 		
-						char end_cstr[STRSIZE];
-						sprintf(end_cstr, "%d", pos2[new_index]+1); // 1-based
-						vec.push_back(string(end_cstr));
+							char end_cstr[STRSIZE];
+							sprintf(end_cstr, "%d", pos2[new_index]+1); // 1-based
+							vec.push_back(string(end_cstr));
+							
+						} else {
+							
+							char start_cstr[STRSIZE];
+							sprintf(start_cstr, "%d", new_index); // 0-based
+							vec.push_back(string(start_cstr));
+				
+							char end_cstr[STRSIZE];
+							sprintf(end_cstr, "%d", new_index+1); // 1-based
+							vec.push_back(string(end_cstr));
+							
+						}
 		
 						permuted_set.push_back(vec);
 					}
