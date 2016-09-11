@@ -1234,11 +1234,13 @@ int main (int argc, char* argv[]) {
 				int epoch_nt = 0;
 				
 				unsigned int variant_pointer = 0;
+				
+				map<string,vector<int> > local_nt;
 			
 				if (trimer) {
 					// Gather up the locations of all confidently mapped trinucleotides (capital letters)
 					// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
-					map<string,vector<int> > local_nt;
+					// map<string,vector<int> > local_nt;
 			
 					vector<char> base; // No treble
 					base.push_back('A');
