@@ -310,7 +310,7 @@ int main (int argc, char* argv[]) {
 	string outdir;
 	
 	if (argc != 9) {
-		fprintf(stderr, "Usage: mutation_burden_emp [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
+		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
 		return 1;
 	} else {
 	
@@ -618,34 +618,36 @@ int main (int argc, char* argv[]) {
 		
 			vector<vector<string> > permuted_set;
 		
-			if (last_chr != ann_array[j][0]) {
-				// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
-				// char_pointer = 0;
+			if (trimer) {
+				if (last_chr != ann_array[j][0]) {
+					// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
+					// char_pointer = 0;
 				
-				string filename = fasta_dir + "/" + ann_array[j][0] + ".fa";
-				fasta_ptr = fopen(filename.c_str(), "r");
+					string filename = fasta_dir + "/" + ann_array[j][0] + ".fa";
+					fasta_ptr = fopen(filename.c_str(), "r");
 				
-				int first = 1;
-				last_chr = ann_array[j][0];
-				chr_nt = "";
-				char linebuf_cstr[STRSIZE];
-				while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-					string linebuf = string(linebuf_cstr);
-					linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-					if (first) {
-						first = 0;
-						continue;
+					int first = 1;
+					last_chr = ann_array[j][0];
+					chr_nt = "";
+					char linebuf_cstr[STRSIZE];
+					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+						string linebuf = string(linebuf_cstr);
+						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+						if (first) {
+							first = 0;
+							continue;
+						}
+						chr_nt += linebuf;
 					}
-					chr_nt += linebuf;
-				}
-				// Check feof of fasta_ptr
-				if (feof(fasta_ptr)) { // We're good
-					fclose(fasta_ptr);
-				} else { // It's an error
-					char errstring[STRSIZE];
-					sprintf(errstring, "Error reading from %s", filename.c_str());
-					perror(errstring);
-					return 1;
+					// Check feof of fasta_ptr
+					if (feof(fasta_ptr)) { // We're good
+						fclose(fasta_ptr);
+					} else { // It's an error
+						char errstring[STRSIZE];
+						sprintf(errstring, "Error reading from %s", filename.c_str());
+						perror(errstring);
+						return 1;
+					}
 				}
 			}
 			
