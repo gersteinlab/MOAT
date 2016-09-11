@@ -30,12 +30,12 @@ using namespace std;
  * Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR
  * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY 
- * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES
+ * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n]
  *
  * Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR 
  * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY
- * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --covar_file=COVARIATE_FILE_1 
+ * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --covar_file=COVARIATE_FILE_1 
  * [--covar_file=COVARIATE_FILE_2 ...]
  */
 int main (int argc, char* argv[]) {
@@ -95,6 +95,9 @@ int main (int argc, char* argv[]) {
 	// Must have at least one of these
 	vector<string> covar_files;
 	
+	// Is the trinucleotide preservation option enabled? (y/n)
+	char trimer;
+	
 	// String constants for comparisons in argument handling
 	char h_string[] = "-h";
 	char help_string[] = "--help";
@@ -121,12 +124,12 @@ int main (int argc, char* argv[]) {
 		fprintf(stderr, "Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR\n");
 		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY \n");
-		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES\n");
+		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n]\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR \n");
 		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY\n");
-		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --covar_file=COVARIATE_FILE_1 \n");
+		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --covar_file=COVARIATE_FILE_1 \n");
 		fprintf(stderr, "[--covar_file=COVARIATE_FILE_2 ...]\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Details on each of MOAT\'s algorithms are included in the accompanying README.txt.\n");
@@ -183,6 +186,8 @@ int main (int argc, char* argv[]) {
 			}
 		} else if (name == "--covar_file") {
 			covar_files.push_back(value);
+		} else if (name == "--3mer") {
+			trimer = value[0];
 		} else { // User put in an invalid argument
 			fprintf(stderr, "Error: Invalid argument name: %s. Exiting.\n", name.c_str());
 			return 1;
@@ -339,6 +344,14 @@ int main (int argc, char* argv[]) {
 			return 1;
 		}
 		
+		// Trimer check
+		if (trimer != 'y' && trimer != 'n') {
+			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", trimer);
+			return 1;
+		}
+		string trimer_str;
+		trimer_str.push_back(trimer);
+		
 		// MOATsim check for required covariate files
 		if (algo == 's') {
 			if (covar_files.size() < 1) {
@@ -383,7 +396,7 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
-		string command = exe + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+		string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
 		if (algo == 's') {
 			for (unsigned int i = 0; i < covar_files.size(); i++) {
 				command += " ";
