@@ -939,6 +939,8 @@ int main (int argc, char* argv[]) {
 					vec.push_back(string(end_str));
 					ann_array.push_back(vec);
 				}
+				
+				string chr_nt = "";
 			
 				if (trimer) {
 					// Load FASTA
@@ -946,7 +948,7 @@ int main (int argc, char* argv[]) {
 					FILE *fasta_ptr = fopen(filename.c_str(), "r");
 		
 					int first = 1;
-					string chr_nt = "";
+					chr_nt = "";
 					char linebuf_cstr[STRSIZE];
 					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
 						string linebuf = string(linebuf_cstr);
@@ -993,11 +995,12 @@ int main (int argc, char* argv[]) {
 					}
 					
 					// BEGIN 3MER CODE
+					map<string,vector<int> > local_nt;
 				
 					if (trimer) {
 						// Gather up the locations of all confidently mapped dinucleotides (capital letters)
 						// Coordinates are for the first letter in the dinucleotide
-						map<string,vector<int> > local_nt;
+						// map<string,vector<int> > local_nt;
 	
 						vector<int> AAA;
 						vector<int> AAG;
