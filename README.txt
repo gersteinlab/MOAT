@@ -30,7 +30,7 @@ Additionally, we provide a variant distribution simulator called MOATsim, which 
 
 (B) Prerequisite Software
 
-MOAT is developed for Unix-based operating systems like Linux and Mac OS X. These types of operating systems are fully supported. It is possible that MOAT may function under Windows in an environment like Cygwin, but this has not been tested.
+MOAT is developed for Linux-based operating systems. It is possible that MOAT may function under Mac OS X, or Windows in an environment like Cygwin, but this has not been tested.
 
 The following software are required to run MOAT. The "version tested" fields indicate the versions of each dependency that have been tested with MOAT. Earlier versions may work, but are unsupported.
 
