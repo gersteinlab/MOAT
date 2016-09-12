@@ -1101,7 +1101,7 @@ int main (int argc, char* argv[]) {
 		
 	} else { // Child process
 		
-		srand(0);
+		srand(0+mpi_rank);
 		
 		// Receive the trimer boolean flag
 		bool trimer;
