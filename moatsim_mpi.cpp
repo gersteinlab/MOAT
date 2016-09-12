@@ -1085,9 +1085,10 @@ int main (int argc, char* argv[]) {
 		
 		/* Signal child processes to end */
 		int permutation_flag = 0;
-		for (int j = 1; j < mpi_size; j++) {
-			MPI_Send(&permutation_flag, 1, MPI_INT, j, 8, MPI_COMM_WORLD);
-		}
+		MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
+// 		for (int j = 1; j < mpi_size; j++) {
+// 			MPI_Send(&permutation_flag, 1, MPI_INT, j, 8, MPI_COMM_WORLD);
+// 		}
 		
 		// Wrap up by removing the temporary files created along the way
 		string rmcom = "rm " + regions_presig;
@@ -1521,7 +1522,7 @@ int main (int argc, char* argv[]) {
 				free(permuted_var_coor);
 			}
 			
-			MPI_Recv(&permutation_flag, 1, MPI_INT, 0, 8, MPI_COMM_WORLD, &status);
+			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			
 			// DEBUG
 			// printf("Breakpoint Tau\n");
