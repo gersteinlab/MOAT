@@ -347,6 +347,7 @@ int main (int argc, char* argv[]) {
 		// Trimer check
 		if (!trimer) {
 			fprintf(stderr, "Error: 3mer preservation option is not defined. Exiting.\n");
+			return 1;
 		} else if (trimer != 'y' && trimer != 'n') {
 			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", trimer);
 			return 1;
