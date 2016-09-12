@@ -389,6 +389,7 @@ int main (int argc, char* argv[]) {
 				trimer = false;
 			} else {
 				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
+				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 		
