@@ -1239,15 +1239,15 @@ int main (int argc, char* argv[]) {
 							// DEBUG
 							// printf("Size check 2: %s: %d\n", cur_nt.c_str(), (int)local_nt[cur_nt].size());
 		
-							// If no positions are available, end program with an error and suggest
-							// a larger bin size
+							// If no positions are available, skip to next variant
 							if (pos.size()-1 == 0) {
-								char errstring[STRSIZE];
-								sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
-												ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-								fprintf(stderr, errstring);
-								MPI_Abort(MPI_COMM_WORLD, 1);
-								return 1;
+								continue;
+// 								char errstring[STRSIZE];
+// 								sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
+// 												ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+// 								fprintf(stderr, errstring);
+// 								MPI_Abort(MPI_COMM_WORLD, 1);
+// 								return 1;
 							}
 		
 							// vector<int> pos2;
