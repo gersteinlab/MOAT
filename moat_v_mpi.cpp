@@ -1256,6 +1256,11 @@ int main (int argc, char* argv[]) {
 									pos2.push_back(pos[l]);
 								}
 							}
+							
+							// If no positions are available, skip to next variant
+							if (pos2.size() == 0) {
+								continue;
+							}
 						
 							// DEBUG
 	// 						printf("Size check 3: pos: %d\n", (int)pos.size());
