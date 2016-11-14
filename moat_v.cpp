@@ -658,13 +658,13 @@ int main (int argc, char* argv[]) {
 				
  				stringstream ss;
 				string cur_nt;
-				ss << chr_nt[j-1];
-				ss << chr_nt[j];
-				ss << chr_nt[j+1];
+				ss << toupper(chr_nt[j-1]);
+				ss << toupper(chr_nt[j]);
+				ss << toupper(chr_nt[j+1]);
 				ss >> cur_nt;
 				
 				// Verify there are no invalid characters
-				if (chr_nt[j] != 'A' && chr_nt[j] != 'C' && chr_nt[j] != 'G' && chr_nt[j] != 'T' && chr_nt[j] != 'N') {
+				if (toupper(chr_nt[j]) != 'A' && toupper(chr_nt[j]) != 'C' && toupper(chr_nt[j]) != 'G' && toupper(chr_nt[j]) != 'T' && toupper(chr_nt[j]) != 'N') {
 					char errstring[STRSIZE];
 					sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", chr_nt[j]);
 					fprintf(stderr, errstring);
