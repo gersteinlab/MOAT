@@ -601,6 +601,30 @@ int main (int argc, char* argv[]) {
 	int epoch_nt = 0;
 	
 	// FASTA import and indexing goes here now, before we start permutations
+	
+	map<string,vector<int> > local_nt;
+			
+	vector<char> base; // No treble
+	base.push_back('A');
+	base.push_back('G');
+	base.push_back('C');
+	base.push_back('T');
+	
+	for (int z = 0; z < 4; z++) {
+		for (int y = 0; y < 4; y++) {
+			for (int x = 0; x < 4; x++) {
+				stringstream ss;
+				string cur_nt;
+				ss << base[z];
+				ss << base[y];
+				ss << base[x];
+				ss >> cur_nt;
+				vector<int> temp;
+				local_nt[cur_nt] = temp;
+			}
+		}
+	}
+			
 	if (trimer) {
 		for (int i = 1; i <= 25; i++) {
 			
@@ -630,29 +654,6 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 			
-			map<string,vector<int> > local_nt;
-			
-			vector<char> base; // No treble
-			base.push_back('A');
-			base.push_back('G');
-			base.push_back('C');
-			base.push_back('T');
-			
-			for (int z = 0; z < 4; z++) {
-				for (int y = 0; y < 4; y++) {
-					for (int x = 0; x < 4; x++) {
-						stringstream ss;
-						string cur_nt;
-						ss << base[z];
-						ss << base[y];
-						ss << base[x];
-						ss >> cur_nt;
-						vector<int> temp;
-						local_nt[cur_nt] = temp;
-					}
-				}
-			}
-			
 			for (int j = 1; j < (int)chr_nt.size()-1; j++) {
 				
  				stringstream ss;
@@ -665,7 +666,7 @@ int main (int argc, char* argv[]) {
 				// Verify there are no invalid characters
 				if (chr_nt[j] != 'A' && chr_nt[j] != 'C' && chr_nt[j] != 'G' && chr_nt[j] != 'T' && chr_nt[j] != 'N') {
 					char errstring[STRSIZE];
-					sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
+					sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", chr_nt[j]);
 					fprintf(stderr, errstring);
 					return 1;
 				}
@@ -701,7 +702,7 @@ int main (int argc, char* argv[]) {
 						// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
 						// char_pointer = 0;
 				
-						string filename = fasta_dir + "/" + ann_array[j][0] + ".fa";
+						string filename = fasta_dir + "/" + ann_array[k][0] + ".fa";
 						fasta_ptr = fopen(filename.c_str(), "r");
 				
 						int first = 1;
