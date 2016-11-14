@@ -598,6 +598,86 @@ int main (int argc, char* argv[]) {
 	string last_chr = "";
 	// int char_pointer;
 	string chr_nt;
+	int epoch_nt = 0;
+	
+	// FASTA import and indexing goes here now, before we start permutations
+	if (trimer) {
+		for (int i = 1; i <= 25; i++) {
+			
+			string chr = int2chr(i);
+			string filename = fasta_dir + "/" + chr + ".fa";
+			fasta_ptr = fopen(filename.c_str(), "r");
+			
+			int first = 1;
+			chr_nt = "";
+			char linebuf_cstr[STRSIZE];
+			while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+				string linebuf = string(linebuf_cstr);
+				linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+				if (first) {
+					first = 0;
+					continue;
+				}
+				chr_nt += linebuf;
+			}
+			// Check feof of fasta_ptr
+			if (feof(fasta_ptr)) { // We're good
+				fclose(fasta_ptr);
+			} else { // It's an error
+				char errstring[STRSIZE];
+				sprintf(errstring, "Error reading from %s", filename.c_str());
+				perror(errstring);
+				return 1;
+			}
+			
+			map<string,vector<int> > local_nt;
+			
+			vector<char> base; // No treble
+			base.push_back('A');
+			base.push_back('G');
+			base.push_back('C');
+			base.push_back('T');
+			
+			for (int z = 0; z < 4; z++) {
+				for (int y = 0; y < 4; y++) {
+					for (int x = 0; x < 4; x++) {
+						stringstream ss;
+						string cur_nt;
+						ss << base[z];
+						ss << base[y];
+						ss << base[x];
+						ss >> cur_nt;
+						vector<int> temp;
+						local_nt[cur_nt] = temp;
+					}
+				}
+			}
+			
+			for (int j = 1; j < (int)chr_nt.size()-1; j++) {
+				
+ 				stringstream ss;
+				string cur_nt;
+				ss << chr_nt[j-1];
+				ss << chr_nt[j];
+				ss << chr_nt[j+1];
+				ss >> cur_nt;
+				
+				// Verify there are no invalid characters
+				if (chr_nt[j] != 'A' && chr_nt[j] != 'C' && chr_nt[j] != 'G' && chr_nt[j] != 'T' && chr_nt[j] != 'N') {
+					char errstring[STRSIZE];
+					sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
+					fprintf(stderr, errstring);
+					return 1;
+				}
+				
+				int this_epoch = epoch_nt + (j+1); // 1-based
+				
+				local_nt[cur_nt].push_back(this_epoch);
+			}
+			
+			epoch_nt += hg19_coor[chr];
+		}
+	}
 	
 	/* Permutate variant locations */
 	srand(0);
@@ -612,415 +692,42 @@ int main (int argc, char* argv[]) {
 		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
 	
 		unsigned int variant_pointer = 0;
-		// vector<int> this_permutation_counts;
-		
-		for (unsigned int j = 0; j < ann_array.size(); j++) {
-		
-			vector<vector<string> > permuted_set;
-		
-			if (trimer) {
-				if (last_chr != ann_array[j][0]) {
-					// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
-					// char_pointer = 0;
-				
-					string filename = fasta_dir + "/" + ann_array[j][0] + ".fa";
-					fasta_ptr = fopen(filename.c_str(), "r");
-				
-					int first = 1;
-					last_chr = ann_array[j][0];
-					chr_nt = "";
-					char linebuf_cstr[STRSIZE];
-					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-						string linebuf = string(linebuf_cstr);
-						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-						if (first) {
-							first = 0;
-							continue;
-						}
-						chr_nt += linebuf;
-					}
-					// Check feof of fasta_ptr
-					if (feof(fasta_ptr)) { // We're good
-						fclose(fasta_ptr);
-					} else { // It's an error
-						char errstring[STRSIZE];
-						sprintf(errstring, "Error reading from %s", filename.c_str());
-						perror(errstring);
-						return 1;
-					}
-				}
-			}
-			
-			// DEBUG
-// 			printf("Char 11998: %c\n", chr_nt[11997]);
-// 			printf("Char 11999: %c\n", chr_nt[11998]);
-// 			printf("Char 12000: %c\n", chr_nt[11999]);
-// 			printf("Char 12001: %c\n", chr_nt[12000]);
-// 			printf("Char 12002: %c\n", chr_nt[12001]);
-			
-			int rand_range_start = atoi(ann_array[j][1].c_str());
-			int rand_range_end = atoi(ann_array[j][2].c_str());
-			
-			vector<string> rand_range;
-			rand_range.push_back(ann_array[j][0]);
-			
-			char rand_range_start_cstr[STRSIZE];
-			sprintf(rand_range_start_cstr, "%d", rand_range_start);
-			rand_range.push_back(string(rand_range_start_cstr));
-			
-			char rand_range_end_cstr[STRSIZE];
-			sprintf(rand_range_end_cstr, "%d", rand_range_end);
-			rand_range.push_back(string(rand_range_end_cstr));
-			
-			pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
-			variant_pointer = range.first;
-			
-			// DEBUG
-			// printf("Breakpoint 3\n");
-			// printf("%d,%d\n", range.first, range.second);
-			
-			int var_subset_count = range.second - range.first;
-			if (var_subset_count == 0) {
-				continue;
-			}
-			
-			// BEGIN 3MER CODE
-			map<string,vector<int> > local_nt;
-			
-			if (trimer) {
-			
-				// Gather up the locations of all confidently mapped trinucleotides (capital letters)
-				// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
-				vector<int> AAA;
-				vector<int> AAG;
-				vector<int> AAC;
-				vector<int> AAT;
-			
-				vector<int> AGA;
-				vector<int> AGG;
-				vector<int> AGC;
-				vector<int> AGT;
-			
-				vector<int> ACA;
-				vector<int> ACG;
-				vector<int> ACC;
-				vector<int> ACT; // Download from act.gersteinlab.org today!
-			
-				vector<int> ATA;
-				vector<int> ATG;
-				vector<int> ATC;
-				vector<int> ATT; // Verizon's not going to be happy about this
-			
-				vector<int> GAA;
-				vector<int> GAG;
-				vector<int> GAC;
-				vector<int> GAT;
-			
-				vector<int> GGA;
-				vector<int> GGG; // Good game Greg
-				vector<int> GGC;
-				vector<int> GGT;
-			
-				vector<int> GCA;
-				vector<int> GCG;
-				vector<int> GCC; // Your friendly neighborhood C compiler
-				vector<int> GCT;
-			
-				vector<int> GTA;
-				vector<int> GTG;
-				vector<int> GTC;
-				vector<int> GTT;
-			
-				vector<int> CAA;
-				vector<int> CAG; // Report to Lee Adama for mission briefing
-				vector<int> CAC;
-				vector<int> CAT; // Cats and dogs living together... total anarchy
-			
-				vector<int> CGA;
-				vector<int> CGG;
-				vector<int> CGC;
-				vector<int> CGT;
-			
-				vector<int> CCA;
-				vector<int> CCG;
-				vector<int> CCC;
-				vector<int> CCT;
-			
-				vector<int> CTA;
-				vector<int> CTG;
-				vector<int> CTC;
-				vector<int> CTT;
-			
-				vector<int> TAA;
-				vector<int> TAG; // You're it!
-				vector<int> TAC;
-				vector<int> TAT;
-			
-				vector<int> TGA;
-				vector<int> TGG;
-				vector<int> TGC;
-				vector<int> TGT;
-			
-				vector<int> TCA; // Is your favorite show on the bubble?
-				vector<int> TCG; // With one more letter, it could've been MTG
-				vector<int> TCC;
-				vector<int> TCT;
-			
-				vector<int> TTA;
-				vector<int> TTG;
-				vector<int> TTC; // The words of the prophet are written on the TTC
-				vector<int> TTT;
-			
-				local_nt["AAA"] = AAA;
-				local_nt["AAG"] = AAG;
-				local_nt["AAC"] = AAC;
-				local_nt["AAT"] = AAT;
-			
-				local_nt["AGA"] = AGA;
-				local_nt["AGG"] = AGG;
-				local_nt["AGC"] = AGC;
-				local_nt["AGT"] = AGT;
-			
-				local_nt["ACA"] = ACA;
-				local_nt["ACG"] = ACG;
-				local_nt["ACC"] = ACC;
-				local_nt["ACT"] = ACT;
-			
-				local_nt["ATA"] = ATA;
-				local_nt["ATG"] = ATG;
-				local_nt["ATC"] = ATC;
-				local_nt["ATT"] = ATT;
-			
-				local_nt["GAA"] = GAA;
-				local_nt["GAG"] = GAG;
-				local_nt["GAC"] = GAC;
-				local_nt["GAT"] = GAT;
-			
-				local_nt["GGA"] = GGA;
-				local_nt["GGG"] = GGG;
-				local_nt["GGC"] = GGC;
-				local_nt["GGT"] = GGT;
-			
-				local_nt["GCA"] = GCA;
-				local_nt["GCG"] = GCG;
-				local_nt["GCC"] = GCC;
-				local_nt["GCT"] = GCT;
-			
-				local_nt["GTA"] = GTA;
-				local_nt["GTG"] = GTG;
-				local_nt["GTC"] = GTC;
-				local_nt["GTT"] = GTT;
-			
-				local_nt["CAA"] = CAA;
-				local_nt["CAG"] = CAG;
-				local_nt["CAC"] = CAC;
-				local_nt["CAT"] = CAT;
-			
-				local_nt["CGA"] = CGA;
-				local_nt["CGG"] = CGG;
-				local_nt["CGC"] = CGC;
-				local_nt["CGT"] = CGT;
-			
-				local_nt["CCA"] = CCA;
-				local_nt["CCG"] = CCG;
-				local_nt["CCC"] = CCC;
-				local_nt["CCT"] = CCT;
-			
-				local_nt["CTA"] = CTA;
-				local_nt["CTG"] = CTG;
-				local_nt["CTC"] = CTC;
-				local_nt["CTT"] = CTT;
-			
-				local_nt["TAA"] = TAA;
-				local_nt["TAG"] = TAG;
-				local_nt["TAC"] = TAC;
-				local_nt["TAT"] = TAT;
-			
-				local_nt["TGA"] = TGA;
-				local_nt["TGG"] = TGG;
-				local_nt["TGC"] = TGC;
-				local_nt["TGT"] = TGT;
-			
-				local_nt["TCA"] = TCA;
-				local_nt["TCG"] = TCG;
-				local_nt["TCC"] = TCC;
-				local_nt["TCT"] = TCT;
-			
-				local_nt["TTA"] = TTA;
-				local_nt["TTG"] = TTG;
-				local_nt["TTC"] = TTC;
-				local_nt["TTT"] = TTT;
-			
-				for (int k = rand_range_start; k < rand_range_end; k++) { // 1-based index
-			
-					// Don't read in characters if it will read off either end
-					if (k == 1 || k == hg19_coor[ann_array[j][0]]) {
-						continue;
-					}
-				
-					char nt1 = toupper(chr_nt[k-2]); // 0-based index
-					char nt2 = toupper(chr_nt[k-1]); // 0-based index
-					char nt3 = toupper(chr_nt[k]); // 0-based index
-				
-					// Verify there are no invalid characters
-					if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
-						char errstring[STRSIZE];
-						sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
-						fprintf(stderr, errstring);
-						return 1;
-					}
-				
-					if (nt1 == 'A' && nt2 == 'A' && nt3 == 'A') {
-						local_nt["AAA"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'A' && nt3 == 'G') {
-						local_nt["AAG"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'A' && nt3 == 'C') {
-						local_nt["AAC"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'A' && nt3 == 'T') {
-						local_nt["AAT"].push_back(k-1);
-					
-					} else if (nt1 == 'A' && nt2 == 'G' && nt3 == 'A') {
-						local_nt["AGA"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'G' && nt3 == 'G') {
-						local_nt["AGG"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'G' && nt3 == 'C') {
-						local_nt["AGC"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'G' && nt3 == 'T') {
-						local_nt["AGT"].push_back(k-1);
-					
-					} else if (nt1 == 'A' && nt2 == 'C' && nt3 == 'A') {
-						local_nt["ACA"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'C' && nt3 == 'G') {
-						local_nt["ACG"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'C' && nt3 == 'C') {
-						local_nt["ACC"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'C' && nt3 == 'T') {
-						local_nt["ACT"].push_back(k-1);
-					
-					} else if (nt1 == 'A' && nt2 == 'T' && nt3 == 'A') {
-						local_nt["ATA"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'T' && nt3 == 'G') {
-						local_nt["ATG"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'T' && nt3 == 'C') {
-						local_nt["ATC"].push_back(k-1);
-					} else if (nt1 == 'A' && nt2 == 'T' && nt3 == 'T') {
-						local_nt["ATT"].push_back(k-1);
-					
-					} else if (nt1 == 'G' && nt2 == 'A' && nt3 == 'A') {
-						local_nt["GAA"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'A' && nt3 == 'G') {
-						local_nt["GAG"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'A' && nt3 == 'C') {
-						local_nt["GAC"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'A' && nt3 == 'T') {
-						local_nt["GAT"].push_back(k-1);
-					
-					} else if (nt1 == 'G' && nt2 == 'G' && nt3 == 'A') {
-						local_nt["GGA"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'G' && nt3 == 'G') {
-						local_nt["GGG"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'G' && nt3 == 'C') {
-						local_nt["GGC"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'G' && nt3 == 'T') {
-						local_nt["GGT"].push_back(k-1);
-					
-					} else if (nt1 == 'G' && nt2 == 'C' && nt3 == 'A') {
-						local_nt["GCA"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'C' && nt3 == 'G') {
-						local_nt["GCG"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'C' && nt3 == 'C') {
-						local_nt["GCC"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'C' && nt3 == 'T') {
-						local_nt["GCT"].push_back(k-1);
-					
-					} else if (nt1 == 'G' && nt2 == 'T' && nt3 == 'A') {
-						local_nt["GTA"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'T' && nt3 == 'G') {
-						local_nt["GTG"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'T' && nt3 == 'C') {
-						local_nt["GTC"].push_back(k-1);
-					} else if (nt1 == 'G' && nt2 == 'T' && nt3 == 'T') {
-						local_nt["GTT"].push_back(k-1);
-				
-					} else if (nt1 == 'C' && nt2 == 'A' && nt3 == 'A') {
-						local_nt["CAA"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'A' && nt3 == 'G') {
-						local_nt["CAG"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'A' && nt3 == 'C') {
-						local_nt["CAC"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'A' && nt3 == 'T') {
-						local_nt["CAT"].push_back(k-1);
-					
-					} else if (nt1 == 'C' && nt2 == 'G' && nt3 == 'A') {
-						local_nt["CGA"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'G' && nt3 == 'G') {
-						local_nt["CGG"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'G' && nt3 == 'C') {
-						local_nt["CGC"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'G' && nt3 == 'T') {
-						local_nt["CGT"].push_back(k-1);
-					
-					} else if (nt1 == 'C' && nt2 == 'C' && nt3 == 'A') {
-						local_nt["CCA"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'C' && nt3 == 'G') {
-						local_nt["CCG"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'C' && nt3 == 'C') {
-						local_nt["CCC"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'C' && nt3 == 'T') {
-						local_nt["CCT"].push_back(k-1);
-					
-					} else if (nt1 == 'C' && nt2 == 'T' && nt3 == 'A') {
-						local_nt["CTA"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'T' && nt3 == 'G') {
-						local_nt["CTG"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'T' && nt3 == 'C') {
-						local_nt["CTC"].push_back(k-1);
-					} else if (nt1 == 'C' && nt2 == 'T' && nt3 == 'T') {
-						local_nt["CTT"].push_back(k-1);
-					
-					} else if (nt1 == 'T' && nt2 == 'A' && nt3 == 'A') {
-						local_nt["TAA"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'A' && nt3 == 'G') {
-						local_nt["TAG"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'A' && nt3 == 'C') {
-						local_nt["TAC"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'A' && nt3 == 'T') {
-						local_nt["TAT"].push_back(k-1);
-					
-					} else if (nt1 == 'T' && nt2 == 'G' && nt3 == 'A') {
-						local_nt["TGA"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'G' && nt3 == 'G') {
-						local_nt["TGG"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'G' && nt3 == 'C') {
-						local_nt["TGC"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'G' && nt3 == 'T') {
-						local_nt["TGT"].push_back(k-1);
-					
-					} else if (nt1 == 'T' && nt2 == 'C' && nt3 == 'A') {
-						local_nt["TCA"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'C' && nt3 == 'G') {
-						local_nt["TCG"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'C' && nt3 == 'C') {
-						local_nt["TCC"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'C' && nt3 == 'T') {
-						local_nt["TCT"].push_back(k-1);
-					
-					} else if (nt1 == 'T' && nt2 == 'T' && nt3 == 'A') {
-						local_nt["TTA"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'T' && nt3 == 'G') {
-						local_nt["TTG"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'T' && nt3 == 'C') {
-						local_nt["TTC"].push_back(k-1);
-					} else if (nt1 == 'T' && nt2 == 'T' && nt3 == 'T') {
-						local_nt["TTT"].push_back(k-1);
-					}
-				}
-			}
-			
-			// END 3MER CODE
 			
 			// Variant processing loop
-			for (unsigned int k = range.first; k < range.second; k++) {
+			for (unsigned int k = 0; k < var_array.size(); k++) {
+			
+				if (trimer) {
+					if (last_chr != var_array[k][0]) {
+						// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
+						// char_pointer = 0;
+				
+						string filename = fasta_dir + "/" + ann_array[j][0] + ".fa";
+						fasta_ptr = fopen(filename.c_str(), "r");
+				
+						int first = 1;
+						last_chr = var_array[k][0];
+						chr_nt = "";
+						char linebuf_cstr[STRSIZE];
+						while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+							string linebuf = string(linebuf_cstr);
+							linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+							if (first) {
+								first = 0;
+								continue;
+							}
+							chr_nt += linebuf;
+						}
+						// Check feof of fasta_ptr
+						if (feof(fasta_ptr)) { // We're good
+							fclose(fasta_ptr);
+						} else { // It's an error
+							char errstring[STRSIZE];
+							sprintf(errstring, "Error reading from %s", filename.c_str());
+							perror(errstring);
+							return 1;
+						}
+					}
+				}
 			
 				// DEBUG
 				// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
@@ -1056,13 +763,13 @@ int main (int argc, char* argv[]) {
 				
 					// If no positions are available, end program with an error and suggest
 					// a larger bin size
-					if (pos.size()-1 == 0) {
-						char errstring[STRSIZE];
-						sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
-										ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-						fprintf(stderr, errstring);
-						return 1;
-					}
+// 					if (pos.size()-1 == 0) {
+// 						char errstring[STRSIZE];
+// 						sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
+// 										ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+// 						fprintf(stderr, errstring);
+// 						return 1;
+// 					}
 				
 					// vector<int> pos2;
 					for (unsigned int l = 0; l < pos.size(); l++) {
@@ -1070,38 +777,45 @@ int main (int argc, char* argv[]) {
 							pos2.push_back(pos[l]);
 						}
 					}
+					
+					if (pos2.size() == 0) {
+						continue;
+					}
+					
 					// Pick new position
 					new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+					new_index = pos2[new_index];
 				} else {
-					new_index = rand() % (rand_range_end-rand_range_start); // Selection in interval [0,(rand_range_end-rand_range_start)-1]
+					new_index = rand() % (3137161264) + 1; // 1-based over whole genome
 				}
 				
 				// END 3MER CODE
 				
 				vector<string> vec;
-				vec.push_back(var_array[k][0]);
+				// vec.push_back(var_array[k][0]);
 				
-				if (trimer) {
+				string new_chr;
 				
-					char start_cstr[STRSIZE];
-					sprintf(start_cstr, "%d", pos2[new_index]); // 0-based
-					vec.push_back(string(start_cstr));
+				for (unsigned int l = 0; l <= 25; l++) {
+					int chr_size = hg19_coor[l];
 				
-					char end_cstr[STRSIZE];
-					sprintf(end_cstr, "%d", pos2[new_index]+1); // 1-based
-					vec.push_back(string(end_cstr));
-					
-				} else {
-				
-					char start_cstr[STRSIZE];
-					sprintf(start_cstr, "%d", new_index); // 0-based
-					vec.push_back(string(start_cstr));
-				
-					char end_cstr[STRSIZE];
-					sprintf(end_cstr, "%d", new_index+1); // 1-based
-					vec.push_back(string(end_cstr));
-					
+					if (new_index > chr_size) {
+						new_index -= chr_size;
+					} else {
+						new_chr = int2chr(l);
+						break;
+					}
 				}
+				
+				vec.push_back(new_chr);
+			
+				char start_cstr[STRSIZE];
+				sprintf(start_cstr, "%d", new_index-1); // 0-based
+				vec.push_back(string(start_cstr));
+			
+				char end_cstr[STRSIZE];
+				sprintf(end_cstr, "%d", new_index); // 1-based
+				vec.push_back(string(end_cstr));
 				
 				permuted_set.push_back(vec);
 			}
