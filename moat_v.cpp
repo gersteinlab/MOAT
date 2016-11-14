@@ -692,78 +692,80 @@ int main (int argc, char* argv[]) {
 		string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
 		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
 	
-		unsigned int variant_pointer = 0;
+		// unsigned int variant_pointer = 0;
+		
+		vector<vector<string> > permuted_set;
 			
-			// Variant processing loop
-			for (unsigned int k = 0; k < var_array.size(); k++) {
+		// Variant processing loop
+		for (unsigned int k = 0; k < var_array.size(); k++) {
+		
+			if (trimer) {
+				if (last_chr != var_array[k][0]) {
+					// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
+					// char_pointer = 0;
 			
-				if (trimer) {
-					if (last_chr != var_array[k][0]) {
-						// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
-						// char_pointer = 0;
-				
-						string filename = fasta_dir + "/" + ann_array[k][0] + ".fa";
-						fasta_ptr = fopen(filename.c_str(), "r");
-				
-						int first = 1;
-						last_chr = var_array[k][0];
-						chr_nt = "";
-						char linebuf_cstr[STRSIZE];
-						while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-							string linebuf = string(linebuf_cstr);
-							linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-							if (first) {
-								first = 0;
-								continue;
-							}
-							chr_nt += linebuf;
+					string filename = fasta_dir + "/" + ann_array[k][0] + ".fa";
+					fasta_ptr = fopen(filename.c_str(), "r");
+			
+					int first = 1;
+					last_chr = var_array[k][0];
+					chr_nt = "";
+					char linebuf_cstr[STRSIZE];
+					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+						string linebuf = string(linebuf_cstr);
+						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+						if (first) {
+							first = 0;
+							continue;
 						}
-						// Check feof of fasta_ptr
-						if (feof(fasta_ptr)) { // We're good
-							fclose(fasta_ptr);
-						} else { // It's an error
-							char errstring[STRSIZE];
-							sprintf(errstring, "Error reading from %s", filename.c_str());
-							perror(errstring);
-							return 1;
-						}
+						chr_nt += linebuf;
 					}
+					// Check feof of fasta_ptr
+					if (feof(fasta_ptr)) { // We're good
+						fclose(fasta_ptr);
+					} else { // It's an error
+						char errstring[STRSIZE];
+						sprintf(errstring, "Error reading from %s", filename.c_str());
+						perror(errstring);
+						return 1;
+					}
+				}
+			}
+		
+			// DEBUG
+			// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
+			
+			int new_index;
+			vector<int> pos2;
+			
+			// BEGIN 3MER CODE
+			if (trimer) {
+		
+				vector<string> cur_var = var_array[k];
+				char cur_nt1 = toupper(chr_nt[atoi(cur_var[2].c_str())-2]);
+				char cur_nt2 = toupper(chr_nt[atoi(cur_var[2].c_str())-1]); // 0-based index
+				char cur_nt3 = toupper(chr_nt[atoi(cur_var[2].c_str())]);
+			
+				stringstream ss;
+				string cur_nt;
+				ss << cur_nt1;
+				ss << cur_nt2;
+				ss << cur_nt3;
+				ss >> cur_nt;
+			
+				// If there is an N in this string, we skip this variant
+				if (cur_nt.find_first_of('N') != string::npos) {
+					continue;
 				}
 			
 				// DEBUG
-				// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-				
-				int new_index;
-				vector<int> pos2;
-				
-				// BEGIN 3MER CODE
-				if (trimer) {
+				// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
+				// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 			
-					vector<string> cur_var = var_array[k];
-					char cur_nt1 = toupper(chr_nt[atoi(cur_var[2].c_str())-2]);
-					char cur_nt2 = toupper(chr_nt[atoi(cur_var[2].c_str())-1]); // 0-based index
-					char cur_nt3 = toupper(chr_nt[atoi(cur_var[2].c_str())]);
-				
-					stringstream ss;
-					string cur_nt;
-					ss << cur_nt1;
-					ss << cur_nt2;
-					ss << cur_nt3;
-					ss >> cur_nt;
-				
-					// If there is an N in this string, we skip this variant
-					if (cur_nt.find_first_of('N') != string::npos) {
-						continue;
-					}
-				
-					// DEBUG
-					// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-					// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
-				
-					vector<int> pos = local_nt[cur_nt];
-				
-					// If no positions are available, end program with an error and suggest
-					// a larger bin size
+				vector<int> pos = local_nt[cur_nt];
+			
+				// If no positions are available, end program with an error and suggest
+				// a larger bin size
 // 					if (pos.size()-1 == 0) {
 // 						char errstring[STRSIZE];
 // 						sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
@@ -771,55 +773,55 @@ int main (int argc, char* argv[]) {
 // 						fprintf(stderr, errstring);
 // 						return 1;
 // 					}
-				
-					// vector<int> pos2;
-					for (unsigned int l = 0; l < pos.size(); l++) {
-						if (pos[l] != atoi(cur_var[2].c_str())-1) {
-							pos2.push_back(pos[l]);
-						}
-					}
-					
-					if (pos2.size() == 0) {
-						continue;
-					}
-					
-					// Pick new position
-					new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
-					new_index = pos2[new_index];
-				} else {
-					new_index = rand() % (3137161264) + 1; // 1-based over whole genome
-				}
-				
-				// END 3MER CODE
-				
-				vector<string> vec;
-				// vec.push_back(var_array[k][0]);
-				
-				string new_chr;
-				
-				for (unsigned int l = 0; l <= 25; l++) {
-					int chr_size = hg19_coor[l];
-				
-					if (new_index > chr_size) {
-						new_index -= chr_size;
-					} else {
-						new_chr = int2chr(l);
-						break;
+			
+				// vector<int> pos2;
+				for (unsigned int l = 0; l < pos.size(); l++) {
+					if (pos[l] != atoi(cur_var[2].c_str())-1) {
+						pos2.push_back(pos[l]);
 					}
 				}
 				
-				vec.push_back(new_chr);
-			
-				char start_cstr[STRSIZE];
-				sprintf(start_cstr, "%d", new_index-1); // 0-based
-				vec.push_back(string(start_cstr));
-			
-				char end_cstr[STRSIZE];
-				sprintf(end_cstr, "%d", new_index); // 1-based
-				vec.push_back(string(end_cstr));
+				if (pos2.size() == 0) {
+					continue;
+				}
 				
-				permuted_set.push_back(vec);
+				// Pick new position
+				new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+				new_index = pos2[new_index];
+			} else {
+				new_index = rand() % (3137161264) + 1; // 1-based over whole genome
 			}
+			
+			// END 3MER CODE
+			
+			vector<string> vec;
+			// vec.push_back(var_array[k][0]);
+			
+			string new_chr;
+			
+			for (unsigned int l = 0; l <= 25; l++) {
+				int chr_size = hg19_coor[int2chr(l)];
+			
+				if (new_index > chr_size) {
+					new_index -= chr_size;
+				} else {
+					new_chr = int2chr(l);
+					break;
+				}
+			}
+			
+			vec.push_back(new_chr);
+		
+			char start_cstr[STRSIZE];
+			sprintf(start_cstr, "%d", new_index-1); // 0-based
+			vec.push_back(string(start_cstr));
+		
+			char end_cstr[STRSIZE];
+			sprintf(end_cstr, "%d", new_index); // 1-based
+			vec.push_back(string(end_cstr));
+			
+			permuted_set.push_back(vec);
+		}
 			
 			// Read in the basepairs we need for this region
 // 			string local_nt = "";
@@ -832,7 +834,7 @@ int main (int argc, char* argv[]) {
 			// END NEW CODE
 			
 			// vector<vector<string> > permuted_set = permute_variants(var_subset_count, rand_range);
-			sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
+		sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
 		
 			// DEBUG
 			// printf("Loop iter %d\n", i);
@@ -842,11 +844,10 @@ int main (int argc, char* argv[]) {
 	// 		return 0;
 			// printf("Permutation %d, Permuted set size: %d\n", i+1, (int)permuted_set.size());
 		
-			for (unsigned int k = 0; k < permuted_set.size(); k++) {
-				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
-			}
-			last_chr = ann_array[j][0];
+		for (unsigned int k = 0; k < permuted_set.size(); k++) {
+			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
 		}
+			// last_chr = ann_array[k][0];
 		fclose(outfile_ptr);
 	}
 	
