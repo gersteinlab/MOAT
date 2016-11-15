@@ -671,9 +671,17 @@ int main (int argc, char* argv[]) {
 					return 1;
 				}
 				
+				if (toupper(chr_nt[j-1]) == 'N' || toupper(chr_nt[j]) == 'N' || toupper(chr_nt[j+1]) == 'N') {
+					continue;
+				}
+				
 				int this_epoch = epoch_nt + (j+1); // 1-based
 				
 				local_nt[cur_nt].push_back(this_epoch);
+				
+				// DEBUG
+				printf("%d\n", this_epoch);
+				printf("%s\n", cur_nt.c_str());
 			}
 			
 			epoch_nt += hg19_coor[chr];
@@ -769,7 +777,8 @@ int main (int argc, char* argv[]) {
 				// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
 				// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 			
-				vector<int> pos = local_nt[cur_nt];
+				// vector<int> pos = local_nt[cur_nt];
+				pos2 = local_nt[cur_nt];
 			
 				// If no positions are available, end program with an error and suggest
 				// a larger bin size
@@ -782,11 +791,11 @@ int main (int argc, char* argv[]) {
 // 					}
 			
 				// vector<int> pos2;
-				for (unsigned int l = 0; l < pos.size(); l++) {
-					if (pos[l] != atoi(cur_var[2].c_str())-1) {
-						pos2.push_back(pos[l]);
-					}
-				}
+// 				for (unsigned int l = 0; l < pos.size(); l++) {
+// 					if (pos[l] != atoi(cur_var[2].c_str())-1) {
+// 						pos2.push_back(pos[l]);
+// 					}
+// 				}
 				
 				if (pos2.size() == 0) {
 					continue;
@@ -806,7 +815,7 @@ int main (int argc, char* argv[]) {
 			
 			string new_chr;
 			
-			for (unsigned int l = 0; l <= 25; l++) {
+			for (unsigned int l = 1; l <= 25; l++) {
 				int chr_size = hg19_coor[int2chr(l)];
 			
 				if (new_index > chr_size) {
