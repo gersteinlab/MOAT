@@ -654,7 +654,8 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 			
-			for (int j = 1; j < (int)chr_nt.size()-1; j++) {
+			// for (int j = 1; j <= (int)chr_nt.size()-1; j++) {
+			for (int j = 1; j < 20000; j++) { // DEBUG
 				
  				stringstream ss;
 				string cur_nt;
