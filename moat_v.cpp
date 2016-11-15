@@ -626,7 +626,7 @@ int main (int argc, char* argv[]) {
 	}
 			
 	if (trimer) {
-		for (int i = 1; i <= 25; i++) {
+		for (int i = 1; i <= 1; i++) {
 			
 			string chr = int2chr(i);
 			string filename = fasta_dir + "/" + chr + ".fa";
