@@ -682,6 +682,7 @@ int main (int argc, char* argv[]) {
 	
 	// DEBUG
 	vector<int> test = local_nt["TCA"];
+	printf("%d\n", (int)test.size());
 	for (unsigned int m = 0; m < test.size(); m++) {
 		printf("%d\n", test[m]);
 	}
