@@ -659,20 +659,25 @@ int main (int argc, char* argv[]) {
 				
  				stringstream ss;
 				string cur_nt;
-				ss << toupper(chr_nt[j-1]);
-				ss << toupper(chr_nt[j]);
-				ss << toupper(chr_nt[j+1]);
+				
+				char nt1 = toupper(chr_nt[j-1]);
+				char nt2 = toupper(chr_nt[j]);
+				char nt3 = toupper(chr_nt[j+1]);
+				
+				ss << nt1;
+				ss << nt2;
+				ss << nt3;
 				ss >> cur_nt;
 				
 				// Verify there are no invalid characters
-				if (toupper(chr_nt[j]) != 'A' && toupper(chr_nt[j]) != 'C' && toupper(chr_nt[j]) != 'G' && toupper(chr_nt[j]) != 'T' && toupper(chr_nt[j]) != 'N') {
+				if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
 					char errstring[STRSIZE];
 					sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", chr_nt[j]);
 					fprintf(stderr, errstring);
 					return 1;
 				}
 				
-				if (toupper(chr_nt[j-1]) == 'N' || toupper(chr_nt[j]) == 'N' || toupper(chr_nt[j+1]) == 'N') {
+				if (nt1 == 'N' || nt2 == 'N' || nt3 == 'N') {
 					continue;
 				}
 				
