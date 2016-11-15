@@ -654,8 +654,8 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 			
-			// for (int j = 1; j <= (int)chr_nt.size()-1; j++) {
-			for (int j = 1; j < 20000; j++) { // DEBUG
+			for (int j = 1; j <= (int)chr_nt.size()-1; j++) {
+			// for (int j = 1; j < 20000; j++) { // DEBUG
 				
  				stringstream ss;
 				string cur_nt;
@@ -686,8 +686,8 @@ int main (int argc, char* argv[]) {
 				local_nt[cur_nt].push_back(this_epoch);
 				
 				// DEBUG
-				printf("%d\n", this_epoch);
-				printf("%s\n", cur_nt.c_str());
+				// printf("%d\n", this_epoch);
+				// printf("%s\n", cur_nt.c_str());
 			}
 			
 			epoch_nt += hg19_coor[chr];
@@ -695,11 +695,11 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	vector<int> test = local_nt["TCA"];
-	printf("%d\n", (int)test.size());
-	for (unsigned int m = 0; m < test.size(); m++) {
-		printf("%d\n", test[m]);
-	}
+// 	vector<int> test = local_nt["TCA"];
+// 	printf("%d\n", (int)test.size());
+// 	for (unsigned int m = 0; m < test.size(); m++) {
+// 		printf("%d\n", test[m]);
+// 	}
 	
 	/* Permutate variant locations */
 	srand(0);
