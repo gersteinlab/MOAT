@@ -625,7 +625,7 @@ int main (int argc, char* argv[]) {
 			variant_pointer = range.first;
 			
 			for (unsigned int k = range.first; k <= range.second; k++) {
-				int this_epoch = epoch_total - (ann_array[j][2] - ann_array[j][1]) + var_array[k][2]; // 1-based
+				int this_epoch = epoch_total - (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str())) + atoi(var_array[k][2].c_str()); // 1-based
 				epoch_var.push_back(this_epoch);
 			}
 		}
