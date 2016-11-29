@@ -573,7 +573,7 @@ int main (int argc, char* argv[]) {
 		vector<int> epoch_var;
 
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
-			epoch_total += (ann_array[j][2] - ann_array[j][1]);
+			epoch_total += (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str()));
 			if (trimer) {
 				if (last_chr != ann_array[j][0]) {
 			
@@ -605,23 +605,23 @@ int main (int argc, char* argv[]) {
 					}
 				}
 			
-				epoch_nt += chr_nt.substr(ann_array[j][1], (ann_array[j][2] - ann_array[j][1]));
+				epoch_nt += chr_nt.substr(atoi(ann_array[j][1].c_str()), (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str())));
 			}
 			
 			// Find overlapping variants and convert to epoch coordinates
 			// Guarantee the overlapping variants are not going to be less than variant_pointer
-			vector<string> ann_range;
-			ann_range.push_back(ann_array[j][0]);
+// 			vector<string> ann_range;
+// 			ann_range.push_back(ann_array[j][0]);
+// 			
+// 			// char ann_range_start_cstr[STRSIZE];
+// 			// sprintf(ann_range_start_cstr, "%d", ann_array[j][1]);
+// 			ann_range.push_back(string(ann_range_start_cstr));
+// 			
+// 			// char ann_range_end_cstr[STRSIZE];
+// 			// sprintf(ann_range_end_cstr, "%d", ann_array[j][2]);
+// 			ann_range.push_back(string(ann_range_end_cstr));
 			
-			char ann_range_start_cstr[STRSIZE];
-			sprintf(ann_range_start_cstr, "%d", ann_array[j][1]);
-			ann_range.push_back(string(ann_range_start_cstr));
-			
-			char ann_range_end_cstr[STRSIZE];
-			sprintf(ann_range_end_cstr, "%d", ann_array[j][2]);
-			ann_range.push_back(string(ann_range_end_cstr));
-			
-			pair<unsigned int,unsigned int> range = intersecting_variants(var_array, ann_range, variant_pointer);
+			pair<unsigned int,unsigned int> range = intersecting_variants(var_array, ann_array[j], variant_pointer);
 			variant_pointer = range.first;
 			
 			for (unsigned int k = range.first; k <= range.second; k++) {
@@ -765,13 +765,13 @@ int main (int argc, char* argv[]) {
 			
 			// EPOCH CODE
 			for (unsigned int l = 0; l < ann_array.size(); l++) {
-				int ann_size = (ann_array[l][2] - ann_array[l][1]);
+				int ann_size = (atoi(ann_array[l][2].c_str()) - atoi(ann_array[l][1].c_str()));
 				
 				if (new_index > ann_size) {
 					new_index -= ann_size;
 				} else {
 					new_chr = ann_array[l][0];
-					new_index = ann_array[l][1] + new_index;
+					new_index = atoi(ann_array[l][1].c_str()) + new_index;
 					break;
 				}
 			}
