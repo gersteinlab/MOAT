@@ -567,79 +567,107 @@ int main (int argc, char* argv[]) {
 		}
 	}
 			
-	if (trimer) {
+// 	if (trimer) {
+
+		unsigned int variant_pointer = 0;
+		vector<int> epoch_var;
+
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
-			if (last_chr != ann_array[j][0]) {
+			epoch_total += (ann_array[j][2] - ann_array[j][1]);
+			if (trimer) {
+				if (last_chr != ann_array[j][0]) {
 			
-				last_chr = ann_array[j][0];
-				string chr = last_chr;
-				string filename = fasta_dir + "/" + chr + ".fa";
-				fasta_ptr = fopen(filename.c_str(), "r");
+					last_chr = ann_array[j][0];
+					string chr = last_chr;
+					string filename = fasta_dir + "/" + chr + ".fa";
+					fasta_ptr = fopen(filename.c_str(), "r");
 			
-				int first = 1;
-				chr_nt = "";
-				char linebuf_cstr[STRSIZE];
-				while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-					string linebuf = string(linebuf_cstr);
-					linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-					if (first) {
-						first = 0;
-						continue;
+					int first = 1;
+					chr_nt = "";
+					char linebuf_cstr[STRSIZE];
+					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+						string linebuf = string(linebuf_cstr);
+						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+						if (first) {
+							first = 0;
+							continue;
+						}
+						chr_nt += linebuf;
 					}
-					chr_nt += linebuf;
+					// Check feof of fasta_ptr
+					if (feof(fasta_ptr)) { // We're good
+						fclose(fasta_ptr);
+					} else { // It's an error
+						char errstring[STRSIZE];
+						sprintf(errstring, "Error reading from %s", filename.c_str());
+						perror(errstring);
+						return 1;
+					}
 				}
-				// Check feof of fasta_ptr
-				if (feof(fasta_ptr)) { // We're good
-					fclose(fasta_ptr);
-				} else { // It's an error
-					char errstring[STRSIZE];
-					sprintf(errstring, "Error reading from %s", filename.c_str());
-					perror(errstring);
-					return 1;
-				}
+			
+				epoch_nt += chr_nt.substr(ann_array[j][1], (ann_array[j][2] - ann_array[j][1]));
 			}
 			
-			epoch_total += (ann_array[j][2] - ann_array[j][1]);
-			epoch_nt += chr_nt.substr(ann_array[j][1], (ann_array[j][2] - ann_array[j][1]));
+			// Find overlapping variants and convert to epoch coordinates
+			// Guarantee the overlapping variants are not going to be less than variant_pointer
+			vector<string> ann_range;
+			ann_range.push_back(ann_array[j][0]);
+			
+			char ann_range_start_cstr[STRSIZE];
+			sprintf(ann_range_start_cstr, "%d", ann_array[j][1]);
+			ann_range.push_back(string(ann_range_start_cstr));
+			
+			char ann_range_end_cstr[STRSIZE];
+			sprintf(ann_range_end_cstr, "%d", ann_array[j][2]);
+			ann_range.push_back(string(ann_range_end_cstr));
+			
+			pair<unsigned int,unsigned int> range = intersecting_variants(var_array, ann_range, variant_pointer);
+			variant_pointer = range.first;
+			
+			for (unsigned int k = range.first; k <= range.second; k++) {
+				int this_epoch = epoch_total - (ann_array[j][2] - ann_array[j][1]) + var_array[k][2]; // 1-based
+				epoch_var.push_back(this_epoch);
+			}
 		}
 		
 		// Index the epoch_nt
-		for (int j = 1; j <= (int)epoch_nt.size()-1; j++) {
-		// for (int j = 1; j < 20000; j++) { // DEBUG
+		if (trimer) {
+			for (int j = 1; j <= (int)epoch_nt.size()-1; j++) {
+			// for (int j = 1; j < 20000; j++) { // DEBUG
 			
-			stringstream ss;
-			string cur_nt;
+				stringstream ss;
+				string cur_nt;
 				
-			char nt1 = toupper(chr_nt[j-1]);
-			char nt2 = toupper(chr_nt[j]);
-			char nt3 = toupper(chr_nt[j+1]);
+				char nt1 = toupper(chr_nt[j-1]);
+				char nt2 = toupper(chr_nt[j]);
+				char nt3 = toupper(chr_nt[j+1]);
 			
-			ss << nt1;
-			ss << nt2;
-			ss << nt3;
-			ss >> cur_nt;
+				ss << nt1;
+				ss << nt2;
+				ss << nt3;
+				ss >> cur_nt;
 				
-			// Verify there are no invalid characters
-			if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
-				char errstring[STRSIZE];
-				sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", chr_nt[j]);
-				fprintf(stderr, errstring);
-				return 1;
+				// Verify there are no invalid characters
+				if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
+					char errstring[STRSIZE];
+					sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", chr_nt[j]);
+					fprintf(stderr, errstring);
+					return 1;
+				}
+			
+				if (nt1 == 'N' || nt2 == 'N' || nt3 == 'N') {
+					continue;
+				}
+				
+					// int this_epoch = epoch_nt + (j+1); // 1-based
+				
+				local_nt[cur_nt].push_back(j+1); // 1-based
+				
+				// DEBUG
+				// printf("%d\n", this_epoch);
+				// printf("%s\n", cur_nt.c_str());
 			}
-			
-			if (nt1 == 'N' || nt2 == 'N' || nt3 == 'N') {
-				continue;
-			}
-				
-				// int this_epoch = epoch_nt + (j+1); // 1-based
-				
-			local_nt[cur_nt].push_back(j+1); // 1-based
-				
-			// DEBUG
-			// printf("%d\n", this_epoch);
-			// printf("%s\n", cur_nt.c_str());
 		}
-	}
 	
 	// DEBUG
 // 	vector<int> test = local_nt["TCA"];
@@ -665,40 +693,7 @@ int main (int argc, char* argv[]) {
 		vector<vector<string> > permuted_set;
 			
 		// Variant processing loop
-		for (unsigned int k = 0; k < var_array.size(); k++) {
-		
-			if (trimer) {
-				if (last_chr != var_array[k][0]) {
-					// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
-					// char_pointer = 0;
-			
-					string filename = fasta_dir + "/" + ann_array[k][0] + ".fa";
-					fasta_ptr = fopen(filename.c_str(), "r");
-			
-					int first = 1;
-					last_chr = var_array[k][0];
-					chr_nt = "";
-					char linebuf_cstr[STRSIZE];
-					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-						string linebuf = string(linebuf_cstr);
-						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-						if (first) {
-							first = 0;
-							continue;
-						}
-						chr_nt += linebuf;
-					}
-					// Check feof of fasta_ptr
-					if (feof(fasta_ptr)) { // We're good
-						fclose(fasta_ptr);
-					} else { // It's an error
-						char errstring[STRSIZE];
-						sprintf(errstring, "Error reading from %s", filename.c_str());
-						perror(errstring);
-						return 1;
-					}
-				}
-			}
+		for (unsigned int k = 0; k < epoch_var.size(); k++) {
 		
 			// DEBUG
 			// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
@@ -709,10 +704,10 @@ int main (int argc, char* argv[]) {
 			// BEGIN 3MER CODE
 			if (trimer) {
 		
-				vector<string> cur_var = var_array[k];
-				char cur_nt1 = toupper(chr_nt[atoi(cur_var[2].c_str())-2]);
-				char cur_nt2 = toupper(chr_nt[atoi(cur_var[2].c_str())-1]); // 0-based index
-				char cur_nt3 = toupper(chr_nt[atoi(cur_var[2].c_str())]);
+				// vector<string> cur_var = var_array[k];
+				char cur_nt1 = toupper(epoch_nt[epoch_var[k]-2]);
+				char cur_nt2 = toupper(epoch_nt[epoch_var[k]-1]); // 0-based index
+				char cur_nt3 = toupper(epoch_nt[epoch_var[k]]);
 			
 				stringstream ss;
 				string cur_nt;
@@ -730,8 +725,8 @@ int main (int argc, char* argv[]) {
 				// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
 				// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 			
-				// vector<int> pos = local_nt[cur_nt];
-				pos2 = local_nt[cur_nt];
+				vector<int> pos = local_nt[cur_nt];
+				// pos2 = local_nt[cur_nt];
 			
 				// If no positions are available, end program with an error and suggest
 				// a larger bin size
@@ -744,11 +739,11 @@ int main (int argc, char* argv[]) {
 // 					}
 			
 				// vector<int> pos2;
-// 				for (unsigned int l = 0; l < pos.size(); l++) {
-// 					if (pos[l] != atoi(cur_var[2].c_str())-1) {
-// 						pos2.push_back(pos[l]);
-// 					}
-// 				}
+				for (unsigned int l = 0; l < pos.size(); l++) {
+					if (pos[l] != epoch_var[k]) {
+						pos2.push_back(pos[l]);
+					}
+				}
 				
 				if (pos2.size() == 0) {
 					continue;
@@ -758,7 +753,7 @@ int main (int argc, char* argv[]) {
 				new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 				new_index = pos2[new_index];
 			} else {
-				new_index = rand() % (3137161264) + 1; // 1-based over whole genome
+				new_index = rand() % (epoch_total) + 1; // 1-based over whole genome
 			}
 			
 			// END 3MER CODE
