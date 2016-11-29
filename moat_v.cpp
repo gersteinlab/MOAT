@@ -763,13 +763,15 @@ int main (int argc, char* argv[]) {
 			
 			string new_chr;
 			
-			for (unsigned int l = 1; l <= 25; l++) {
-				int chr_size = hg19_coor[int2chr(l)];
-			
-				if (new_index > chr_size) {
-					new_index -= chr_size;
+			// EPOCH CODE
+			for (unsigned int l = 0; l < ann_array.size(); l++) {
+				int ann_size = (ann_array[l][2] - ann_array[l][1]);
+				
+				if (new_index > ann_size) {
+					new_index -= ann_size;
 				} else {
-					new_chr = int2chr(l);
+					new_chr = ann_array[l][0];
+					new_index = ann_array[l][1] + new_index;
 					break;
 				}
 			}
