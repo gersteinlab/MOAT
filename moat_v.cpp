@@ -305,12 +305,16 @@ int main (int argc, char* argv[]) {
 	// Expected format: tab(chr, start, end, ...)
 	string vfile;
 	
+	// File with annotations to study for mutation burden
+	// Expected format: tab(chr, start, end, name, ...)
+	string afile;
+	
 	// Directory with the output files
 	// Format: tab(chr, start, end)
 	string outdir;
 	
-	if (argc != 9) {
-		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
+	if (argc != 10) {
+		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [annotation file] [output directory]. Exiting.\n");
 		return 1;
 	} else {
 	
@@ -329,7 +333,8 @@ int main (int argc, char* argv[]) {
 		prohibited_file = string(argv[5]);
 		fasta_dir = string(argv[6]);
 		vfile = string(argv[7]);
-		outdir = string(argv[8]);
+		afile = string(argv[8]);
+		outdir = string(argv[9]);
 	}
 	
 	// Verify files, and import data to memory
@@ -341,6 +346,17 @@ int main (int argc, char* argv[]) {
 	// Check that the file is not empty
 	if (vbuf.st_size == 0) {
 		fprintf(stderr, "Error: Variant file cannot be empty. Exiting.\n");
+		return 1;
+	}
+	
+	struct stat abuf;
+	if (stat(afile.c_str(), &abuf)) { // Report the error and exit
+		fprintf(stderr, "Error trying to stat %s: %s\n", afile.c_str(), strerror(errno));
+		return 1;
+	}
+	// Check that the file is not empty
+	if (abuf.st_size == 0) {
+		fprintf(stderr, "Error: Annotation file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
@@ -416,6 +432,40 @@ int main (int argc, char* argv[]) {
 		return 1;
 	}
 	
+	// Bring annotation file data into memory
+	FILE *afile_ptr = fopen(afile.c_str(), "r");
+	while (fgets(linebuf, STRSIZE, afile_ptr) != NULL) {
+		string line = string(linebuf);
+		
+		// DEBUG
+		// printf("%s", line.c_str());
+		
+		// Extract chromosome, start, end, and name from line (first 4 columns)
+		vector<string> vec;
+		for (int i = 0; i < 4; i++) {
+			size_t ws_index = line.find_first_of("\t\n");
+			string in = line.substr(0, ws_index);
+			vec.push_back(in);
+			line = line.substr(ws_index+1);
+		}
+		
+		// If this is not a standard chromosome, then remove this row
+		if (chr2int(vec[0]) == 0) {
+			continue;
+		}
+		
+		ann_array.push_back(vec);
+	}
+	// Check feof of vfile
+	if (feof(afile_ptr)) { // We're good
+		fclose(afile_ptr);
+	} else { // It's an error
+		char errstring[STRSIZE];
+		sprintf(errstring, "Error reading from %s", afile.c_str());
+		perror(errstring);
+		return 1;
+	}
+	
 	// Import prohibited regions file
 	FILE *prohibited_file_ptr = fopen(prohibited_file.c_str(), "r");
 	while (fgets(linebuf, STRSIZE, prohibited_file_ptr) != NULL) {
@@ -453,98 +503,23 @@ int main (int argc, char* argv[]) {
 	
 	// Sort the arrays
 	sort(var_array.begin(), var_array.end(), cmpIntervals);
+	sort(ann_array.begin(), ann_array.end(), cmpIntervals);
 	sort(prohibited_regions.begin(), prohibited_regions.end(), cmpIntervals);
 	
-	// Merge prohibited regions
+	// Merge annotations and prohibited regions
+	ann_array = merge_intervals(ann_array);
 	prohibited_regions = merge_intervals(prohibited_regions);
 	
-	// hg19 coordinates
-	map<string,int> hg19_coor;
+	// BEGINNING OF NEW EPOCH CODE
+	// Annotation file is relevant again, must import and use in the prohibited
+	// region subtraction
+	// Removal of hg19 coor code
 	
-	hg19_coor["chr1"] = 249250621;
-	hg19_coor["chr2"] = 243199373;
-	hg19_coor["chr3"] =	198022430;
-	hg19_coor["chr4"] =	191154276;
-	hg19_coor["chr5"] =	180915260;
-	hg19_coor["chr6"] =	171115067;
-	hg19_coor["chr7"] =	159138663;
-	hg19_coor["chr8"] =	146364022;
-	hg19_coor["chr9"] =	141213431;
-	hg19_coor["chr10"] = 135534747;
-	hg19_coor["chr11"] = 135006516;
-	hg19_coor["chr12"] = 133851895;
-	hg19_coor["chr13"] = 115169878;
-	hg19_coor["chr14"] = 107349540;
-	hg19_coor["chr15"] = 102531392;
-	hg19_coor["chr16"] = 90354753;
-	hg19_coor["chr17"] = 81195210;
-	hg19_coor["chr18"] = 78077248;
-	hg19_coor["chr19"] = 59128983;
-	hg19_coor["chr20"] = 63025520;
-	hg19_coor["chr21"] = 48129895;
-	hg19_coor["chr22"] = 51304566;
-	hg19_coor["chrX"] = 155270560;
-	hg19_coor["chrY"] = 59373566;
-	hg19_coor["chrM"] = 16571;
-	
-	for (int i = 1; i <= 25; i++) {
-		string chr = int2chr(i);
-		int left = 1;
-		while ((left + window_radius) < hg19_coor[chr]) {
-			vector<string> vec;
-			vec.push_back(chr);
-			
-			char left_str[STRSIZE];
-			sprintf(left_str, "%d", left);
-			vec.push_back(string(left_str));
-			
-			char right_str[STRSIZE];
-			sprintf(right_str, "%d", left + window_radius);
-			vec.push_back(string(right_str));
-			
-			ann_array.push_back(vec);
-			
-			left += window_radius;
-		}
-		
-		// Fencepost
-		vector<string> vec;
-		vec.push_back(chr);
-		
-		char left_str[STRSIZE];
-		sprintf(left_str, "%d", left);
-		vec.push_back(string(left_str));
-		
-		char right_str[STRSIZE];
-		sprintf(right_str, "%d", hg19_coor[chr]);
-		vec.push_back(string(right_str));
-		
-		ann_array.push_back(vec);
-	}
-	
-	// DEBUG - check ann_array values
-// 	FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
-// 	for (unsigned int i = 0; i < ann_array.size(); i++) {
-// 		fprintf(testfile_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
-// 	}
-// 	fclose(testfile_ptr);
-// 	return 0;
-	
-	// Subtract the portions of each annotation that overlap prohibited regions
+	// Remove each annotation that overlaps prohibited regions
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
 		vector<vector<string> > int_intervals = intersecting_intervals(prohibited_regions, ann_array[i]);
-		sort(int_intervals.begin(), int_intervals.end(), cmpIntervals);
-		vector<vector<string> > allowed_regions = subtract_intervals(ann_array[i], int_intervals);
 		
-		if (allowed_regions.size() > 0) {
-			// Easy to replace the first one
-			ann_array[i][1] = allowed_regions[0][1];
-			ann_array[i][2] = allowed_regions[0][2];
-			
-			for (unsigned int j = 1; j < allowed_regions.size(); j++) {
-				ann_array.push_back(allowed_regions[j]);
-			}
-		} else { // No allowed regions, mark for removal
+		if (int_intervals.size() > 0) { // Mark for removal
 			ann_array[i][0] = "chrNo";
 		}
 	}
@@ -556,49 +531,16 @@ int main (int argc, char* argv[]) {
 		ann_array.erase(ann_array.end());
 	}
 	
-	// Detect those below the min threshold and join with a contiguous neighbor
-	for (unsigned int i = 0; i < ann_array.size(); i++) {
-		// Unpack
-		string cur_chr = ann_array[i][0];
-		int cur_start = atoi(ann_array[i][1].c_str());
-		int cur_end = atoi(ann_array[i][2].c_str());
-		int width = cur_end - cur_start;
-		
-		if (width < min_width) {
-			if (i != 0 && cur_chr == ann_array[i-1][0] && atoi(ann_array[i-1][2].c_str()) == cur_start) {
-				// Merge
-				ann_array[i-1][2] = ann_array[i][2];
-			} else if (i != ann_array.size()-1 && cur_chr == ann_array[i+1][0] && atoi(ann_array[i+1][1].c_str()) == cur_end) {
-				// Merge
-				ann_array[i+1][1] = ann_array[i][1];
-			}
-			// In any case, remove it
-			ann_array[i][0] = "chrNo";
-		}
-	}
-	
-	// Removal operations again
-	sort(ann_array.begin(), ann_array.end(), cmpIntervals);
-	while (ann_array[ann_array.size()-1][0] == "chrNo") {
-		ann_array.erase(ann_array.end());
-	}
-	
 	// DEBUG
 	// printf("Breakpoint 2\n");
 	
-	// DEBUG - check ann_array values after prohibited region subtraction
-// 	FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
-// 	for (unsigned int i = 0; i < ann_array.size(); i++) {
-// 		fprintf(testfile_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
-// 	}
-// 	fclose(testfile_ptr);
-// 	return 0;
-	
+	// EPOCH CODE	
 	FILE *fasta_ptr = NULL;
 	string last_chr = "";
 	// int char_pointer;
 	string chr_nt;
-	int epoch_nt = 0;
+	int epoch_total = 0;
+	string epoch_nt;
 	
 	// FASTA import and indexing goes here now, before we start permutations
 	
@@ -626,71 +568,76 @@ int main (int argc, char* argv[]) {
 	}
 			
 	if (trimer) {
-		for (int i = 1; i <= 1; i++) {
+		for (unsigned int j = 0; j < ann_array.size(); j++) {
+			if (last_chr != ann_array[j][0]) {
 			
-			string chr = int2chr(i);
-			string filename = fasta_dir + "/" + chr + ".fa";
-			fasta_ptr = fopen(filename.c_str(), "r");
+				last_chr = ann_array[j][0];
+				string chr = last_chr;
+				string filename = fasta_dir + "/" + chr + ".fa";
+				fasta_ptr = fopen(filename.c_str(), "r");
 			
-			int first = 1;
-			chr_nt = "";
-			char linebuf_cstr[STRSIZE];
-			while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-				string linebuf = string(linebuf_cstr);
-				linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-				if (first) {
-					first = 0;
-					continue;
+				int first = 1;
+				chr_nt = "";
+				char linebuf_cstr[STRSIZE];
+				while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+					string linebuf = string(linebuf_cstr);
+					linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+					if (first) {
+						first = 0;
+						continue;
+					}
+					chr_nt += linebuf;
 				}
-				chr_nt += linebuf;
+				// Check feof of fasta_ptr
+				if (feof(fasta_ptr)) { // We're good
+					fclose(fasta_ptr);
+				} else { // It's an error
+					char errstring[STRSIZE];
+					sprintf(errstring, "Error reading from %s", filename.c_str());
+					perror(errstring);
+					return 1;
+				}
 			}
-			// Check feof of fasta_ptr
-			if (feof(fasta_ptr)) { // We're good
-				fclose(fasta_ptr);
-			} else { // It's an error
+			
+			epoch_total += (ann_array[j][2] - ann_array[j][1]);
+			epoch_nt += chr_nt.substr(ann_array[j][1], (ann_array[j][2] - ann_array[j][1]));
+		}
+		
+		// Index the epoch_nt
+		for (int j = 1; j <= (int)epoch_nt.size()-1; j++) {
+		// for (int j = 1; j < 20000; j++) { // DEBUG
+			
+			stringstream ss;
+			string cur_nt;
+				
+			char nt1 = toupper(chr_nt[j-1]);
+			char nt2 = toupper(chr_nt[j]);
+			char nt3 = toupper(chr_nt[j+1]);
+			
+			ss << nt1;
+			ss << nt2;
+			ss << nt3;
+			ss >> cur_nt;
+				
+			// Verify there are no invalid characters
+			if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
 				char errstring[STRSIZE];
-				sprintf(errstring, "Error reading from %s", filename.c_str());
-				perror(errstring);
+				sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", chr_nt[j]);
+				fprintf(stderr, errstring);
 				return 1;
 			}
 			
-			for (int j = 1; j <= (int)chr_nt.size()-1; j++) {
-			// for (int j = 1; j < 20000; j++) { // DEBUG
-				
- 				stringstream ss;
-				string cur_nt;
-				
-				char nt1 = toupper(chr_nt[j-1]);
-				char nt2 = toupper(chr_nt[j]);
-				char nt3 = toupper(chr_nt[j+1]);
-				
-				ss << nt1;
-				ss << nt2;
-				ss << nt3;
-				ss >> cur_nt;
-				
-				// Verify there are no invalid characters
-				if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
-					char errstring[STRSIZE];
-					sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", chr_nt[j]);
-					fprintf(stderr, errstring);
-					return 1;
-				}
-				
-				if (nt1 == 'N' || nt2 == 'N' || nt3 == 'N') {
-					continue;
-				}
-				
-				int this_epoch = epoch_nt + (j+1); // 1-based
-				
-				local_nt[cur_nt].push_back(this_epoch);
-				
-				// DEBUG
-				// printf("%d\n", this_epoch);
-				// printf("%s\n", cur_nt.c_str());
+			if (nt1 == 'N' || nt2 == 'N' || nt3 == 'N') {
+				continue;
 			}
-			
-			epoch_nt += hg19_coor[chr];
+				
+				// int this_epoch = epoch_nt + (j+1); // 1-based
+				
+			local_nt[cur_nt].push_back(j+1); // 1-based
+				
+			// DEBUG
+			// printf("%d\n", this_epoch);
+			// printf("%s\n", cur_nt.c_str());
 		}
 	}
 	
