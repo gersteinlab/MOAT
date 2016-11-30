@@ -193,6 +193,7 @@ vector<vector<string> > intersecting_intervals (vector<vector<string> > interval
 // Subroutine for calculating intersecting variants
 // Differs from intersecting_intervals in that two pointers to the first and last of
 // the var_array range are returned, rather than the variants themselves
+// Rather, it's [left_pointer, right_pointer)
 pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > const &intervals, vector<string> region, unsigned int left_pointer) {
 	
 	// Output vector
