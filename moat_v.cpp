@@ -577,12 +577,12 @@ int main (int argc, char* argv[]) {
 		
 		// DEBUG
 		// printf("Breakpoint 2.1\n");
-		for (unsigned int j = 0; j < ann_array.size(); j++) {
-			printf("%s:%s-%s\n", ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-		}
-		for (unsigned int j = 0; j < var_array.size(); j++) {
-			printf("%s:%s-%s\n", var_array[j][0].c_str(), var_array[j][1].c_str(), var_array[j][2].c_str());
-		}
+// 		for (unsigned int j = 0; j < ann_array.size(); j++) {
+// 			printf("%s:%s-%s\n", ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+// 		}
+// 		for (unsigned int j = 0; j < var_array.size(); j++) {
+// 			printf("%s:%s-%s\n", var_array[j][0].c_str(), var_array[j][1].c_str(), var_array[j][2].c_str());
+// 		}
 
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
 			epoch_total += (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str()));
@@ -638,6 +638,15 @@ int main (int argc, char* argv[]) {
 			
 			for (unsigned int k = range.first; k < range.second; k++) {
 				int this_epoch = epoch_total - (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str())) + (atoi(var_array[k][2].c_str()) - atoi(ann_array[j][1].c_str())); // 1-based
+				
+				// DEBUG
+				printf("%d\n", epoch_total);
+				printf("%s\n", ann_array[j][2].c_str());
+				printf("%s\n", ann_array[j][1].c_str());
+				printf("%s\n", var_array[k][2].c_str());
+				printf("%s\n", ann_array[j][1].c_str());
+				printf("%d\n", this_epoch);
+				
 				epoch_var.push_back(this_epoch); // 1-based
 			}
 		}
