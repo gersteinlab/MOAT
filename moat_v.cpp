@@ -386,7 +386,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	printf("Breakpoint 0\n");
+	// printf("Breakpoint 0\n");
 	
 	/* Data structures for the starting data */
 	// Variant array, contains variants of the format vector(chr, start, end)
@@ -678,6 +678,9 @@ int main (int argc, char* argv[]) {
 // 	for (unsigned int m = 0; m < test.size(); m++) {
 // 		printf("%d\n", test[m]);
 // 	}
+
+	// DEBUG
+	printf("Breakpoint 2.5\n");
 	
 	/* Permutate variant locations */
 	srand(0);
