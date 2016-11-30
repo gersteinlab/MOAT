@@ -761,6 +761,13 @@ int main (int argc, char* argv[]) {
 				// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 			
 				vector<int> pos = local_nt[cur_nt];
+				
+				// DEBUG
+				for (unsigned int z = 0; z < pos.size(); z++) {
+					printf("%d,", pos[z]);
+				}
+				printf("\n");
+				
 				// pos2 = local_nt[cur_nt];
 			
 				// If no positions are available, end program with an error and suggest
