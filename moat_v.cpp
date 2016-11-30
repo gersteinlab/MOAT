@@ -637,7 +637,11 @@ int main (int argc, char* argv[]) {
 			variant_pointer = range.first;
 			
 			for (unsigned int k = range.first; k < range.second; k++) {
-				int this_epoch = epoch_total - (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str())) + (atoi(var_array[k][2].c_str()) - atoi(ann_array[j][1].c_str())); // 1-based
+				int ann_end = atoi(ann_array[j][2].c_str());
+				int ann_start = atoi(ann_array[j][1].c_str());
+				int var_end = atoi(var_array[k][2].c_str());
+			
+				int this_epoch = epoch_total - (ann_end - ann_start) + (var_end - ann_start); // 1-based
 				
 				// DEBUG
 				printf("%d\n", epoch_total);
@@ -723,7 +727,7 @@ int main (int argc, char* argv[]) {
 		for (unsigned int k = 0; k < epoch_var.size(); k++) {
 		
 			// DEBUG
-			printf("%d epoch_coor: %d\n", k, epoch_var[k]);
+			// printf("%d epoch_coor: %d\n", k, epoch_var[k]);
 			// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 			
 			int new_index;
@@ -745,7 +749,7 @@ int main (int argc, char* argv[]) {
 				ss >> cur_nt;
 				
 				// DEBUG
-				printf("%s\n", cur_nt.c_str());
+				// printf("%s\n", cur_nt.c_str());
 			
 				// If there is an N in this string, we skip this variant
 				if (cur_nt.find_first_of('N') != string::npos) {
