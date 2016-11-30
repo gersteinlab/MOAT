@@ -649,15 +649,15 @@ int main (int argc, char* argv[]) {
 				int this_epoch = epoch_total - (ann_end - ann_start) + (var_end - ann_start); // 1-based
 				
 				// DEBUG
- 				printf("epoch_total: %d\n", epoch_total);
+ 				// printf("epoch_total: %d\n", epoch_total);
 // 				printf("%s\n", ann_array[j][2].c_str());
 // 				printf("%s\n", ann_array[j][1].c_str());
 // 				printf("%s\n", var_array[k][2].c_str());
 // 				printf("%s\n", ann_array[j][1].c_str());
- 				printf("this_epoch: %d\n", this_epoch);
- 				printf("this_chr: %s\n", var_array[k][0].c_str());
- 				printf("this_start: %d\n", atoi(var_array[k][1].c_str()));
- 				printf("this_end: %d\n", atoi(var_array[k][2].c_str()));
+//  				printf("this_epoch: %d\n", this_epoch);
+//  				printf("this_chr: %s\n", var_array[k][0].c_str());
+//  				printf("this_start: %d\n", atoi(var_array[k][1].c_str()));
+//  				printf("this_end: %d\n", atoi(var_array[k][2].c_str()));
 				
 				epoch_var.push_back(this_epoch); // 1-based
 			}
@@ -674,9 +674,9 @@ int main (int argc, char* argv[]) {
 				stringstream ss;
 				string cur_nt;
 				
-				char nt1 = toupper(chr_nt[j-1]);
-				char nt2 = toupper(chr_nt[j]); // 0-based
-				char nt3 = toupper(chr_nt[j+1]);
+				char nt1 = toupper(epoch_nt[j-1]);
+				char nt2 = toupper(epoch_nt[j]); // 0-based
+				char nt3 = toupper(epoch_nt[j+1]);
 			
 				ss << nt1;
 				ss << nt2;
