@@ -502,7 +502,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	printf("Breakpoint 1\n");
+	// printf("Breakpoint 1\n");
 	
 	// Sort the arrays
 	sort(var_array.begin(), var_array.end(), cmpIntervals);
@@ -535,7 +535,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	printf("Breakpoint 2\n");
+	// printf("Breakpoint 2\n");
 	
 	// EPOCH CODE	
 	FILE *fasta_ptr = NULL;
@@ -576,7 +576,7 @@ int main (int argc, char* argv[]) {
 		vector<int> epoch_var;
 		
 		// DEBUG
-		printf("Breakpoint 2.1\n");
+		// printf("Breakpoint 2.1\n");
 
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
 			epoch_total += (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str()));
@@ -637,7 +637,7 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// DEBUG
-		printf("Breakpoint 2.2\n");
+		// printf("Breakpoint 2.2\n");
 		
 		// Index the epoch_nt
 		if (trimer) {
@@ -686,7 +686,7 @@ int main (int argc, char* argv[]) {
 // 	}
 
 	// DEBUG
-	printf("Breakpoint 2.5\n");
+	// printf("Breakpoint 2.5\n");
 	
 	/* Permutate variant locations */
 	srand(0);
@@ -830,7 +830,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	printf("Breakpoint 3\n");
+	// printf("Breakpoint 3\n");
 	
 	// Verdun
 	return 0;
