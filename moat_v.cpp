@@ -800,13 +800,17 @@ int main (int argc, char* argv[]) {
 			
 			// EPOCH CODE
 			for (unsigned int l = 0; l < ann_array.size(); l++) {
+			
+				// DEBUG
+				printf("%d: %s\n", (int)l, ann_array[l][0].c_str());
+			
 				int ann_size = (atoi(ann_array[l][2].c_str()) - atoi(ann_array[l][1].c_str()));
 				
 				if (new_index > ann_size) {
 					new_index -= ann_size;
 				} else {
 					new_chr = ann_array[l][0];
-					new_index = atoi(ann_array[l][1].c_str()) + new_index;
+					new_index = atoi(ann_array[l][1].c_str()) + new_index - 1;
 					break;
 				}
 			}
