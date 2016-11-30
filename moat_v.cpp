@@ -577,6 +577,12 @@ int main (int argc, char* argv[]) {
 		
 		// DEBUG
 		// printf("Breakpoint 2.1\n");
+		for (unsigned int j = 0; j < ann_array.size(); j++) {
+			printf("%s:%s-%s\n", ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+		}
+		for (unsigned int j = 0; j < var_array.size(); j++) {
+			printf("%s:%s-%s\n", var_array[j][0].c_str(), var_array[j][1].c_str(), var_array[j][2].c_str());
+		}
 
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
 			epoch_total += (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str()));
