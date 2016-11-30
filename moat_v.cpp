@@ -385,6 +385,9 @@ int main (int argc, char* argv[]) {
 		return 1;
 	}
 	
+	// DEBUG
+	printf("Breakpoint 0\n");
+	
 	/* Data structures for the starting data */
 	// Variant array, contains variants of the format vector(chr, start, end)
 	vector<vector<string> > var_array;
