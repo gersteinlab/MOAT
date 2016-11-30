@@ -809,7 +809,7 @@ int main (int argc, char* argv[]) {
 			// END 3MER CODE
 			
 			// DEBUG
-			printf("new_index_1: %d\n", new_index);
+			// printf("new_index_1: %d\n", new_index);
 			
 			vector<string> vec;
 			// vec.push_back(var_array[k][0]);
@@ -820,7 +820,7 @@ int main (int argc, char* argv[]) {
 			for (unsigned int l = 0; l < ann_array.size(); l++) {
 			
 				// DEBUG
-				printf("%d: %s\n", (int)l, ann_array[l][0].c_str());
+				// printf("%d: %s\n", (int)l, ann_array[l][0].c_str());
 			
 				int ann_size = (atoi(ann_array[l][2].c_str()) - atoi(ann_array[l][1].c_str()));
 				
@@ -828,16 +828,16 @@ int main (int argc, char* argv[]) {
 					new_index -= ann_size;
 				} else {
 					new_chr = ann_array[l][0];
-					new_index = atoi(ann_array[l][1].c_str()) + new_index - 1;
+					new_index = atoi(ann_array[l][1].c_str()) + new_index;
 					break;
 				}
 			}
 			
 			// DEBUG
-			printf("var: %d\n", epoch_var[k]);
-			printf("new_chr: %s\n", new_chr.c_str());
-			printf("new_index_2: %d\n", new_index);
-			printf("<------->\n");
+// 			printf("var: %d\n", epoch_var[k]);
+// 			printf("new_chr: %s\n", new_chr.c_str());
+// 			printf("new_index_2: %d\n", new_index);
+// 			printf("<------->\n");
 			
 			vec.push_back(new_chr);
 		
