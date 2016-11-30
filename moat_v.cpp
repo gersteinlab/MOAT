@@ -499,7 +499,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	// printf("Breakpoint 1\n");
+	printf("Breakpoint 1\n");
 	
 	// Sort the arrays
 	sort(var_array.begin(), var_array.end(), cmpIntervals);
@@ -532,7 +532,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	// printf("Breakpoint 2\n");
+	printf("Breakpoint 2\n");
 	
 	// EPOCH CODE	
 	FILE *fasta_ptr = NULL;
@@ -818,7 +818,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	// printf("Breakpoint 3\n");
+	printf("Breakpoint 3\n");
 	
 	// Verdun
 	return 0;
