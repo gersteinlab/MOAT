@@ -644,12 +644,12 @@ int main (int argc, char* argv[]) {
 				int this_epoch = epoch_total - (ann_end - ann_start) + (var_end - ann_start); // 1-based
 				
 				// DEBUG
-				printf("%d\n", epoch_total);
-				printf("%s\n", ann_array[j][2].c_str());
-				printf("%s\n", ann_array[j][1].c_str());
-				printf("%s\n", var_array[k][2].c_str());
-				printf("%s\n", ann_array[j][1].c_str());
-				printf("%d\n", this_epoch);
+// 				printf("%d\n", epoch_total);
+// 				printf("%s\n", ann_array[j][2].c_str());
+// 				printf("%s\n", ann_array[j][1].c_str());
+// 				printf("%s\n", var_array[k][2].c_str());
+// 				printf("%s\n", ann_array[j][1].c_str());
+// 				printf("%d\n", this_epoch);
 				
 				epoch_var.push_back(this_epoch); // 1-based
 			}
@@ -806,7 +806,7 @@ int main (int argc, char* argv[]) {
 					new_index -= ann_size;
 				} else {
 					new_chr = ann_array[l][0];
-					new_index = atoi(ann_array[l][1].c_str()) + new_index - 1;
+					new_index = atoi(ann_array[l][1].c_str()) + new_index;
 					break;
 				}
 			}
