@@ -587,7 +587,8 @@ int main (int argc, char* argv[]) {
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
 		
 			// DEBUG
-			printf("%d: %s\n", (int)j, last_chr.c_str());
+			// printf("%d: %s\n", (int)j, last_chr.c_str());
+			printf("epoch_total: %d\n", epoch_total);
 		
 			epoch_total += (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str()));
 			if (trimer) {
