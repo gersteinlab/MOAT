@@ -574,6 +574,9 @@ int main (int argc, char* argv[]) {
 
 		unsigned int variant_pointer = 0;
 		vector<int> epoch_var;
+		
+		// DEBUG
+		printf("Breakpoint 2.1\n");
 
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
 			epoch_total += (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str()));
@@ -632,6 +635,9 @@ int main (int argc, char* argv[]) {
 				epoch_var.push_back(this_epoch);
 			}
 		}
+		
+		// DEBUG
+		printf("Breakpoint 2.2\n");
 		
 		// Index the epoch_nt
 		if (trimer) {
