@@ -783,7 +783,7 @@ int main (int argc, char* argv[]) {
 					new_index -= ann_size;
 				} else {
 					new_chr = ann_array[l][0];
-					new_index = atoi(ann_array[l][1].c_str()) + new_index;
+					new_index = atoi(ann_array[l][1].c_str()) + new_index - 1;
 					break;
 				}
 			}
