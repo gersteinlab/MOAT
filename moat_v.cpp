@@ -763,10 +763,10 @@ int main (int argc, char* argv[]) {
 				vector<int> pos = local_nt[cur_nt];
 				
 				// DEBUG
-				for (unsigned int z = 0; z < pos.size(); z++) {
-					printf("%d,", pos[z]);
-				}
-				printf("\n");
+// 				for (unsigned int z = 0; z < pos.size(); z++) {
+// 					printf("%d,", pos[z]);
+// 				}
+// 				printf("\n");
 				
 				// pos2 = local_nt[cur_nt];
 			
@@ -800,6 +800,9 @@ int main (int argc, char* argv[]) {
 			
 			// END 3MER CODE
 			
+			// DEBUG
+			printf("new_index_1: %d\n", new_index);
+			
 			vector<string> vec;
 			// vec.push_back(var_array[k][0]);
 			
@@ -825,6 +828,7 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			printf("var: %d\n", epoch_var[k]);
 			printf("new_chr: %s\n", new_chr.c_str());
+			printf("new_index_2: %d\n", new_index);
 			printf("<------->\n");
 			
 			vec.push_back(new_chr);
