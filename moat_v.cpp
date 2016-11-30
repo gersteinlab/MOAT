@@ -708,6 +708,7 @@ int main (int argc, char* argv[]) {
 		for (unsigned int k = 0; k < epoch_var.size(); k++) {
 		
 			// DEBUG
+			printf("%d epoch_coor: %d\n", k, epoch_var[k]);
 			// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 			
 			int new_index;
@@ -727,6 +728,9 @@ int main (int argc, char* argv[]) {
 				ss << cur_nt2;
 				ss << cur_nt3;
 				ss >> cur_nt;
+				
+				// DEBUG
+				printf("%s\n", cur_nt.c_str());
 			
 				// If there is an N in this string, we skip this variant
 				if (cur_nt.find_first_of('N') != string::npos) {
