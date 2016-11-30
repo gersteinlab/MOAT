@@ -815,6 +815,11 @@ int main (int argc, char* argv[]) {
 				}
 			}
 			
+			// DEBUG
+			printf("var: %d\n", epoch_var[k]);
+			printf("new_chr: %s\n", new_chr);
+			printf("<------->\n");
+			
 			vec.push_back(new_chr);
 		
 			char start_cstr[STRSIZE];
