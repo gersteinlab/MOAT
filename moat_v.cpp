@@ -631,8 +631,8 @@ int main (int argc, char* argv[]) {
 			variant_pointer = range.first;
 			
 			for (unsigned int k = range.first; k < range.second; k++) {
-				int this_epoch = epoch_total - (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str())) + atoi(var_array[k][2].c_str()); // 1-based
-				epoch_var.push_back(this_epoch);
+				int this_epoch = epoch_total - (atoi(ann_array[j][2].c_str()) - atoi(ann_array[j][1].c_str())) + (atoi(var_array[k][2].c_str()) - atoi(ann_array[j][1].c_str())); // 1-based
+				epoch_var.push_back(this_epoch); // 1-based
 			}
 		}
 		
@@ -641,14 +641,14 @@ int main (int argc, char* argv[]) {
 		
 		// Index the epoch_nt
 		if (trimer) {
-			for (int j = 1; j <= (int)epoch_nt.size()-1; j++) {
+			for (int j = 1; j <= (int)epoch_nt.size()-2; j++) {
 			// for (int j = 1; j < 20000; j++) { // DEBUG
 			
 				stringstream ss;
 				string cur_nt;
 				
 				char nt1 = toupper(chr_nt[j-1]);
-				char nt2 = toupper(chr_nt[j]);
+				char nt2 = toupper(chr_nt[j]); // 0-based
 				char nt3 = toupper(chr_nt[j+1]);
 			
 				ss << nt1;
