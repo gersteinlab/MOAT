@@ -407,7 +407,7 @@ int main (int argc, char* argv[]) {
 		string line = string(linebuf);
 		
 		// DEBUG
-		// printf("%s\n", line.c_str());
+		printf("%s\n", line.c_str());
 		
 		// Extract chromosome, start, and end from line (first 3 columns)
 		vector<string> vec;
