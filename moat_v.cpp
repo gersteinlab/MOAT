@@ -730,81 +730,94 @@ int main (int argc, char* argv[]) {
 		// unsigned int variant_pointer = 0;
 		
 		vector<vector<string> > permuted_set;
+		
+		// NEW CODE: pick a random delta for this permutation
+		int range = 10000;
+		int delta = (rand() % (2*range)) + 1 - range; // [-range,range]
 			
 		// Variant processing loop
 		for (unsigned int k = 0; k < epoch_var.size(); k++) {
+		
+			int new_index = epoch_var[k]; // 1-based
+			
+			// Out of bounds fixing
+			if (new_index < 1) {
+				new_index = epoch_total + new_index;
+			} else if (new_index > epoch_total) {
+				new_index = new_index - epoch_total;
+			}
 		
 			// DEBUG
 			// printf("%d epoch_coor: %d\n", k, epoch_var[k]);
 			// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 			
-			int new_index;
-			vector<int> pos2;
-			
-			// BEGIN 3MER CODE
-			if (trimer) {
-		
-				// vector<string> cur_var = var_array[k];
-				char cur_nt1 = toupper(epoch_nt[epoch_var[k]-2]);
-				char cur_nt2 = toupper(epoch_nt[epoch_var[k]-1]); // 0-based index
-				char cur_nt3 = toupper(epoch_nt[epoch_var[k]]);
-			
-				stringstream ss;
-				string cur_nt;
-				ss << cur_nt1;
-				ss << cur_nt2;
-				ss << cur_nt3;
-				ss >> cur_nt;
-				
-				// DEBUG
-				// printf("%s\n", cur_nt.c_str());
-			
-				// If there is an N in this string, we skip this variant
-				if (cur_nt.find_first_of('N') != string::npos) {
-					continue;
-				}
-			
-				// DEBUG
-				// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-				// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
-			
-				vector<int> pos = local_nt[cur_nt];
-				
-				// DEBUG
-// 				for (unsigned int z = 0; z < pos.size(); z++) {
-// 					printf("%d,", pos[z]);
+// 			int new_index;
+// 			vector<int> pos2;
+// 			
+// 			// BEGIN 3MER CODE
+// 			if (trimer) {
+// 		
+// 				// vector<string> cur_var = var_array[k];
+// 				char cur_nt1 = toupper(epoch_nt[epoch_var[k]-2]);
+// 				char cur_nt2 = toupper(epoch_nt[epoch_var[k]-1]); // 0-based index
+// 				char cur_nt3 = toupper(epoch_nt[epoch_var[k]]);
+// 			
+// 				stringstream ss;
+// 				string cur_nt;
+// 				ss << cur_nt1;
+// 				ss << cur_nt2;
+// 				ss << cur_nt3;
+// 				ss >> cur_nt;
+// 				
+// 				// DEBUG
+// 				// printf("%s\n", cur_nt.c_str());
+// 			
+// 				// If there is an N in this string, we skip this variant
+// 				if (cur_nt.find_first_of('N') != string::npos) {
+// 					continue;
 // 				}
-// 				printf("\n");
-				
-				// pos2 = local_nt[cur_nt];
-			
-				// If no positions are available, end program with an error and suggest
-				// a larger bin size
-// 					if (pos.size()-1 == 0) {
-// 						char errstring[STRSIZE];
-// 						sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
-// 										ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-// 						fprintf(stderr, errstring);
-// 						return 1;
+// 			
+// 				// DEBUG
+// 				// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
+// 				// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+// 			
+// 				vector<int> pos = local_nt[cur_nt];
+// 				
+// 				// DEBUG
+// // 				for (unsigned int z = 0; z < pos.size(); z++) {
+// // 					printf("%d,", pos[z]);
+// // 				}
+// // 				printf("\n");
+// 				
+// 				// pos2 = local_nt[cur_nt];
+// 			
+// 				// If no positions are available, end program with an error and suggest
+// 				// a larger bin size
+// // 					if (pos.size()-1 == 0) {
+// // 						char errstring[STRSIZE];
+// // 						sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
+// // 										ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+// // 						fprintf(stderr, errstring);
+// // 						return 1;
+// // 					}
+// 			
+// 				// vector<int> pos2;
+// 				for (unsigned int l = 0; l < pos.size(); l++) {
+// 					if (pos[l] != epoch_var[k]) {
+// 						pos2.push_back(pos[l]);
 // 					}
-			
-				// vector<int> pos2;
-				for (unsigned int l = 0; l < pos.size(); l++) {
-					if (pos[l] != epoch_var[k]) {
-						pos2.push_back(pos[l]);
-					}
-				}
-				
-				if (pos2.size() == 0) {
-					continue;
-				}
-				
-				// Pick new position
-				new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
-				new_index = pos2[new_index];
-			} else {
-				new_index = rand() % (epoch_total) + 1; // 1-based over whole genome
-			}
+// 				}
+// 				
+// 				if (pos2.size() == 0) {
+// 					continue;
+// 				}
+// 				
+// 				// Pick new position
+// 				new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+// 				new_index = pos2[new_index];
+// 			} else {
+// 				new_index = rand() % (epoch_total) + 1; // 1-based over whole genome
+// 			}
 			
 			// END 3MER CODE
 			
