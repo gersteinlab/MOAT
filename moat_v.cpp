@@ -313,8 +313,12 @@ int main (int argc, char* argv[]) {
 	// Format: tab(chr, start, end)
 	string outdir;
 	
-	if (argc != 10) {
-		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [annotation file] [output directory]. Exiting.\n");
+	// For development purposes
+	// Manually configure the seed used for random number generation
+	int rseed;
+	
+	if (argc != 11) {
+		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [annotation file] [output directory] [random seed]. Exiting.\n");
 		return 1;
 	} else {
 	
@@ -335,6 +339,7 @@ int main (int argc, char* argv[]) {
 		vfile = string(argv[7]);
 		afile = string(argv[8]);
 		outdir = string(argv[9]);
+		rseed = atoi(argv[10]);
 	}
 	
 	// Verify files, and import data to memory
@@ -716,7 +721,7 @@ int main (int argc, char* argv[]) {
 	// printf("Breakpoint 2.5\n");
 	
 	/* Permutate variant locations */
-	srand(0);
+	srand(rseed);
 	
 	for (int i = 0; i < num_permutations; i++) {
 		
