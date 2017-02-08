@@ -743,7 +743,7 @@ int main (int argc, char* argv[]) {
 		// Variant processing loop
 		for (unsigned int k = 0; k < epoch_var.size(); k++) {
 		
-			int new_index = epoch_var[k]; // 1-based
+			int new_index = epoch_var[k] + delta; // 1-based
 			
 			// Out of bounds fixing
 			if (new_index < 1) {
