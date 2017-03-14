@@ -505,10 +505,17 @@ int main (int argc, char* argv[]) {
 		vector<vector<string> > funseq_output;
 		
 		// Read in "Output.bed"
+		int first = 1;
 		char linebuf2[BIGSTRSIZE];
 		string funseq_output_file = funseq_outdir + "/Output.bed";
 		FILE *ffile_ptr = fopen(funseq_output_file.c_str(), "r");
 		while (fgets(linebuf2, BIGSTRSIZE, ffile_ptr) != NULL) {
+		
+			if (first) {
+				first = 0;
+				continue;
+			}
+		
 			string line = string(linebuf2);
 			
 			vector<string> vec;
@@ -550,7 +557,7 @@ int main (int argc, char* argv[]) {
 				string info_str = funseq_output[j][6];
 				double coding_score;
 				double nc_score;
-				for (int i = 0; i < 13; i++) {
+				for (int i = 0; i < 14; i++) {
 					size_t ws_index = info_str.find_first_of(";");
 					string in = info_str.substr(0, ws_index);
 					info_str = info_str.substr(ws_index+1);
