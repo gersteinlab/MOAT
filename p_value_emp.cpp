@@ -242,16 +242,16 @@ int main (int argc, char* argv[]) {
 	// Check that Funseq2 is installed
 	string test_funseq2 = "command -v funseq2.sh";
 	if (system(test_funseq2.c_str())) {
-		fprintf(stderr, "Error: Funseq2 is not installed. Please install Funseq2 ".
-										"(funseq2.gersteinlab.org) and ensure the install path has been ".
-										"added to your PATH environment variable. Exiting.\n");
+		fprintf(stderr, "Error: Funseq2 is not installed. Please install Funseq2 ");
+		fprintf(stderr, "(funseq2.gersteinlab.org) and ensure the install path has been ");
+		fprintf(stderr, "added to your PATH environment variable. Exiting.\n");
 		return 1;
 	}
 	
 	// Verify that "funseq_opt" is valid
 	if (funseq_opt != 'o' && funseq_opt != 'p') {
-		fprintf(stderr, "Error: Funseq option was set to \'%c\', which is invalid. ".
-										"Must be either \'o\' or \'p\'. Exiting.\n", funseq_opt);
+		fprintf(stderr, "Error: Funseq option was set to \'%c\', which is invalid. ", funseq_opt);
+		fprintf(stderr, "Must be either \'o\' or \'p\'. Exiting.\n");
 		return 1;
 	}
 	
