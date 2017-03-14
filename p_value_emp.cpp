@@ -255,10 +255,6 @@ int main (int argc, char* argv[]) {
 		return 1;
 	}
 	
-	// Verify that funseq output directory exists, or create it if it doesn't
-// 	string command = "mkdir -p " + funseq_outdir;
-// 	system(command.c_str());
-	
 	/* Data structures for the starting data */
 	// Variant array, contains variants of the format vector(chr, start, end)
 	vector<vector<string> > var_array;
@@ -497,6 +493,10 @@ int main (int argc, char* argv[]) {
 		// Retrieve current working directory for temporary Funseq2 output
 		string funseq_outdir = exec("pwd");
 		funseq_outdir += "/funseq";
+		
+		// Verify that funseq output directory exists, or create it if it doesn't
+		string command = "mkdir -p " + funseq_outdir;
+		system(command.c_str());
 		
 		string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + vfile + " -inf bed -outf bed -o " + funseq_outdir;
 		system(funseq2_command.c_str());
