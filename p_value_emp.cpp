@@ -256,8 +256,8 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// Verify that funseq output directory exists, or create it if it doesn't
-	string command = "mkdir -p " + funseq_outdir;
-	system(command.c_str());
+// 	string command = "mkdir -p " + funseq_outdir;
+// 	system(command.c_str());
 	
 	/* Data structures for the starting data */
 	// Variant array, contains variants of the format vector(chr, start, end)
