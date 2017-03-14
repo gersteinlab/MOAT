@@ -241,7 +241,7 @@ int main (int argc, char* argv[]) {
 	
 	// Check that Funseq2 is installed
 	string test_funseq2 = "command -v funseq2.sh";
-	if (system(test_funseq2.c_str()) {
+	if (system(test_funseq2.c_str())) {
 		fprintf(stderr, "Error: Funseq2 is not installed. Please install Funseq2 ".
 										"(funseq2.gersteinlab.org) and ensure the install path has been ".
 										"added to your PATH environment variable. Exiting.\n");
@@ -257,7 +257,7 @@ int main (int argc, char* argv[]) {
 	
 	// Verify that funseq output directory exists, or create it if it doesn't
 	string command = "mkdir -p " + funseq_outdir;
-	system(command);
+	system(command.c_str());
 	
 	/* Data structures for the starting data */
 	// Variant array, contains variants of the format vector(chr, start, end)
@@ -490,7 +490,7 @@ int main (int argc, char* argv[]) {
 	vector<double> funseq_scores;
 	if (funseq_opt == 'o') {
 		string funseq2_command = "funseq2.sh -f " + vfile + " -inf bed -outf bed -o " + funseq_outdir;
-		system(funseq2_command);
+		system(funseq2_command.c_str());
 		
 		// Collect sum of Funseq scores per annotation
 		vector<vector<string> > funseq_output;
@@ -528,7 +528,7 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// Sort
-		sort(funseq_output.begin(), funseq_output.end(); cmpIntervals);
+		sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
 		
 		// Gather up and sum the Funseq values over each annotation
 		unsigned int funseq_var_pointer = 0;
@@ -542,9 +542,9 @@ int main (int argc, char* argv[]) {
 				double coding_score;
 				double nc_score;
 				for (int i = 0; i < 13; i++) {
-					size_t ws_index = line.find_first_of(";");
-					string in = line.substr(0, ws_index);
-					line = line.substr(ws_index+1);
+					size_t ws_index = info_str.find_first_of(";");
+					string in = info_str.substr(0, ws_index);
+					info_str = info_str.substr(ws_index+1);
 					if (i == 12) {
 						if (in != ".") {
 							coding_score = atof(in.c_str());
