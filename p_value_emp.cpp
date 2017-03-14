@@ -186,6 +186,7 @@ int main (int argc, char* argv[]) {
 	// Funseq mode to use
 	// 'o': Run Funseq on (o)bserved variants only
 	// 'p': Run Funseq on permuted variants as well, output the p-value significance
+	// 'n': Do not use Funseq
 	// of the observed variants' Funseq score
 	char funseq_opt;
 	
@@ -193,7 +194,7 @@ int main (int argc, char* argv[]) {
 	// string funseq_outdir;
 	
 	if (argc != 7) {
-		fprintf(stderr, "Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file] [funseq option]. Exiting.\n");
+		fprintf(stderr, "Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file] [funseq option (o/p/n)]. Exiting.\n");
 		return 1;
 	} else {
 		vfile = string(argv[1]);
@@ -249,9 +250,9 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// Verify that "funseq_opt" is valid
-	if (funseq_opt != 'o' && funseq_opt != 'p') {
+	if (funseq_opt != 'o' && funseq_opt != 'p' && funseq_opt != 'n') {
 		fprintf(stderr, "Error: Funseq option was set to \'%c\', which is invalid. ", funseq_opt);
-		fprintf(stderr, "Must be either \'o\' or \'p\'. Exiting.\n");
+		fprintf(stderr, "Must be either \'o\' or \'p\' or \'n\'. Exiting.\n");
 		return 1;
 	}
 	
@@ -493,6 +494,10 @@ int main (int argc, char* argv[]) {
 		// Retrieve current working directory for temporary Funseq2 output
 		string funseq_outdir = exec("pwd");
 		funseq_outdir += "/funseq";
+		
+		// DEBUG
+		printf("%s\n", funseq_outdir.c_str());
+		exit();
 		
 		// Verify that funseq output directory exists, or create it if it doesn't
 		string command = "mkdir -p " + funseq_outdir;
