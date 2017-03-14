@@ -9,6 +9,7 @@
 #include <map>
 #include <algorithm>
 #include <utility>
+#include <stdexcept>
 
 using namespace std;
 
@@ -340,4 +341,24 @@ vector<vector<string> > permute_variants (int varcount, vector<string> region) {
 		// printf("Breakpoint 6\n");
 	}
 	return out_variants;
+}
+
+// This method allows the code to run system calls and capture their stdout
+string exec (const char* cmd) {
+	char buffer[STRSIZE];
+	string result = "";
+	FILE* pipe = popen(cmd, "r");
+	if (!pipe) throw std::runtime_error("popen() failed!");
+	try {
+  	while (!feof(pipe)) {
+  		if (fgets(buffer, STRSIZE, pipe) != NULL) {
+  			result += buffer;
+  		}
+		}
+	} catch (...) {
+		pclose(pipe);
+		throw;
+	}
+	pclose(pipe);
+  return result;
 }

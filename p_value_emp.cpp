@@ -240,7 +240,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// Check that Funseq2 is installed
-	string test_funseq2 = "command -v funseq2.sh";
+	string test_funseq2 = "command -v funseq2.sh > /dev/null";
 	if (system(test_funseq2.c_str())) {
 		fprintf(stderr, "Error: Funseq2 is not installed. Please install Funseq2 ");
 		fprintf(stderr, "(funseq2.gersteinlab.org) and ensure the install path has been ");
@@ -489,7 +489,12 @@ int main (int argc, char* argv[]) {
 	// Also do Funseq2 calculation
 	vector<double> funseq_scores;
 	if (funseq_opt == 'o') {
-		string funseq2_command = "funseq2.sh -f " + vfile + " -inf bed -outf bed -o " + funseq_outdir;
+	
+		string funseq_loc = exec("command -v funseq2.sh");
+		size_t index = funseq_loc.find_last_of("/");
+		funseq_loc = funseq_loc.substr(0, index);
+		
+		string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + vfile + " -inf bed -outf bed -o " + funseq_outdir;
 		system(funseq2_command.c_str());
 		
 		// Collect sum of Funseq scores per annotation

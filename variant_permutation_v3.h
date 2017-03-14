@@ -17,3 +17,4 @@ vector<vector<string> > permute_variants (int varcount, vector<string> region);
 vector<vector<string> > intersecting_intervals (vector<vector<string> > intervals, vector<string> region);
 pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > const &intervals, vector<string> region, unsigned int left_pointer);
 vector<vector<string> > subtract_intervals (vector<string> region, vector<vector<string> > intervals);
+string exec (const char* cmd);
