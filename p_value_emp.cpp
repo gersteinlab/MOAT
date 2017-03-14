@@ -497,8 +497,8 @@ int main (int argc, char* argv[]) {
 		funseq_outdir += "/funseq";
 		
 		// DEBUG
-		printf("%s\n", funseq_outdir.c_str());
-		exit(0);
+// 		printf("%s\n", funseq_outdir.c_str());
+// 		exit(0);
 		
 		// Verify that funseq output directory exists, or create it if it doesn't
 		string command = "mkdir -p " + funseq_outdir;
