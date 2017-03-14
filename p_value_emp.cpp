@@ -493,6 +493,7 @@ int main (int argc, char* argv[]) {
 		
 		// Retrieve current working directory for temporary Funseq2 output
 		string funseq_outdir = exec("pwd");
+		funseq_outdir.erase(funseq_outdir.find_last_not_of(" \n\r\t")+1);
 		funseq_outdir += "/funseq";
 		
 		// DEBUG
