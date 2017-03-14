@@ -371,7 +371,7 @@ int main (int argc, char* argv[]) {
 	
 	// Check that Funseq2 is installed
 	string test_funseq2 = "command -v funseq2.sh";
-	if (system(test_funseq2.c_str()) {
+	if (system(test_funseq2.c_str())) {
 		fprintf(stderr, "Error: Funseq2 is not installed. Please install Funseq2 ".
 										"(funseq2.gersteinlab.org) and ensure the install path has been ".
 										"added to your PATH environment variable.\n");
