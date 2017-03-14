@@ -190,10 +190,10 @@ int main (int argc, char* argv[]) {
 	char funseq_opt;
 	
 	// Directory where the Funseq output is to be written
-	string funseq_outdir;
+	// string funseq_outdir;
 	
-	if (argc != 8) {
-		fprintf(stderr, "Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file] [funseq option] [funseq output directory]. Exiting.\n");
+	if (argc != 7) {
+		fprintf(stderr, "Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file] [funseq option]. Exiting.\n");
 		return 1;
 	} else {
 		vfile = string(argv[1]);
@@ -202,7 +202,7 @@ int main (int argc, char* argv[]) {
 		permutation_dir = string(argv[4]);
 		outfile = string(argv[5]);
 		funseq_opt = argv[6][0];
-		funseq_outdir = string(argv[7]);
+		// funseq_outdir = string(argv[7]);
 	}
 	
 	// Verify files, and import data to memory
@@ -494,6 +494,10 @@ int main (int argc, char* argv[]) {
 		size_t index = funseq_loc.find_last_of("/");
 		funseq_loc = funseq_loc.substr(0, index);
 		
+		// Retrieve current working directory for temporary Funseq2 output
+		string funseq_outdir = exec("pwd");
+		funseq_outdir += "/funseq";
+		
 		string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + vfile + " -inf bed -outf bed -o " + funseq_outdir;
 		system(funseq2_command.c_str());
 		
@@ -594,6 +598,10 @@ int main (int argc, char* argv[]) {
 		}
 	}
 	fclose(outfile_ptr);
+	
+	// Clean up Funseq temporary folder
+// 	string rm_com = "rm -rf " + funseq_outdir;
+// 	system(rm_com.c_str());
 	
 	// Verdun
 	return 0;
