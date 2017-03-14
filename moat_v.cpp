@@ -310,7 +310,7 @@ int main (int argc, char* argv[]) {
 	string outdir;
 	
 	if (argc != 9) {
-		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file]. Exiting.\n");
+		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory]. Exiting.\n");
 		return 1;
 	} else {
 	
