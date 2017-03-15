@@ -639,9 +639,9 @@ int main (int argc, char* argv[]) {
 		unsigned int variant_pointer = 0;
 		// vector<int> this_permutation_counts;
 		
-		for (unsigned int j = 0; j < ann_array.size(); j++) {
+		vector<vector<string> > permuted_set;
 		
-			vector<vector<string> > permuted_set;
+		for (unsigned int j = 0; j < ann_array.size(); j++) {
 		
 			if (trimer) {
 				if (last_chr != ann_array[j][0]) {
