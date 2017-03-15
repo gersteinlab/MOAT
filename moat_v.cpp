@@ -1240,43 +1240,38 @@ int main (int argc, char* argv[]) {
 		
 			// Gather up and sum the Funseq values over each annotation
 			unsigned int funseq_var_pointer = 0;
-			for (unsigned int i = 0; i < ann_array.size(); i++) {
-				pair<unsigned int,unsigned int> range = intersecting_variants(funseq_output, ann_array[i], funseq_var_pointer);
-				funseq_var_pointer = range.first;
+			for (unsigned int j = 0; j < funseq_output.size(); j++) {
+				string info_str = funseq_output[j][6];
 				double funseq_sum = 0.0;
-			
-				for (unsigned int j = range.first; j < range.second; j++) {
-					string info_str = funseq_output[j][6];
-					double coding_score;
-					double nc_score;
-					for (int i = 0; i < 14; i++) {
-						size_t ws_index = info_str.find_first_of(";");
-						string in = info_str.substr(0, ws_index);
-						info_str = info_str.substr(ws_index+1);
-						if (i == 12) {
-							if (in != ".") {
-								coding_score = atof(in.c_str());
-							} else {
-								coding_score = -1.0;
-							}
-						} else if (i == 13) {
-							if (in != ".") {
-								nc_score = atof(in.c_str());
-							} else {
-								nc_score = -1.0;
-							}
+				double coding_score;
+				double nc_score;
+				for (int i = 0; i < 14; i++) {
+					size_t ws_index = info_str.find_first_of(";");
+					string in = info_str.substr(0, ws_index);
+					info_str = info_str.substr(ws_index+1);
+					if (i == 12) {
+						if (in != ".") {
+							coding_score = atof(in.c_str());
+						} else {
+							coding_score = -1.0;
 						}
-					}
-				
-					if (coding_score != -1.0) {
-						funseq_sum += coding_score;
-					} else {
-						funseq_sum += nc_score;
+					} else if (i == 13) {
+						if (in != ".") {
+							nc_score = atof(in.c_str());
+						} else {
+							nc_score = -1.0;
+						}
 					}
 				}
 			
+				if (coding_score != -1.0) {
+					funseq_sum = coding_score;
+				} else {
+					funseq_sum = nc_score;
+				}
 				funseq_scores.push_back(funseq_sum);
 			}
+		}
 			
 			// Print the Funseq scores to a companion file
 			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
@@ -1287,7 +1282,7 @@ int main (int argc, char* argv[]) {
 			}
 			fclose(funseq_outfile_ptr);
 		}
-	}
+	// }
 	
 	// DEBUG
 	// printf("Breakpoint 3\n");
