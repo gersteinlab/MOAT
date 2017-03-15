@@ -1163,9 +1163,8 @@ int main (int argc, char* argv[]) {
 		fclose(outfile_ptr);
 		
 		// Data available for Funseq step
+		vector<double> funseq_scores;
 		if (funseq_opt) {
-		
-			vector<double> funseq_scores;
 			
 			string funseq_loc = exec("command -v funseq2.sh");
 			size_t index = funseq_loc.find_last_of("/");
@@ -1239,7 +1238,7 @@ int main (int argc, char* argv[]) {
 			sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
 		
 			// Gather up and sum the Funseq values over each annotation
-			unsigned int funseq_var_pointer = 0;
+			// unsigned int funseq_var_pointer = 0;
 			for (unsigned int j = 0; j < funseq_output.size(); j++) {
 				string info_str = funseq_output[j][6];
 				double funseq_sum = 0.0;
@@ -1273,15 +1272,15 @@ int main (int argc, char* argv[]) {
 			}
 		}
 			
-			// Print the Funseq scores to a companion file
-			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
-			FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
-			
-			for (unsigned int k = 0; k < funseq_scores.size(); k++) {
-				fprintf(funseq_outfile_ptr, "%f\n", funseq_scores[k]);
-			}
-			fclose(funseq_outfile_ptr);
+		// Print the Funseq scores to a companion file
+		string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
+		FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
+		
+		for (unsigned int k = 0; k < funseq_scores.size(); k++) {
+			fprintf(funseq_outfile_ptr, "%f\n", funseq_scores[k]);
 		}
+		fclose(funseq_outfile_ptr);
+	}
 	// }
 	
 	// DEBUG
