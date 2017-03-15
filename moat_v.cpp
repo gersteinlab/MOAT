@@ -1155,10 +1155,10 @@ int main (int argc, char* argv[]) {
 	// 		return 0;
 			// printf("Permutation %d, Permuted set size: %d\n", i+1, (int)permuted_set.size());
 		
-			for (unsigned int k = 0; k < permuted_set.size(); k++) {
-				fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str());
-			}
 			last_chr = ann_array[j][0];
+		}
+		for (unsigned int k = 0; k < permuted_set.size(); k++) {
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str());
 		}
 		fclose(outfile_ptr);
 		
@@ -1270,21 +1270,21 @@ int main (int argc, char* argv[]) {
 				}
 				funseq_scores.push_back(funseq_sum);
 			}
-		}
 			
-		// Print the Funseq scores to a new file that will replace the old one
-		string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
-		FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
+			// Print the Funseq scores to a new file that will replace the old one
+			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
+			FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
 		
-		for (unsigned int k = 0; k < funseq_scores.size(); k++) {
-			fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
+			for (unsigned int k = 0; k < funseq_scores.size(); k++) {
+				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
+			}
+			fclose(funseq_outfile_ptr);
+		
+			string file_switch_1 = "rm " + outfile;
+			system(file_switch_1.c_str());
+			string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
+			system(file_switch_2.c_str());
 		}
-		fclose(funseq_outfile_ptr);
-		
-		string file_switch_1 = "rm " + outfile;
-		system(file_switch_1.c_str());
-		string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
-		system(file_switch_2.c_str());
 	}
 	// }
 	
