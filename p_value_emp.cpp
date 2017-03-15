@@ -368,7 +368,7 @@ int main (int argc, char* argv[]) {
 		return 1;
 	}
 	
-		// Collect the output values, will end with same size as ann_array
+	// Collect the output values, will end with same size as ann_array
 	vector<double> pvalues;
 	
 	// Sort the arrays
@@ -483,9 +483,10 @@ int main (int argc, char* argv[]) {
 		pvalues.push_back(fraction);
 	}
 	
-	// Also do Funseq2 calculation
+	// Also do Funseq2 calculation, if requested
 	vector<double> funseq_scores;
-	if (funseq_opt == 'o') {
+	vector<int> fs_overcount (ann_array.size(), 0);
+	if (funseq_opt != 'n') {
 	
 		string funseq_loc = exec("command -v funseq2.sh");
 		size_t index = funseq_loc.find_last_of("/");
@@ -601,6 +602,104 @@ int main (int argc, char* argv[]) {
 			
 			funseq_scores.push_back(funseq_sum);
 		}
+		
+		// Additional steps for using permutation Funseq scores
+		if (funseq_opt == 'p') {
+			for (my i = 1; i <= num_permutations; i++) {
+				// Collect sum of Funseq scores per annotation
+				vector<double> perm_funseq_scores;
+				vector<vector<string> > perm_funseq_output;
+			
+				// Read in "Output.bed"
+				int first = 1;
+				char linebuf3[BIGSTRSIZE];
+				string pfunseq_output_file = funseq_outdir + "/permutation_" + i + ".txt";
+				FILE *pffile_ptr = fopen(pfunseq_output_file.c_str(), "r");
+				while (fgets(linebuf3, BIGSTRSIZE, pffile_ptr) != NULL) {
+				
+					if (first) {
+						first = 0;
+						continue;
+					}
+		
+					string line = string(linebuf3);
+				
+					vector<string> vec;
+					for (int i = 0; i < 7; i++) {
+						size_t ws_index = line.find_first_of("\t\n");
+						string in = line.substr(0, ws_index);
+						vec.push_back(in);
+						line = line.substr(ws_index+1);
+					}
+			
+					// If this is not a standard chromosome, then remove this row
+					if (chr2int(vec[0]) == 0) {
+						continue;
+					}
+			
+					perm_funseq_output.push_back(vec);
+				}
+				// Check feof of vfile
+				if (feof(pffile_ptr)) { // We're good
+					fclose(pffile_ptr);
+				} else { // It's an error
+					char errstring[STRSIZE];
+					sprintf(errstring, "Error reading from %s", pfunseq_output_file.c_str());
+					perror(errstring);
+					return 1;
+				}
+			
+				// Sort
+				sort(perm_funseq_output.begin(), perm_funseq_output.end(), cmpIntervals);
+			
+				// Gather up and sum the Funseq values over each annotation
+				unsigned int pfunseq_var_pointer = 0;
+				for (unsigned int j = 0; j < ann_array.size(); j++) {
+					pair<unsigned int,unsigned int> range = intersecting_variants(perm_funseq_output, ann_array[j], pfunseq_var_pointer);
+					pfunseq_var_pointer = range.first;
+					double funseq_sum = 0.0;
+				
+					for (unsigned int k = range.first; k < range.second; k++) {
+						string info_str = perm_funseq_output[k][6];
+						double coding_score;
+						double nc_score;
+						for (int l = 0; l < 14; l++) {
+							size_t ws_index = info_str.find_first_of(";");
+							string in = info_str.substr(0, ws_index);
+							info_str = info_str.substr(ws_index+1);
+							if (l == 12) {
+								if (in != ".") {
+									coding_score = atof(in.c_str());
+								} else {
+									coding_score = -1.0;
+								}
+							} else if (l == 13) {
+								if (in != ".") {
+									nc_score = atof(in.c_str());
+								} else {
+									nc_score = -1.0;
+								}
+							}
+						}
+				
+						if (coding_score != -1.0) {
+							funseq_sum += coding_score;
+						} else {
+							funseq_sum += nc_score;
+						}
+					}
+				
+					perm_funseq_scores.push_back(funseq_sum);
+				}
+				
+				// Now update fs_overcount
+				for (unsigned int j = 0; j < ann_array.size(); j++) {
+					if (perm_funseq_scores[j] >= funseq_scores[j]) {
+						fs_overcount[j]++;
+					}
+				}
+			}
+		}
 	}
 	
 	// Output generation
@@ -614,7 +713,13 @@ int main (int argc, char* argv[]) {
 		string cur_ann_name = ann_array[i][3];
 		
 		// Print the output line
-		if (funseq_opt == 'o') {
+		if (funseq_opt == 'p') {
+			
+			// Now do final p-value calculation
+			double fraction = (double)fs_overcount[i]/(double)num_permutations;
+		
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%e\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], funseq_scores[i], fraction);
+		} else if (funseq_opt == 'o') {
 			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%e\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], funseq_scores[i]);
 		} else {
 			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i]);
