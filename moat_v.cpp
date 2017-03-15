@@ -1164,6 +1164,8 @@ int main (int argc, char* argv[]) {
 		
 		// Data available for Funseq step
 		if (funseq_opt) {
+		
+			vector<double> funseq_scores;
 			
 			string funseq_loc = exec("command -v funseq2.sh");
 			size_t index = funseq_loc.find_last_of("/");
