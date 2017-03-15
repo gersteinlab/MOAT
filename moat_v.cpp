@@ -1277,7 +1277,7 @@ int main (int argc, char* argv[]) {
 		FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
 		
 		for (unsigned int k = 0; k < funseq_scores.size(); k++) {
-			fprintf(funseq_outfile_ptr, "%f\n", funseq_scores[k]);
+			fprintf(funseq_outfile_ptr, "%e\n", funseq_scores[k]);
 		}
 		fclose(funseq_outfile_ptr);
 	}

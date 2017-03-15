@@ -615,7 +615,7 @@ int main (int argc, char* argv[]) {
 		
 		// Print the output line
 		if (funseq_opt == 'o') {
-			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], funseq_scores[i]);
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%e\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], funseq_scores[i]);
 		} else {
 			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i]);
 		}
