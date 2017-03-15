@@ -628,7 +628,7 @@ int main (int argc, char* argv[]) {
 					string line = string(linebuf3);
 				
 					vector<string> vec;
-					for (int i = 0; i < 7; i++) {
+					for (int i = 0; i < 6; i++) {
 						size_t ws_index = line.find_first_of("\t\n");
 						string in = line.substr(0, ws_index);
 						vec.push_back(in);
@@ -663,33 +663,7 @@ int main (int argc, char* argv[]) {
 					double funseq_sum = 0.0;
 				
 					for (unsigned int k = range.first; k < range.second; k++) {
-						string info_str = perm_funseq_output[k][6];
-						double coding_score;
-						double nc_score;
-						for (int l = 0; l < 14; l++) {
-							size_t ws_index = info_str.find_first_of(";");
-							string in = info_str.substr(0, ws_index);
-							info_str = info_str.substr(ws_index+1);
-							if (l == 12) {
-								if (in != ".") {
-									coding_score = atof(in.c_str());
-								} else {
-									coding_score = -1.0;
-								}
-							} else if (l == 13) {
-								if (in != ".") {
-									nc_score = atof(in.c_str());
-								} else {
-									nc_score = -1.0;
-								}
-							}
-						}
-				
-						if (coding_score != -1.0) {
-							funseq_sum += coding_score;
-						} else {
-							funseq_sum += nc_score;
-						}
+						funseq_sum += perm_funseq_output[k][5];
 					}
 				
 					perm_funseq_scores.push_back(funseq_sum);
