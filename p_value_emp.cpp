@@ -504,7 +504,17 @@ int main (int argc, char* argv[]) {
 		string command = "mkdir -p " + funseq_outdir;
 		system(command.c_str());
 		
-		string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + vfile + " -inf bed -outf bed -o " + funseq_outdir;
+		// Convert vfile to absolute path, if it is not already
+		char abs_path_vfile[PATH_MAX];
+		errno = 0;
+		realpath(vfile.c_str(), abs_path_vfile);
+		if (errno) {
+			fprintf(stderr, "Error resolving absolute path of variant file: %s\n", strerror(errno));
+			fprintf(stderr, "Exiting.\n");
+			return 1;
+		}
+		
+		string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + abs_path_vfile + " -inf bed -outf bed -o " + funseq_outdir;
 		system(funseq2_command.c_str());
 		
 		// Collect sum of Funseq scores per annotation

@@ -9,11 +9,13 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <sstream>
+#include <limits.h>
 #include "variant_permutation_v3.h"
 
 using namespace std;
 
 #define STRSIZE 256
+#define BIGSTRSIZE 1024
 
 // The notable difference with the v2 is that this code places random bins anywhere
 // in the genome
@@ -309,8 +311,11 @@ int main (int argc, char* argv[]) {
 	// Format: tab(chr, start, end)
 	string outdir;
 	
-	if (argc != 9) {
-		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory]. Exiting.\n");
+	// Option to specify whether to calculate Funseq scores on the permutations
+	bool funseq_opt;
+	
+	if (argc != 10) {
+		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory] [Funseq option (y/n)]. Exiting.\n");
 		return 1;
 	} else {
 	
@@ -330,6 +335,15 @@ int main (int argc, char* argv[]) {
 		fasta_dir = string(argv[6]);
 		vfile = string(argv[7]);
 		outdir = string(argv[8]);
+		
+		if (argv[9][0] == 'y') {
+			funseq_opt = true;
+		} else if (argv[9][0] == 'n') {
+			funseq_opt = false;
+		} else {
+			fprintf(stderr, "Invalid option for Funseq option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[9][0]);
+			return 1;
+		}
 	}
 	
 	// Verify files, and import data to memory
@@ -369,17 +383,19 @@ int main (int argc, char* argv[]) {
 		return 1;
 	}
 	
-	// Check that Funseq2 is installed
-	string test_funseq2 = "command -v funseq2.sh > /dev/null";
-	if (system(test_funseq2.c_str())) {
-		fprintf(stderr, "Error: Funseq2 is not installed. Please install Funseq2 ");
-		fprintf(stderr, "(funseq2.gersteinlab.org) and ensure the install path has been ");
-		fprintf(stderr, "added to your PATH environment variable.\n");
-		return 1;
+	// Check that Funseq2 is installed, if it is to be used
+	if (funseq_opt) {
+		string test_funseq2 = "command -v funseq2.sh > /dev/null";
+		if (system(test_funseq2.c_str())) {
+			fprintf(stderr, "Error: Funseq2 is not installed. Please install Funseq2 ");
+			fprintf(stderr, "(funseq2.gersteinlab.org) and ensure the install path has been ");
+			fprintf(stderr, "added to your PATH environment variable.\n");
+			return 1;
+		}
 	}
 	
 	/* Data structures for the starting data */
-	// Variant array, contains variants of the format vector(chr, start, end)
+	// Variant array, contains variants of the format vector(chr, start, end, ref allele, alt allele)
 	vector<vector<string> > var_array;
 	
 	// Annotation array, contains annotations of the format vector(chr, start, end, ann_name)
@@ -390,7 +406,7 @@ int main (int argc, char* argv[]) {
 	vector<vector<string> > prohibited_regions;
 	
 	// Bring variant file data into memory
-	// Save the first 3 columns, ignore the rest if there are any
+	// Save the first 5 columns, ignore the rest if there are any
 	char linebuf[STRSIZE];
 	FILE *vfile_ptr = fopen(vfile.c_str(), "r");
 	while (fgets(linebuf, STRSIZE, vfile_ptr) != NULL) {
@@ -399,9 +415,9 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 		// printf("%s\n", line.c_str());
 		
-		// Extract chromosome, start, and end from line (first 3 columns)
+		// Extract chromosome, start, end, ref and alt from line (first 5 columns)
 		vector<string> vec;
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 5; i++) {
 			size_t ws_index = line.find_first_of("\t\n");
 			string in = line.substr(0, ws_index);
 			vec.push_back(in);
@@ -1112,6 +1128,9 @@ int main (int argc, char* argv[]) {
 					
 				}
 				
+				vec.push_back(var_array[k][3]);
+				vec.push_back(var_array[k][4]);
+				
 				permuted_set.push_back(vec);
 			}
 			
@@ -1137,11 +1156,135 @@ int main (int argc, char* argv[]) {
 			// printf("Permutation %d, Permuted set size: %d\n", i+1, (int)permuted_set.size());
 		
 			for (unsigned int k = 0; k < permuted_set.size(); k++) {
-				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+				fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str());
 			}
 			last_chr = ann_array[j][0];
 		}
 		fclose(outfile_ptr);
+		
+		// Data available for Funseq step
+		if (funseq_opt) {
+			
+			string funseq_loc = exec("command -v funseq2.sh");
+			size_t index = funseq_loc.find_last_of("/");
+			funseq_loc = funseq_loc.substr(0, index);
+		
+			// Retrieve current working directory for temporary Funseq2 output
+			string funseq_outdir = exec("pwd");
+			funseq_outdir.erase(funseq_outdir.find_last_not_of(" \n\r\t")+1);
+			funseq_outdir += "/funseq";
+			
+			// Verify that funseq output directory exists, or create it if it doesn't
+			string command = "mkdir -p " + funseq_outdir;
+			system(command.c_str());
+			
+			// Convert outfile to absolute path, if it is not already
+			char abs_path_outfile[PATH_MAX];
+			errno = 0;
+			realpath(outfile.c_str(), abs_path_outfile);
+			if (errno) {
+				fprintf(stderr, "Error resolving absolute path of permutation variant file: %s\n", strerror(errno));
+				fprintf(stderr, "Exiting.\n");
+				return 1;
+			}
+		
+			string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + abs_path_outfile + " -inf bed -outf bed -o " + funseq_outdir;
+			system(funseq2_command.c_str());
+			
+			// Collect sum of Funseq scores per annotation
+			vector<vector<string> > funseq_output;
+		
+			// Read in "Output.bed"
+			int first = 1;
+			char linebuf2[BIGSTRSIZE];
+			string funseq_output_file = funseq_outdir + "/Output.bed";
+			FILE *ffile_ptr = fopen(funseq_output_file.c_str(), "r");
+			while (fgets(linebuf2, BIGSTRSIZE, ffile_ptr) != NULL) {
+		
+				if (first) {
+					first = 0;
+					continue;
+				}
+		
+				string line = string(linebuf2);
+			
+				vector<string> vec;
+				for (int i = 0; i < 7; i++) {
+					size_t ws_index = line.find_first_of("\t\n");
+					string in = line.substr(0, ws_index);
+					vec.push_back(in);
+					line = line.substr(ws_index+1);
+				}
+			
+				// If this is not a standard chromosome, then remove this row
+				if (chr2int(vec[0]) == 0) {
+					continue;
+				}
+			
+				funseq_output.push_back(vec);
+			}
+			// Check feof of vfile
+			if (feof(ffile_ptr)) { // We're good
+				fclose(ffile_ptr);
+			} else { // It's an error
+				char errstring[STRSIZE];
+				sprintf(errstring, "Error reading from %s", funseq_output_file.c_str());
+				perror(errstring);
+				return 1;
+			}
+		
+			// Sort
+			sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
+		
+			// Gather up and sum the Funseq values over each annotation
+			unsigned int funseq_var_pointer = 0;
+			for (unsigned int i = 0; i < ann_array.size(); i++) {
+				pair<unsigned int,unsigned int> range = intersecting_variants(funseq_output, ann_array[i], funseq_var_pointer);
+				funseq_var_pointer = range.first;
+				double funseq_sum = 0.0;
+			
+				for (unsigned int j = range.first; j < range.second; j++) {
+					string info_str = funseq_output[j][6];
+					double coding_score;
+					double nc_score;
+					for (int i = 0; i < 14; i++) {
+						size_t ws_index = info_str.find_first_of(";");
+						string in = info_str.substr(0, ws_index);
+						info_str = info_str.substr(ws_index+1);
+						if (i == 12) {
+							if (in != ".") {
+								coding_score = atof(in.c_str());
+							} else {
+								coding_score = -1.0;
+							}
+						} else if (i == 13) {
+							if (in != ".") {
+								nc_score = atof(in.c_str());
+							} else {
+								nc_score = -1.0;
+							}
+						}
+					}
+				
+					if (coding_score != -1.0) {
+						funseq_sum += coding_score;
+					} else {
+						funseq_sum += nc_score;
+					}
+				}
+			
+				funseq_scores.push_back(funseq_sum);
+			}
+			
+			// Print the Funseq scores to a companion file
+			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
+			FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
+			
+			for (unsigned int k = 0; k < funseq_scores.size(); k++) {
+				fprintf(funseq_outfile_ptr, "%f\n", funseq_scores[k]);
+			}
+			fclose(funseq_outfile_ptr);
+		}
 	}
 	
 	// DEBUG
