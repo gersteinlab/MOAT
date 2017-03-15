@@ -605,15 +605,18 @@ int main (int argc, char* argv[]) {
 		
 		// Additional steps for using permutation Funseq scores
 		if (funseq_opt == 'p') {
-			for (my i = 1; i <= num_permutations; i++) {
+			for (int i = 1; i <= num_permutations; i++) {
 				// Collect sum of Funseq scores per annotation
 				vector<double> perm_funseq_scores;
 				vector<vector<string> > perm_funseq_output;
+				
+				char i_str[STRSIZE];
+				sprintf(i_str, "%d", i);
 			
 				// Read in "Output.bed"
 				int first = 1;
 				char linebuf3[BIGSTRSIZE];
-				string pfunseq_output_file = funseq_outdir + "/permutation_" + i + ".txt";
+				string pfunseq_output_file = funseq_outdir + "/permutation_" + string(i_str) + ".txt";
 				FILE *pffile_ptr = fopen(pfunseq_output_file.c_str(), "r");
 				while (fgets(linebuf3, BIGSTRSIZE, pffile_ptr) != NULL) {
 				
