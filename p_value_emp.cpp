@@ -663,7 +663,7 @@ int main (int argc, char* argv[]) {
 					double funseq_sum = 0.0;
 				
 					for (unsigned int k = range.first; k < range.second; k++) {
-						funseq_sum += perm_funseq_output[k][5];
+						funseq_sum += atof(perm_funseq_output[k][5].c_str());
 					}
 				
 					perm_funseq_scores.push_back(funseq_sum);
