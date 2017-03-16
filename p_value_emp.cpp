@@ -606,6 +606,10 @@ int main (int argc, char* argv[]) {
 		// Additional steps for using permutation Funseq scores
 		if (funseq_opt == 'p') {
 			for (int i = 1; i <= num_permutations; i++) {
+			
+				// DEBUG
+				printf("Permutation: %d\n", i);
+			
 				// Collect sum of Funseq scores per annotation
 				vector<double> perm_funseq_scores;
 				vector<vector<string> > perm_funseq_output;
@@ -651,6 +655,9 @@ int main (int argc, char* argv[]) {
 					perror(errstring);
 					return 1;
 				}
+				
+				// DEBUG
+				printf("Input step done\n");
 			
 				// Sort
 				sort(perm_funseq_output.begin(), perm_funseq_output.end(), cmpIntervals);
@@ -668,6 +675,9 @@ int main (int argc, char* argv[]) {
 				
 					perm_funseq_scores.push_back(funseq_sum);
 				}
+				
+				// DEBUG
+				printf("Funseq score sum done\n");
 				
 				// Now update fs_overcount
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
