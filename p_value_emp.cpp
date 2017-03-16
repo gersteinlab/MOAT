@@ -618,16 +618,16 @@ int main (int argc, char* argv[]) {
 				sprintf(i_str, "%d", i);
 			
 				// Read in "Output.bed"
-				int first = 1;
+				// int first = 1;
 				char linebuf3[BIGSTRSIZE];
-				string pfunseq_output_file = funseq_outdir + "/permutation_" + string(i_str) + ".txt";
+				string pfunseq_output_file = permutation_dir + "/permutation_" + string(i_str) + ".txt";
 				FILE *pffile_ptr = fopen(pfunseq_output_file.c_str(), "r");
 				while (fgets(linebuf3, BIGSTRSIZE, pffile_ptr) != NULL) {
 				
-					if (first) {
-						first = 0;
-						continue;
-					}
+// 					if (first) {
+// 						first = 0;
+// 						continue;
+// 					}
 		
 					string line = string(linebuf3);
 				
