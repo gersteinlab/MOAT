@@ -608,7 +608,7 @@ int main (int argc, char* argv[]) {
 			for (int i = 1; i <= num_permutations; i++) {
 			
 				// DEBUG
-				printf("Permutation: %d\n", i);
+				// printf("Permutation: %d\n", i);
 			
 				// Collect sum of Funseq scores per annotation
 				vector<double> perm_funseq_scores;
@@ -657,7 +657,7 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-				printf("Input step done\n");
+				// printf("Input step done\n");
 			
 				// Sort
 				sort(perm_funseq_output.begin(), perm_funseq_output.end(), cmpIntervals);
@@ -677,7 +677,7 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-				printf("Funseq score sum done\n");
+				// printf("Funseq score sum done\n");
 				
 				// Now update fs_overcount
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
