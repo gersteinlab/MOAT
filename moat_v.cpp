@@ -1279,6 +1279,9 @@ int main (int argc, char* argv[]) {
 			
 			// DEBUG
 			printf("Funseq score sum done\n");
+			printf("funseq_output size: %d\n", (int)funseq_output.size());
+			printf("funseq_scores size: %d\n", (int)funseq_scores.size());
+			printf("permuted_set size: %d\n", (int)permuted_set.size());
 			
 			// Print the Funseq scores to a new file that will replace the old one
 			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
