@@ -14,7 +14,7 @@
 using namespace std;
 
 #define STRSIZE 256
-#define BIGSTRSIZE 1024
+#define BIGSTRSIZE 10240
 
 // Refactorization of the code that turns a chromosome string into an integer
 int chr2int (string chr_str) {
