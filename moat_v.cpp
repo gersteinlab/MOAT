@@ -1192,6 +1192,9 @@ int main (int argc, char* argv[]) {
 			string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + abs_path_outfile + " -inf bed -outf bed -o " + funseq_outdir;
 			system(funseq2_command.c_str());
 			
+			// DEBUG
+			printf("Funseq done\n");
+			
 			// Collect sum of Funseq scores per annotation
 			vector<vector<string> > funseq_output;
 		
@@ -1233,6 +1236,9 @@ int main (int argc, char* argv[]) {
 				perror(errstring);
 				return 1;
 			}
+			
+			// DEBUG
+			printf("Funseq score reading done\n");
 		
 			// Sort
 			sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
@@ -1271,6 +1277,9 @@ int main (int argc, char* argv[]) {
 				funseq_scores.push_back(funseq_sum);
 			}
 			
+			// DEBUG
+			printf("Funseq score sum done\n");
+			
 			// Print the Funseq scores to a new file that will replace the old one
 			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
 			FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
@@ -1284,6 +1293,9 @@ int main (int argc, char* argv[]) {
 			system(file_switch_1.c_str());
 			string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
 			system(file_switch_2.c_str());
+			
+			// DEBUG
+			printf("Filesystem magic done\n");
 		}
 	}
 	// }
