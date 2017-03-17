@@ -1193,7 +1193,7 @@ int main (int argc, char* argv[]) {
 			system(funseq2_command.c_str());
 			
 			// DEBUG
-			printf("Funseq done\n");
+			// printf("Funseq done\n");
 			
 			// Collect sum of Funseq scores per annotation
 			vector<vector<string> > funseq_output;
@@ -1238,7 +1238,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			printf("Funseq score reading done\n");
+			// printf("Funseq score reading done\n");
 		
 			// Sort
 			sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
@@ -1278,15 +1278,15 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			printf("Funseq score sum done\n");
-			printf("funseq_output size: %d\n", (int)funseq_output.size());
-			for (unsigned int m = 0; m < funseq_output.size(); m++) {
-				for (unsigned int n = 0; n < funseq_output[m].size(); n++) {
-					printf("m: %d, n: %d, Token: %s\n", m, n, funseq_output[m][n].c_str());
-				}
-			}
-			printf("funseq_scores size: %d\n", (int)funseq_scores.size());
-			printf("permuted_set size: %d\n", (int)permuted_set.size());
+// 			printf("Funseq score sum done\n");
+// 			printf("funseq_output size: %d\n", (int)funseq_output.size());
+// 			for (unsigned int m = 0; m < funseq_output.size(); m++) {
+// 				for (unsigned int n = 0; n < funseq_output[m].size(); n++) {
+// 					printf("m: %d, n: %d, Token: %s\n", m, n, funseq_output[m][n].c_str());
+// 				}
+// 			}
+// 			printf("funseq_scores size: %d\n", (int)funseq_scores.size());
+// 			printf("permuted_set size: %d\n", (int)permuted_set.size());
 			
 			// Print the Funseq scores to a new file that will replace the old one
 			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
@@ -1303,7 +1303,7 @@ int main (int argc, char* argv[]) {
 			system(file_switch_2.c_str());
 			
 			// DEBUG
-			printf("Filesystem magic done\n");
+			// printf("Filesystem magic done\n");
 		}
 	}
 	// }
