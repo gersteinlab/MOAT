@@ -1282,7 +1282,7 @@ int main (int argc, char* argv[]) {
 			printf("funseq_output size: %d\n", (int)funseq_output.size());
 			for (unsigned int m = 0; m < funseq_output.size(); m++) {
 				for (unsigned int n = 0; n < funseq_output[m].size(); n++) {
-					printf("Token: %s\n", funseq_output[m][n].c_str());
+					printf("m: %d, n: %d, Token: %s\n", m, n, funseq_output[m][n].c_str());
 				}
 			}
 			printf("funseq_scores size: %d\n", (int)funseq_scores.size());
