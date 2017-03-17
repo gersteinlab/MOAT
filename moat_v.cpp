@@ -1280,6 +1280,11 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			printf("Funseq score sum done\n");
 			printf("funseq_output size: %d\n", (int)funseq_output.size());
+			for (unsigned int m = 0; m < funseq_output.size(); m++) {
+				for (unsigned int n = 0; n < funseq_output[m].size(); n++) {
+					printf("Token: %s\n", funseq_output[m][n].c_str());
+				}
+			}
 			printf("funseq_scores size: %d\n", (int)funseq_scores.size());
 			printf("permuted_set size: %d\n", (int)permuted_set.size());
 			
