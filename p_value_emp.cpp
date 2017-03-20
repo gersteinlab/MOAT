@@ -683,7 +683,7 @@ int main (int argc, char* argv[]) {
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
 				
 					// DEBUG
-					printf("Permutation %d, annotation %d: %e, %e\n", i, j, perm_funseq_scores[j], funseq_scores[j]);
+					// printf("Permutation %d, annotation %d: %e, %e\n", i, j, perm_funseq_scores[j], funseq_scores[j]);
 				
 					if (perm_funseq_scores[j] >= funseq_scores[j]) {
 						fs_overcount[j]++;
@@ -719,8 +719,8 @@ int main (int argc, char* argv[]) {
 	fclose(outfile_ptr);
 	
 	// Clean up Funseq temporary folder
-// 	string rm_com = "rm -rf " + funseq_outdir;
-// 	system(rm_com.c_str());
+	string rm_com = "rm -rf " + funseq_outdir;
+	system(rm_com.c_str());
 	
 	// Verdun
 	return 0;

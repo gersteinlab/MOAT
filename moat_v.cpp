@@ -1304,6 +1304,10 @@ int main (int argc, char* argv[]) {
 			
 			// DEBUG
 			// printf("Filesystem magic done\n");
+			
+			// Clean up Funseq temporary folder
+			string rm_com = "rm -rf " + funseq_outdir;
+			system(rm_com.c_str());
 		}
 	}
 	// }
