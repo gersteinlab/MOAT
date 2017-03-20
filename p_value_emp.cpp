@@ -681,6 +681,10 @@ int main (int argc, char* argv[]) {
 				
 				// Now update fs_overcount
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
+				
+					// DEBUG
+					printf("Permutation %d, annotation %d: %e, %e\n", i, j, perm_funseq_scores[j], funseq_scores[j]);
+				
 					if (perm_funseq_scores[j] >= funseq_scores[j]) {
 						fs_overcount[j]++;
 					}
