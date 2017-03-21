@@ -1635,7 +1635,9 @@ int main (int argc, char* argv[]) {
 							// Pick new position
 							new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 						} else {
-							new_index = rand() % (rand_range_end-rand_range_start); // Selection in interval [0,(rand_range_end-rand_range_start)-1]
+							do {
+								new_index = rand() % (rand_range_end-rand_range_start); // Selection in interval [0,(rand_range_end-rand_range_start)-1]
+							} while (chr_nt[new_index] == 'N');
 						}
 						
 						// END 3MER CODE
@@ -1669,20 +1671,23 @@ int main (int argc, char* argv[]) {
 							bool is_purine; // Otherwise, pyrimidine
 							bool is_transition; // Otherwise, transversion
 							
-							if (var_array[k][3][0] == 'A' || var_array[k][3][0] == 'G') {
+							char old_ref = toupper(var_array[k][3][0]);
+							char old_alt = toupper(var_array[k][4][0]);
+							
+							if (old_ref == 'A' || old_ref == 'G') {
 								is_purine = true;
 							} else {
 								is_purine = false;
 							}
 					
 							if (is_purine) {
-								if (var_array[k][4][0] == 'A' || var_array[k][4][0] == 'G') {
+								if (old_alt == 'A' || old_alt == 'G') {
 									is_transition = true;
 								} else {
 									is_transition = false;
 								}
 							} else {
-								if (var_array[k][4][0] == 'A' || var_array[k][4][0] == 'G') {
+								if (old_alt == 'A' || old_alt == 'G') {
 									is_transition = false;
 								} else {
 									is_transition = true;
@@ -1690,39 +1695,39 @@ int main (int argc, char* argv[]) {
 							}
 							
 							char ref = chr_nt[new_index];
-							char alt;
+							string alt;
 					
 							if (is_transition) {
 								if (ref == 'A') {
-									alt = 'G';
+									alt = "G";
 								} else if (ref == 'G') {
-									alt = 'A';
+									alt = "A";
 								} else if (ref == 'C') {
-									alt = 'T';
+									alt = "T";
 								} else if (ref == 'T') {
-									alt = 'C';
+									alt = "C";
 								}
 							} else {
 								int rando = rand() % 2;
 								if (ref == 'A' || ref == 'G') {
 									// Choose between C and T
 									if (rando) {
-										alt = 'C';
+										alt = "C";
 									} else {
-										alt = 'T';
+										alt = "T";
 									}
 								} else {
 									// Choose between A and G
 									if (rando) {
-										alt = 'A';
+										alt = "A";
 									} else {
-										alt = 'G';
+										alt = "G";
 									}
 								}
 							}
 					
 							vec.push_back(string(&ref));
-							vec.push_back(string(&alt));
+							vec.push_back(alt);
 							
 						}
 		
