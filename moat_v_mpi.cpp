@@ -995,10 +995,10 @@ int main (int argc, char* argv[]) {
 						sprintf(end_str, "%d", permuted_var_coor[2*j+1]);
 						
 						char ref_str[STRSIZE];
-						sprintf(ref_str, "%c", chr_var_alleles[2*j]);
+						sprintf(ref_str, "%c", permuted_var_alleles[2*j]);
 					
 						char alt_str[STRSIZE];
-						sprintf(alt_str, "%c", chr_var_alleles[2*j+1]);
+						sprintf(alt_str, "%c", permuted_var_alleles[2*j+1]);
 					
 						vector<string> vec;
 						vec.push_back(this_chr);
