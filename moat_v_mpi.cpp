@@ -418,7 +418,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		/* Data structures for the starting data */
-		// Variant array, contains variants of the format vector(chr, start, end)
+		// Variant array, contains variants of the format vector(chr, start, end, ref, alt)
 		vector<vector<string> > var_array;
 	
 		// Annotation array, contains annotations of the format vector(chr, start, end, ann_name)
@@ -438,9 +438,9 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			// printf("%s\n", line.c_str());
 		
-			// Extract chromosome, start, and end from line (first 3 columns)
+			// Extract chromosome, start, end, ref and alt from line (first 5 columns)
 			vector<string> vec;
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 5; i++) {
 				size_t ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
 				vec.push_back(in);

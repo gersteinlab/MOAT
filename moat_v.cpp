@@ -643,7 +643,7 @@ int main (int argc, char* argv[]) {
 		
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
 		
-			if (trimer) {
+			// if (trimer) {
 				if (last_chr != ann_array[j][0]) {
 					// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
 					// char_pointer = 0;
@@ -674,7 +674,7 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 				}
-			}
+			// }
 			
 			// DEBUG
 // 			printf("Char 11998: %c\n", chr_nt[11997]);
@@ -1116,6 +1116,9 @@ int main (int argc, char* argv[]) {
 					sprintf(end_cstr, "%d", pos2[new_index]+1); // 1-based
 					vec.push_back(string(end_cstr));
 					
+					vec.push_back(var_array[k][3]);
+					vec.push_back(var_array[k][4]);
+					
 				} else {
 				
 					char start_cstr[STRSIZE];
@@ -1126,10 +1129,65 @@ int main (int argc, char* argv[]) {
 					sprintf(end_cstr, "%d", new_index+1); // 1-based
 					vec.push_back(string(end_cstr));
 					
+					bool is_purine; // Otherwise, pyrimidine
+					bool is_transition; // Otherwise, transversion
+					
+					if (var_array[k][3][0] == 'A' || var_array[k][3][0] == 'G') {
+						is_purine = true;
+					} else {
+						is_purine = false;
+					}
+					
+					if (is_purine) {
+						if (var_array[k][4][0] == 'A' || var_array[k][4][0] == 'G') {
+							is_transition = true;
+						} else {
+							is_transition = false;
+						}
+					} else {
+						if (var_array[k][4][0] == 'A' || var_array[k][4][0] == 'G') {
+							is_transition = false;
+						} else {
+							is_transition = true;
+						}
+					}
+					
+					char ref = chr_nt[new_index];
+					char alt;
+					
+					if (is_transition) {
+						if (ref == 'A') {
+							alt = 'G';
+						} else if (ref == 'G') {
+							alt = 'A';
+						} else if (ref == 'C') {
+							alt = 'T';
+						} else if (ref == 'T') {
+							alt = 'C';
+						}
+					} else {
+						int rando = rand() % 2;
+						if (ref == 'A' || ref == 'G') {
+							// Choose between C and T
+							if (rando) {
+								alt = 'C';
+							} else {
+								alt = 'T';
+							}
+						} else {
+							// Choose between A and G
+							if (rando) {
+								alt = 'A';
+							} else {
+								alt = 'G';
+							}
+						}
+					}
+					
+					vec.push_back(string(&ref));
+					vec.push_back(string(&alt));
+					
 				}
-				
-				vec.push_back(var_array[k][3]);
-				vec.push_back(var_array[k][4]);
 				
 				permuted_set.push_back(vec);
 			}
