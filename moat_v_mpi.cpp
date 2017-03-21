@@ -993,13 +993,19 @@ int main (int argc, char* argv[]) {
 					
 						char end_str[STRSIZE];
 						sprintf(end_str, "%d", permuted_var_coor[2*j+1]);
+						
+						char ref_str[STRSIZE];
+						sprintf(ref_str, "%c", chr_var_alleles[2*j]);
+					
+						char alt_str[STRSIZE];
+						sprintf(alt_str, "%c", chr_var_alleles[2*j+1]);
 					
 						vector<string> vec;
 						vec.push_back(this_chr);
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
-						vec.push_back(string(&permuted_var_alleles[2*j]));
-						vec.push_back(string(&permuted_var_alleles[2*j+1]));
+						vec.push_back(string(ref_str));
+						vec.push_back(string(alt_str));
 						permuted_set.push_back(vec);
 					}
 
@@ -1287,13 +1293,19 @@ int main (int argc, char* argv[]) {
 				
 					char end_str[STRSIZE];
 					sprintf(end_str, "%d", chr_var_coor[i]);
+					
+					char ref_str[STRSIZE];
+					sprintf(ref_str, "%c", chr_var_alleles[2*i]);
+					
+					char alt_str[STRSIZE];
+					sprintf(alt_str, "%c", chr_var_alleles[2*i+1]);
 				
 					vector<string> vec;
 					vec.push_back(chr);
 					vec.push_back(string(start_str));
 					vec.push_back(string(end_str));
-					vec.push_back(string(&chr_var_alleles[2*i]));
-					vec.push_back(string(&chr_var_alleles[2*i+1]));
+					vec.push_back(string(ref_str));
+					vec.push_back(string(alt_str));
 					var_array.push_back(vec);
 				}
 			
@@ -1725,8 +1737,11 @@ int main (int argc, char* argv[]) {
 									}
 								}
 							}
+							
+							char ref_str[STRSIZE];
+							sprintf(ref_str, "%c", ref);
 					
-							vec.push_back(string(&ref));
+							vec.push_back(string(ref_str));
 							vec.push_back(alt);
 							
 						}

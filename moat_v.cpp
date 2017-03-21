@@ -1189,7 +1189,10 @@ int main (int argc, char* argv[]) {
 						}
 					}
 					
-					vec.push_back(string(&ref));
+					char ref_str[STRSIZE];
+					sprintf(ref_str, "%c", ref);
+					
+					vec.push_back(string(ref_str));
 					vec.push_back(alt);
 					
 				}
