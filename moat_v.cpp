@@ -1353,18 +1353,18 @@ int main (int argc, char* argv[]) {
 			
 			// Print the Funseq scores to a new file that will replace the old one
 			// DEBUG deactivate this code
-// 			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
-// 			FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
-// 		
-// 			for (unsigned int k = 0; k < funseq_scores.size(); k++) {
-// 				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
-// 			}
-// 			fclose(funseq_outfile_ptr);
-// 		
-// 			string file_switch_1 = "rm " + outfile;
-// 			system(file_switch_1.c_str());
-// 			string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
-// 			system(file_switch_2.c_str());
+			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
+			FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
+		
+			for (unsigned int k = 0; k < funseq_scores.size(); k++) {
+				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
+			}
+			fclose(funseq_outfile_ptr);
+		
+			string file_switch_1 = "rm " + outfile;
+			system(file_switch_1.c_str());
+			string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
+			system(file_switch_2.c_str());
 			
 			// DEBUG
 			// printf("Filesystem magic done\n");
