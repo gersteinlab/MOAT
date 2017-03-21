@@ -811,6 +811,7 @@ int main (int argc, char* argv[]) {
 					if (errno) {
 						fprintf(stderr, "Error resolving absolute path of permutation variant file: %s\n", strerror(errno));
 						fprintf(stderr, "Exiting.\n");
+						MPI_Abort(MPI_COMM_WORLD, 1);
 						return 1;
 					}
 					
@@ -856,6 +857,7 @@ int main (int argc, char* argv[]) {
 						char errstring[STRSIZE];
 						sprintf(errstring, "Error reading from %s", funseq_output_file.c_str());
 						perror(errstring);
+						MPI_Abort(MPI_COMM_WORLD, 1);
 						return 1;
 					}
 					
@@ -908,6 +910,9 @@ int main (int argc, char* argv[]) {
 					FILE *outfile_ptr = fopen(outfile.c_str(), "r");
 					while (fgets(linebuf3, STRSIZE, vfile_ptr) != NULL) {
 						string line = string(linebuf3);
+						
+						// DEBUG: check what's coming in from this file
+						printf("%s\n", line.c_str());
 						
 						// Extract chromosome, start, end, ref, and alt (first 5 columns)
 						vector<string> vec;
@@ -1077,6 +1082,7 @@ int main (int argc, char* argv[]) {
 			if (errno) {
 				fprintf(stderr, "Error resolving absolute path of permutation variant file: %s\n", strerror(errno));
 				fprintf(stderr, "Exiting.\n");
+				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
@@ -1122,6 +1128,7 @@ int main (int argc, char* argv[]) {
 				char errstring[STRSIZE];
 				sprintf(errstring, "Error reading from %s", funseq_output_file.c_str());
 				perror(errstring);
+				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
