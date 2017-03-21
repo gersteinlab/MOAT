@@ -1273,7 +1273,7 @@ int main (int argc, char* argv[]) {
 				int *chr_var_coor = (int *)malloc(chr_var_coor_size*sizeof(int));
 				MPI_Recv(chr_var_coor, chr_var_coor_size, MPI_INT, 0, 4, MPI_COMM_WORLD, &status);
 				
-				char *chr_var_alleles = (char *)malloc(2*chr_var_array_size*(sizeof(char)));
+				char *chr_var_alleles = (char *)malloc(2*chr_var_coor_size*(sizeof(char)));
 				MPI_Recv(chr_var_alleles, 2*chr_var_coor_size, MPI_CHAR, 0, 20, MPI_COMM_WORLD, &status);
 			
 				// Turn into the expected data structures (vectors)
