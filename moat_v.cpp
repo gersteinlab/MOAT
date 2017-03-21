@@ -1158,39 +1158,39 @@ int main (int argc, char* argv[]) {
 					}
 					
 					char ref = toupper(chr_nt[new_index]);
-					char alt;
+					string alt;
 					
 					if (is_transition) {
 						if (ref == 'A') {
-							alt = 'G';
+							alt = "G";
 						} else if (ref == 'G') {
-							alt = 'A';
+							alt = "A";
 						} else if (ref == 'C') {
-							alt = 'T';
+							alt = "T";
 						} else if (ref == 'T') {
-							alt = 'C';
+							alt = "C";
 						}
 					} else {
 						int rando = rand() % 2;
 						if (ref == 'A' || ref == 'G') {
 							// Choose between C and T
 							if (rando) {
-								alt = 'C';
+								alt = "C";
 							} else {
-								alt = 'T';
+								alt = "T";
 							}
 						} else {
 							// Choose between A and G
 							if (rando) {
-								alt = 'A';
+								alt = "A";
 							} else {
-								alt = 'G';
+								alt = "G";
 							}
 						}
 					}
 					
 					vec.push_back(string(&ref));
-					vec.push_back(string(&alt));
+					vec.push_back(alt);
 					
 				}
 				
