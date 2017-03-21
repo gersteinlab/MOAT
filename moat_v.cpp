@@ -1157,7 +1157,7 @@ int main (int argc, char* argv[]) {
 						}
 					}
 					
-					char ref = chr_nt[new_index];
+					char ref = toupper(chr_nt[new_index]);
 					char alt;
 					
 					if (is_transition) {
