@@ -755,7 +755,7 @@ int main (int argc, char* argv[]) {
 				
 					// Package the variant data for the child
 					int *chr_var_coor = (int *)malloc(chr_var_array_size*sizeof(int));
-					char *chr_var_alleles = (char *)malloc(2*chr_var_array_size(sizeof(char)));
+					char *chr_var_alleles = (char *)malloc(2*chr_var_array_size*(sizeof(char)));
 					for (int k = 0; k < chr_var_array_size; k++) {
 						chr_var_coor[k] = atoi(chr_var_array[k][2].c_str());
 						chr_var_alleles[2*k] = chr_var_array[k][3][0];
@@ -998,8 +998,8 @@ int main (int argc, char* argv[]) {
 						vec.push_back(this_chr);
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
-						vec.push_back(permuted_var_alleles[2*j]);
-						vec.push_back(permuted_var_alleles[2*j+1]);
+						vec.push_back(string(permuted_var_alleles[2*j]));
+						vec.push_back(string(permuted_var_alleles[2*j+1]));
 						permuted_set.push_back(vec);
 					}
 
