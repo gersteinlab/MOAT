@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
+#include <stdexcept>
 #include "variant_permutation_v3.h"
 
 using namespace std;
@@ -663,8 +664,8 @@ int main (int argc, char* argv[]) {
 			for (unsigned int i = 0; i < var_array.size(); i++) {
 				char regnum_cstr[STRSIZE];
 		 		sprintf(regnum_cstr, "%d", regnum);
-		 		string regnum = "reg" + string(regnum_cstr);
-				fprintf("%s\t%s\t%s\t%s\n", var_array[0].c_str(), var_array[1].c_str(), var_array[2].c_str(), regnum.c_str());
+		 		string regnum_str = "reg" + string(regnum_cstr);
+				fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", var_array[0].c_str(), var_array[1].c_str(), var_array[2].c_str(), regnum_str.c_str());
 				regnum++;
 			}
 			fclose(avg_infile_ptr);
@@ -675,7 +676,7 @@ int main (int argc, char* argv[]) {
 			system(command.c_str());
 			
 			// Next command depends on OS
-			string command = "uname";
+			command = "uname";
 			char buf[STRSIZE];
 			string os = "";
 			FILE* pipe = popen(command.c_str(), "r");
@@ -708,6 +709,7 @@ int main (int argc, char* argv[]) {
 			
 			// Read the output into memory
 			FILE *avg_outfile_ptr = fopen(avg_outfile_sorted.c_str(), "r");
+			char linebuf_cstr[STRSIZE];
 			while (fgets(linebuf_cstr, STRSIZE-1, avg_outfile_ptr) != NULL) {
 				
 				string linebuf = string(linebuf_cstr);
