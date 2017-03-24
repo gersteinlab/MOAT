@@ -665,7 +665,7 @@ int main (int argc, char* argv[]) {
 				char regnum_cstr[STRSIZE];
 		 		sprintf(regnum_cstr, "%d", regnum);
 		 		string regnum_str = "reg" + string(regnum_cstr);
-				fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", var_array[0].c_str(), var_array[1].c_str(), var_array[2].c_str(), regnum_str.c_str());
+				fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str(), regnum_str.c_str());
 				regnum++;
 			}
 			fclose(avg_infile_ptr);
