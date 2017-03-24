@@ -611,10 +611,6 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 		
-			// Clean up Funseq temporary folder
-			string rm_com = "rm -rf " + funseq_outdir;
-			system(rm_com.c_str());
-		
 			// Sort
 			sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
 		
@@ -734,6 +730,11 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 			fclose(avg_outfile_ptr);
+		}
+		
+		// Clean up Funseq temporary folder
+		string rm_com = "rm -rf " + funseq_outdir;
+		system(rm_com.c_str());
 		
 		// Additional steps for using permutation Funseq scores
 		if (funseq_opt == 'p') {
