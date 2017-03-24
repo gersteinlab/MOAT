@@ -657,8 +657,8 @@ int main (int argc, char* argv[]) {
 		} else { // Funseq_mode == 's' (static)
 			
 			// Produce an input file for bigWigAverageOverBed in the temporary Funseq folder
-			string avg_infile = "avg_infile.txt";
-			string avg_outfile = "avg_outfile.txt";
+			string avg_infile = funseq_outdir + "/" + "avg_infile.txt";
+			string avg_outfile = funseq_outdir + "/" + "avg_outfile.txt";
 			int regnum = 1;
 			FILE *avg_infile_ptr = fopen(avg_infile.c_str(), "w");
 			for (unsigned int i = 0; i < var_array.size(); i++) {
@@ -702,7 +702,7 @@ int main (int argc, char* argv[]) {
 			}
 			system(command.c_str());
 			
-			string avg_outfile_sorted = "avg_outfile_sorted.txt";
+			string avg_outfile_sorted = funseq_outdir + "/" + "avg_outfile_sorted.txt";
 			
 			command = "sort -n -k 1,1 " + avg_outfile + " > " + avg_outfile_sorted;
 			system(command.c_str());
