@@ -336,10 +336,15 @@ int main (int argc, char* argv[]) {
 		string outdir;
 		
 		// Option to specify whether to calculate Funseq scores on the permutations
-		bool funseq_opt;
+		// Also sets the mode for calculating Funseq scores
+		// 's': Static mode. Retrieves precomputed results from a data file.
+		// 'd': Dynamic mode: Compute Funseq results alongside the MOAT results, using a
+		// locally installed Funseq
+		// 'n': Do not use Funseq
+		char funseq_opt;
 	
 		if (argc != 10) {
-			fprintf(stderr, "Usage: moat_v_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file] [Funseq option (y/n)]. Exiting.\n");
+			fprintf(stderr, "Usage: moat_v_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output file] [Funseq option (s/d/n)]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
@@ -362,16 +367,17 @@ int main (int argc, char* argv[]) {
 			vfile = string(argv[7]);
 			// afile = string(argv[5]);
 			outdir = string(argv[8]);
+			funseq_opt = argv[9][0];
 			
-			if (argv[9][0] == 'y') {
-				funseq_opt = true;
-			} else if (argv[9][0] == 'n') {
-				funseq_opt = false;
-			} else {
-				fprintf(stderr, "Invalid option for Funseq option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[9][0]);
-				MPI_Abort(MPI_COMM_WORLD, 1);
-				return 1;
-			}
+// 			if (argv[9][0] == 'y') {
+// 				funseq_opt = true;
+// 			} else if (argv[9][0] == 'n') {
+// 				funseq_opt = false;
+// 			} else {
+// 				fprintf(stderr, "Invalid option for Funseq option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[9][0]);
+// 				MPI_Abort(MPI_COMM_WORLD, 1);
+// 				return 1;
+// 			}
 		}
 	
 		// Verify files, and import data to memory
@@ -415,6 +421,43 @@ int main (int argc, char* argv[]) {
 			fprintf(stderr, "Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
+		}
+		
+		// Verify that "funseq_mode" is valid
+		if (funseq_opt != 's' && funseq_opt != 'd' && funseq_opt != 'n') {
+			fprintf(stderr, "Error: Funseq option was set to \'%c\', which is invalid. ", funseq_opt);
+			fprintf(stderr, "Must be either \'s\' or \'d\' or \'n\'. Exiting.\n");
+			return 1;
+		}
+		
+		// Check that Funseq2 is installed, if dynamic mode is to be used
+		if (funseq_opt == 'd') {
+			string test_funseq2 = "command -v funseq2.sh > /dev/null";
+			if (system(test_funseq2.c_str())) {
+				fprintf(stderr, "Error: Funseq2 is not installed. Please install Funseq2 ");
+				fprintf(stderr, "(funseq2.gersteinlab.org) and ensure the install path has been ");
+				fprintf(stderr, "added to your PATH environment variable.\n");
+				return 1;
+			}
+		}
+		
+		// Check bigWigAverageOverBed and Funseq data file in static mode
+		if (funseq_mode == 's') {
+			// Verify that bigWigAverageOverBed is in the same directory as this program
+			struct stat avgbuf;
+			char avgoverbed_cstr[] = "./bigWigAverageOverBed";
+			if (stat(avgoverbed_cstr, &avgbuf)) {
+				fprintf(stderr, "Error: bigWigAverageOverBed is not in the same directory as \"moat\". Exiting.\n");
+				return 1;
+			}
+		
+			// Verify precomputed Funseq scores are in the same directory as this program
+			struct stat databuf;
+			char funseq_scores_cstr[] = "./hg19_wg_score.bw";
+			if (stat(funseq_scores_cstr, &databuf)) {
+				fprintf(stderr, "Error: Precomputed Funseq scores \"hg19_wg_score.bw\" is not in the same directory as \"moat\". Exiting.\n");
+				return 1;
+			}
 		}
 	
 		/* Data structures for the starting data */
@@ -781,20 +824,15 @@ int main (int argc, char* argv[]) {
 			
 			// NEW CODE
 			// Do Funseq on the previously created permutation
-			if (funseq_opt) {
+			vector<double> funseq_scores;
+			if (funseq_opt != 'n') {
 				if (i >= 1) {
-					
-					vector<double> funseq_scores;
-					
-					string funseq_loc = exec("command -v funseq2.sh");
-					size_t index = funseq_loc.find_last_of("/");
-					funseq_loc = funseq_loc.substr(0, index);
-		
+				
 					// Retrieve current working directory for temporary Funseq2 output
 					string funseq_outdir = exec("pwd");
 					funseq_outdir.erase(funseq_outdir.find_last_not_of(" \n\r\t")+1);
 					funseq_outdir += "/funseq";
-			
+	
 					// Verify that funseq output directory exists, or create it if it doesn't
 					string command = "mkdir -p " + funseq_outdir;
 					system(command.c_str());
@@ -803,7 +841,7 @@ int main (int argc, char* argv[]) {
 					char perm_num[STRSIZE];
 					sprintf(perm_num, "%d", i);
 					string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
-					
+				
 					// Convert outfile to absolute path, if it is not already
 					char abs_path_outfile[PATH_MAX];
 					errno = 0;
@@ -814,88 +852,201 @@ int main (int argc, char* argv[]) {
 						MPI_Abort(MPI_COMM_WORLD, 1);
 						return 1;
 					}
+				
+					if (funseq_opt == 'd') {
 					
-					string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + abs_path_outfile + " -inf bed -outf bed -o " + funseq_outdir;
-					system(funseq2_command.c_str());
+						string funseq_loc = exec("command -v funseq2.sh");
+						size_t index = funseq_loc.find_last_of("/");
+						funseq_loc = funseq_loc.substr(0, index);
 					
-					// Collect sum of Funseq scores per annotation
-					vector<vector<string> > funseq_output;
+						string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + abs_path_outfile + " -inf bed -outf bed -o " + funseq_outdir;
+						system(funseq2_command.c_str());
+					
+						// Collect sum of Funseq scores per annotation
+						vector<vector<string> > funseq_output;
 		
-					// Read in "Output.bed"
-					int first = 1;
-					char linebuf2[BIGSTRSIZE];
-					string funseq_output_file = funseq_outdir + "/Output.bed";
-					FILE *ffile_ptr = fopen(funseq_output_file.c_str(), "r");
-					while (fgets(linebuf2, BIGSTRSIZE, ffile_ptr) != NULL) {
+						// Read in "Output.bed"
+						int first = 1;
+						char linebuf2[BIGSTRSIZE];
+						string funseq_output_file = funseq_outdir + "/Output.bed";
+						FILE *ffile_ptr = fopen(funseq_output_file.c_str(), "r");
+						while (fgets(linebuf2, BIGSTRSIZE, ffile_ptr) != NULL) {
 						
-						if (first) {
-							first = 0;
-							continue;
-						}
+							if (first) {
+								first = 0;
+								continue;
+							}
 		
-						string line = string(linebuf2);
+							string line = string(linebuf2);
 			
-						vector<string> vec;
-						for (int i = 0; i < 7; i++) {
-							size_t ws_index = line.find_first_of("\t\n");
-							string in = line.substr(0, ws_index);
-							vec.push_back(in);
-							line = line.substr(ws_index+1);
+							vector<string> vec;
+							for (int i = 0; i < 7; i++) {
+								size_t ws_index = line.find_first_of("\t\n");
+								string in = line.substr(0, ws_index);
+								vec.push_back(in);
+								line = line.substr(ws_index+1);
+							}
+			
+							// If this is not a standard chromosome, then remove this row
+							if (chr2int(vec[0]) == 0) {
+								continue;
+							}
+			
+							funseq_output.push_back(vec);
 						}
-			
-						// If this is not a standard chromosome, then remove this row
-						if (chr2int(vec[0]) == 0) {
-							continue;
+						// Check feof of vfile
+						if (feof(ffile_ptr)) { // We're good
+							fclose(ffile_ptr);
+						} else { // It's an error
+							char errstring[STRSIZE];
+							sprintf(errstring, "Error reading from %s", funseq_output_file.c_str());
+							perror(errstring);
+							MPI_Abort(MPI_COMM_WORLD, 1);
+							return 1;
 						}
-			
-						funseq_output.push_back(vec);
-					}
-					// Check feof of vfile
-					if (feof(ffile_ptr)) { // We're good
-						fclose(ffile_ptr);
-					} else { // It's an error
-						char errstring[STRSIZE];
-						sprintf(errstring, "Error reading from %s", funseq_output_file.c_str());
-						perror(errstring);
-						MPI_Abort(MPI_COMM_WORLD, 1);
-						return 1;
-					}
 					
-					// Sort
-					sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
+						// Sort
+						sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
 		
-					// Gather up and sum the Funseq values over each annotation
-					// unsigned int funseq_var_pointer = 0;
-					for (unsigned int j = 0; j < funseq_output.size(); j++) {
-						string info_str = funseq_output[j][6];
-						double funseq_sum = 0.0;
-						double coding_score;
-						double nc_score;
-						for (int i = 0; i < 14; i++) {
-							size_t ws_index = info_str.find_first_of(";");
-							string in = info_str.substr(0, ws_index);
-							info_str = info_str.substr(ws_index+1);
-							if (i == 12) {
-								if (in != ".") {
-									coding_score = atof(in.c_str());
-								} else {
-									coding_score = -1.0;
-								}
-							} else if (i == 13) {
-								if (in != ".") {
-									nc_score = atof(in.c_str());
-								} else {
-									nc_score = -1.0;
+						// Gather up and sum the Funseq values over each annotation
+						// unsigned int funseq_var_pointer = 0;
+						for (unsigned int j = 0; j < funseq_output.size(); j++) {
+							string info_str = funseq_output[j][6];
+							double funseq_sum = 0.0;
+							double coding_score;
+							double nc_score;
+							for (int i = 0; i < 14; i++) {
+								size_t ws_index = info_str.find_first_of(";");
+								string in = info_str.substr(0, ws_index);
+								info_str = info_str.substr(ws_index+1);
+								if (i == 12) {
+									if (in != ".") {
+										coding_score = atof(in.c_str());
+									} else {
+										coding_score = -1.0;
+									}
+								} else if (i == 13) {
+									if (in != ".") {
+										nc_score = atof(in.c_str());
+									} else {
+										nc_score = -1.0;
+									}
 								}
 							}
-						}
 			
-						if (coding_score != -1.0) {
-							funseq_sum = coding_score;
-						} else {
-							funseq_sum = nc_score;
+							if (coding_score != -1.0) {
+								funseq_sum = coding_score;
+							} else {
+								funseq_sum = nc_score;
+							}
+							funseq_scores.push_back(funseq_sum);
 						}
-						funseq_scores.push_back(funseq_sum);
+					} else { // Funseq_mode == 's' (static)
+					
+						// Produce an input file for bigWigAverageOverBed in the temporary Funseq folder
+						string avg_infile = funseq_outdir + "/" + "avg_infile.txt";
+						string avg_outfile = funseq_outdir + "/" + "avg_outfile.txt";
+						int regnum = 1;
+						FILE *avg_infile_ptr = fopen(avg_infile.c_str(), "w");
+						
+						// Need to read the other columns from the original outfile
+						char linebuf3[STRSIZE];
+						FILE *outfile_ptr = fopen(outfile.c_str(), "r");
+						while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
+						
+							string line = string(linebuf3);
+							
+							// Extract chromosome, start, and end (first 3 columns)
+							vector<string> vec;
+							for (int i = 0; i < 3; i++) {
+								size_t ws_index = line.find_first_of("\t\n");
+								string in = line.substr(0, ws_index);
+								vec.push_back(in);
+								line = line.substr(ws_index+1);
+							}
+							
+							char regnum_cstr[STRSIZE];
+							sprintf(regnum_cstr, "%d", regnum);
+							string regnum_str = "reg" + string(regnum_cstr);
+							
+							fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), regnum_str.c_str());
+							regnum++;
+						}
+						// Check feof of outfile
+						if (feof(outfile_ptr)) { // We're good
+							fclose(outfile_ptr);
+						} else { // It's an error
+							char errstring[STRSIZE];
+							sprintf(errstring, "Error reading from %s", outfile.c_str());
+							perror(errstring);
+							MPI_Abort(MPI_COMM_WORLD, 1);
+							return 1;
+						}
+						
+						fclose(avg_infile_ptr);
+						
+						// The actual command
+						// Assumes bigWigAverageOverBed is in same directory
+						string command = "./bigWigAverageOverBed hg19_wg_score.bw " + avg_infile + " " + avg_outfile;
+						system(command.c_str());
+				
+						// Next command depends on OS
+						command = "uname";
+						char buf[STRSIZE];
+						string os = "";
+						FILE* pipe = popen(command.c_str(), "r");
+						if (!pipe) throw runtime_error("Could not determine operating system. Exiting.\n");
+						try {
+							while (!feof(pipe)) {
+								if (fgets(buf, STRSIZE, pipe) != NULL) {
+									os += buf;
+								}
+							}
+						} catch (...) {
+							pclose(pipe);
+							throw;
+						}
+						pclose(pipe);
+			
+						// DEBUG
+						// printf("%s\n", os.c_str());
+						if (os == "Darwin\n") { // OS = Mac OS X
+							command = "sed -i .bak 's/^reg//g' " + avg_outfile;
+						} else { // Assume Linux, or rather, that this command is compatible
+							command = "sed -i 's/^reg//g' " + avg_outfile;
+						}
+						system(command.c_str());
+						
+						string avg_outfile_sorted = funseq_outdir + "/" + "avg_outfile_sorted.txt";
+				
+						command = "sort -n -k 1,1 " + avg_outfile + " > " + avg_outfile_sorted;
+						system(command.c_str());
+			
+						// Read the output into memory
+						FILE *avg_outfile_ptr = fopen(avg_outfile_sorted.c_str(), "r");
+						char linebuf_cstr[STRSIZE];
+						while (fgets(linebuf_cstr, STRSIZE-1, avg_outfile_ptr) != NULL) {
+				
+							string linebuf = string(linebuf_cstr);
+							int col_index = 0;
+							while (col_index < 5) {
+								unsigned int pos = linebuf.find_first_of("\t");
+								linebuf = linebuf.substr(pos+1);
+								col_index++;
+							}
+				
+							// Now linebuf has the value we're looking for. Put it in the funseq_scores vector.
+							double funseq_score;
+							sscanf(linebuf.c_str(), "%lf", &funseq_score);
+							funseq_scores.push_back(funseq_score);
+						}
+						if (!(feof(avg_outfile_ptr)) && ferror(avg_outfile_ptr)) { // This is an error
+							char preamble[STRSIZE];
+							sprintf(preamble, "There was an error reading from %s", avg_outfile_sorted.c_str());
+							perror(preamble);
+							return 1;
+						}
+						fclose(avg_outfile_ptr);
 					}
 					
 					// Print the Funseq scores to a new file that will replace the old one
@@ -926,7 +1077,7 @@ int main (int argc, char* argv[]) {
 						fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), vec[3].c_str(), vec[4].c_str(), funseq_scores[fs_index]);
 						fs_index++;
 					}
-					// Check feof of vfile
+					// Check feof of outfile
 					if (feof(outfile_ptr)) { // We're good
 						fclose(outfile_ptr);
 					} else { // It's an error
@@ -1053,14 +1204,9 @@ int main (int argc, char* argv[]) {
 // 		}
 
 		// Funseq fencepost
-		if (funseq_opt) {
-			
-			vector<double> funseq_scores;
-					
-			string funseq_loc = exec("command -v funseq2.sh");
-			size_t index = funseq_loc.find_last_of("/");
-			funseq_loc = funseq_loc.substr(0, index);
-
+		vector<double> funseq_scores;
+		if (funseq_opt != 'n') {
+		
 			// Retrieve current working directory for temporary Funseq2 output
 			string funseq_outdir = exec("pwd");
 			funseq_outdir.erase(funseq_outdir.find_last_not_of(" \n\r\t")+1);
@@ -1086,87 +1232,200 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 			
-			string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + abs_path_outfile + " -inf bed -outf bed -o " + funseq_outdir;
-			system(funseq2_command.c_str());
+			if (funseq_opt == 'd') {
+					
+				string funseq_loc = exec("command -v funseq2.sh");
+				size_t index = funseq_loc.find_last_of("/");
+				funseq_loc = funseq_loc.substr(0, index);
 			
-			// Collect sum of Funseq scores per annotation
-			vector<vector<string> > funseq_output;
+				string funseq2_command = "cd " + funseq_loc + "; ./funseq2.sh -f " + abs_path_outfile + " -inf bed -outf bed -o " + funseq_outdir;
+				system(funseq2_command.c_str());
+			
+				// Collect sum of Funseq scores per annotation
+				vector<vector<string> > funseq_output;
 
-			// Read in "Output.bed"
-			int first = 1;
-			char linebuf2[BIGSTRSIZE];
-			string funseq_output_file = funseq_outdir + "/Output.bed";
-			FILE *ffile_ptr = fopen(funseq_output_file.c_str(), "r");
-			while (fgets(linebuf2, BIGSTRSIZE, ffile_ptr) != NULL) {
+				// Read in "Output.bed"
+				int first = 1;
+				char linebuf2[BIGSTRSIZE];
+				string funseq_output_file = funseq_outdir + "/Output.bed";
+				FILE *ffile_ptr = fopen(funseq_output_file.c_str(), "r");
+				while (fgets(linebuf2, BIGSTRSIZE, ffile_ptr) != NULL) {
 				
-				if (first) {
-					first = 0;
-					continue;
-				}
+					if (first) {
+						first = 0;
+						continue;
+					}
 
-				string line = string(linebuf2);
+					string line = string(linebuf2);
 	
-				vector<string> vec;
-				for (int i = 0; i < 7; i++) {
-					size_t ws_index = line.find_first_of("\t\n");
-					string in = line.substr(0, ws_index);
-					vec.push_back(in);
-					line = line.substr(ws_index+1);
+					vector<string> vec;
+					for (int i = 0; i < 7; i++) {
+						size_t ws_index = line.find_first_of("\t\n");
+						string in = line.substr(0, ws_index);
+						vec.push_back(in);
+						line = line.substr(ws_index+1);
+					}
+	
+					// If this is not a standard chromosome, then remove this row
+					if (chr2int(vec[0]) == 0) {
+						continue;
+					}
+	
+					funseq_output.push_back(vec);
 				}
-	
-				// If this is not a standard chromosome, then remove this row
-				if (chr2int(vec[0]) == 0) {
-					continue;
+				// Check feof of vfile
+				if (feof(ffile_ptr)) { // We're good
+					fclose(ffile_ptr);
+				} else { // It's an error
+					char errstring[STRSIZE];
+					sprintf(errstring, "Error reading from %s", funseq_output_file.c_str());
+					perror(errstring);
+					MPI_Abort(MPI_COMM_WORLD, 1);
+					return 1;
 				}
-	
-				funseq_output.push_back(vec);
-			}
-			// Check feof of vfile
-			if (feof(ffile_ptr)) { // We're good
-				fclose(ffile_ptr);
-			} else { // It's an error
-				char errstring[STRSIZE];
-				sprintf(errstring, "Error reading from %s", funseq_output_file.c_str());
-				perror(errstring);
-				MPI_Abort(MPI_COMM_WORLD, 1);
-				return 1;
-			}
 			
-			// Sort
-			sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
+				// Sort
+				sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
 			
-			// Gather up and sum the Funseq values over each annotation
-			// unsigned int funseq_var_pointer = 0;
-			for (unsigned int j = 0; j < funseq_output.size(); j++) {
-				string info_str = funseq_output[j][6];
-				double funseq_sum = 0.0;
-				double coding_score;
-				double nc_score;
-				for (int i = 0; i < 14; i++) {
-					size_t ws_index = info_str.find_first_of(";");
-					string in = info_str.substr(0, ws_index);
-					info_str = info_str.substr(ws_index+1);
-					if (i == 12) {
-						if (in != ".") {
-							coding_score = atof(in.c_str());
-						} else {
-							coding_score = -1.0;
-						}
-					} else if (i == 13) {
-						if (in != ".") {
-							nc_score = atof(in.c_str());
-						} else {
-							nc_score = -1.0;
+				// Gather up and sum the Funseq values over each annotation
+				// unsigned int funseq_var_pointer = 0;
+				for (unsigned int j = 0; j < funseq_output.size(); j++) {
+					string info_str = funseq_output[j][6];
+					double funseq_sum = 0.0;
+					double coding_score;
+					double nc_score;
+					for (int i = 0; i < 14; i++) {
+						size_t ws_index = info_str.find_first_of(";");
+						string in = info_str.substr(0, ws_index);
+						info_str = info_str.substr(ws_index+1);
+						if (i == 12) {
+							if (in != ".") {
+								coding_score = atof(in.c_str());
+							} else {
+								coding_score = -1.0;
+							}
+						} else if (i == 13) {
+							if (in != ".") {
+								nc_score = atof(in.c_str());
+							} else {
+								nc_score = -1.0;
+							}
 						}
 					}
-				}
 	
-				if (coding_score != -1.0) {
-					funseq_sum = coding_score;
-				} else {
-					funseq_sum = nc_score;
+					if (coding_score != -1.0) {
+						funseq_sum = coding_score;
+					} else {
+						funseq_sum = nc_score;
+					}
+					funseq_scores.push_back(funseq_sum);
 				}
-				funseq_scores.push_back(funseq_sum);
+			} else { // Funseq_mode == 's' (static)
+			
+				// Produce an input file for bigWigAverageOverBed in the temporary Funseq folder
+				string avg_infile = funseq_outdir + "/" + "avg_infile.txt";
+				string avg_outfile = funseq_outdir + "/" + "avg_outfile.txt";
+				int regnum = 1;
+				FILE *avg_infile_ptr = fopen(avg_infile.c_str(), "w");
+				
+				// Need to read the other columns from the original outfile
+				char linebuf3[STRSIZE];
+				FILE *outfile_ptr = fopen(outfile.c_str(), "r");
+				while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
+				
+					string line = string(linebuf3);
+							
+					// Extract chromosome, start, and end (first 3 columns)
+					vector<string> vec;
+					for (int i = 0; i < 3; i++) {
+						size_t ws_index = line.find_first_of("\t\n");
+						string in = line.substr(0, ws_index);
+						vec.push_back(in);
+						line = line.substr(ws_index+1);
+					}
+					
+					char regnum_cstr[STRSIZE];
+					sprintf(regnum_cstr, "%d", regnum);
+					string regnum_str = "reg" + string(regnum_cstr);
+					
+					fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), regnum_str.c_str());
+					regnum++;
+				}
+				// Check feof of outfile
+				if (feof(outfile_ptr)) { // We're good
+					fclose(outfile_ptr);
+				} else { // It's an error
+					char errstring[STRSIZE];
+					sprintf(errstring, "Error reading from %s", outfile.c_str());
+					perror(errstring);
+					MPI_Abort(MPI_COMM_WORLD, 1);
+					return 1;
+				}
+				
+				fclose(avg_infile_ptr);
+				
+				// The actual command
+				// Assumes bigWigAverageOverBed is in same directory
+				string command = "./bigWigAverageOverBed hg19_wg_score.bw " + avg_infile + " " + avg_outfile;
+				system(command.c_str());
+		
+				// Next command depends on OS
+				command = "uname";
+				char buf[STRSIZE];
+				string os = "";
+				FILE* pipe = popen(command.c_str(), "r");
+				if (!pipe) throw runtime_error("Could not determine operating system. Exiting.\n");
+				try {
+					while (!feof(pipe)) {
+						if (fgets(buf, STRSIZE, pipe) != NULL) {
+							os += buf;
+						}
+					}
+				} catch (...) {
+					pclose(pipe);
+					throw;
+				}
+				pclose(pipe);
+	
+				// DEBUG
+				// printf("%s\n", os.c_str());
+				if (os == "Darwin\n") { // OS = Mac OS X
+					command = "sed -i .bak 's/^reg//g' " + avg_outfile;
+				} else { // Assume Linux, or rather, that this command is compatible
+					command = "sed -i 's/^reg//g' " + avg_outfile;
+				}
+				system(command.c_str());
+				
+				string avg_outfile_sorted = funseq_outdir + "/" + "avg_outfile_sorted.txt";
+		
+				command = "sort -n -k 1,1 " + avg_outfile + " > " + avg_outfile_sorted;
+				system(command.c_str());
+				
+				// Read the output into memory
+				FILE *avg_outfile_ptr = fopen(avg_outfile_sorted.c_str(), "r");
+				char linebuf_cstr[STRSIZE];
+				while (fgets(linebuf_cstr, STRSIZE-1, avg_outfile_ptr) != NULL) {
+		
+					string linebuf = string(linebuf_cstr);
+					int col_index = 0;
+					while (col_index < 5) {
+						unsigned int pos = linebuf.find_first_of("\t");
+						linebuf = linebuf.substr(pos+1);
+						col_index++;
+					}
+		
+					// Now linebuf has the value we're looking for. Put it in the funseq_scores vector.
+					double funseq_score;
+					sscanf(linebuf.c_str(), "%lf", &funseq_score);
+					funseq_scores.push_back(funseq_score);
+				}
+				if (!(feof(avg_outfile_ptr)) && ferror(avg_outfile_ptr)) { // This is an error
+					char preamble[STRSIZE];
+					sprintf(preamble, "There was an error reading from %s", avg_outfile_sorted.c_str());
+					perror(preamble);
+					return 1;
+				}
+				fclose(avg_outfile_ptr);			
 			}
 			
 			// Print the Funseq scores to a new file that will replace the old one

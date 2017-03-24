@@ -1388,14 +1388,19 @@ int main (int argc, char* argv[]) {
 				string avg_outfile = funseq_outdir + "/" + "avg_outfile.txt";
 				int regnum = 1;
 				FILE *avg_infile_ptr = fopen(avg_infile.c_str(), "w");
-				for (unsigned int i = 0; i < var_array.size(); i++) {
+				for (unsigned int i = 0; i < permuted_set.size(); i++) {
 					char regnum_cstr[STRSIZE];
 					sprintf(regnum_cstr, "%d", regnum);
 					string regnum_str = "reg" + string(regnum_cstr);
-					fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str(), regnum_str.c_str());
+					fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", permuted_set[i][0].c_str(), permuted_set[i][1].c_str(), permuted_set[i][2].c_str(), regnum_str.c_str());
 					regnum++;
 				}
 				fclose(avg_infile_ptr);
+				
+				// The actual command
+				// Assumes bigWigAverageOverBed is in same directory
+				string command = "./bigWigAverageOverBed hg19_wg_score.bw " + avg_infile + " " + avg_outfile;
+				system(command.c_str());
 				
 				// Next command depends on OS
 				command = "uname";
