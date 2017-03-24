@@ -735,8 +735,8 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// Clean up Funseq temporary folder
-		string rm_com = "rm -rf " + funseq_outdir;
-		system(rm_com.c_str());
+// 		string rm_com = "rm -rf " + funseq_outdir;
+// 		system(rm_com.c_str());
 		
 		// Additional steps for using permutation Funseq scores
 		if (funseq_opt == 'p') {
