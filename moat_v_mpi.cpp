@@ -10,8 +10,9 @@
 #include <errno.h>
 #include <sstream>
 #include <limits.h>
+#include <stdexcept>
 #include "variant_permutation_v3.h"
-# include <mpi.h>
+#include <mpi.h>
 
 using namespace std;
 
@@ -442,7 +443,7 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// Check bigWigAverageOverBed and Funseq data file in static mode
-		if (funseq_mode == 's') {
+		if (funseq_opt == 's') {
 			// Verify that bigWigAverageOverBed is in the same directory as this program
 			struct stat avgbuf;
 			char avgoverbed_cstr[] = "./bigWigAverageOverBed";
@@ -969,7 +970,7 @@ int main (int argc, char* argv[]) {
 							sprintf(regnum_cstr, "%d", regnum);
 							string regnum_str = "reg" + string(regnum_cstr);
 							
-							fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), regnum_str.c_str());
+							fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), regnum_str.c_str());
 							regnum++;
 						}
 						// Check feof of outfile
@@ -1348,7 +1349,7 @@ int main (int argc, char* argv[]) {
 					sprintf(regnum_cstr, "%d", regnum);
 					string regnum_str = "reg" + string(regnum_cstr);
 					
-					fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), regnum_str.c_str());
+					fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), regnum_str.c_str());
 					regnum++;
 				}
 				// Check feof of outfile
