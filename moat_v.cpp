@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <sstream>
 #include <limits.h>
+#include <stdexcept>
 #include "variant_permutation_v3.h"
 
 using namespace std;
@@ -412,7 +413,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// Check bigWigAverageOverBed and Funseq data file in static mode
-	if (funseq_mode == 's') {
+	if (funseq_opt == 's') {
 		// Verify that bigWigAverageOverBed is in the same directory as this program
 		struct stat avgbuf;
 		char avgoverbed_cstr[] = "./bigWigAverageOverBed";
