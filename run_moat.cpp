@@ -30,7 +30,7 @@ using namespace std;
  * Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR
  * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY 
- * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n]
+ * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --funseq_mode=[n/so/do/sp/dp]
  *
  * Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR 
@@ -98,6 +98,13 @@ int main (int argc, char* argv[]) {
 	// Is the trinucleotide preservation option enabled? (y/n)
 	char trimer;
 	
+	// Character that indicates Funseq mode (stored as a string)
+	// 's': Static mode. Retrieves precomputed results from a data file.
+	// 'd': Dynamic mode: Compute Funseq results alongside the MOAT results, using a
+	// locally installed Funseq
+	// 'n': Do not use Funseq
+	string funseq_mode;
+	
 	// String constants for comparisons in argument handling
 	char h_string[] = "-h";
 	char help_string[] = "--help";
@@ -124,7 +131,7 @@ int main (int argc, char* argv[]) {
 		fprintf(stderr, "Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR\n");
 		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY \n");
-		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n]\n");
+		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --funseq_mode=[n/s/d]\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR \n");
@@ -148,7 +155,7 @@ int main (int argc, char* argv[]) {
 		string arg = string(argv[i]);
 		size_t pos_equals = arg.find('=');
 		if (pos_equals == string::npos) {
-			fprintf(stderr, "Error: Argument missing value: %s. Exiting.\n", arg.c_str());
+			fprintf(stderr, "Error: Argument missing value: %s. Use -h or --help for usage information. Exiting.\n", arg.c_str());
 			return 1;
 		}
 		string name = arg.substr(0, pos_equals);
@@ -188,8 +195,10 @@ int main (int argc, char* argv[]) {
 			covar_files.push_back(value);
 		} else if (name == "--3mer") {
 			trimer = value[0];
+		} else if (name == "--funseq_mode") {
+			funseq_mode = value;
 		} else { // User put in an invalid argument
-			fprintf(stderr, "Error: Invalid argument name: %s. Exiting.\n", name.c_str());
+			fprintf(stderr, "Error: Invalid argument name: %s. Use -h or --help for usage information. Exiting.\n", name.c_str());
 			return 1;
 		}
 	}
@@ -205,46 +214,46 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 		} else if (parallel != 'n') { // Invalid value for parallel flag
-			fprintf(stderr, "Error: Invalid value for \"--parallel\": %c. Exiting.\n", parallel);
+			fprintf(stderr, "Error: Invalid value for \"--parallel\": %c. Use -h or --help for usage information. Exiting.\n", parallel);
 			return 1;
 		}
 			
 		// Verify all relevant variables are defined
 		if (num_permutations == INT_MIN) {
-			fprintf(stderr, "Error: n is not defined. Exiting.\n");
+			fprintf(stderr, "Error: n is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (num_permutations <= 0) { // Out of range
-			fprintf(stderr, "Error: n must be at least 1. Exiting.\n");
+			fprintf(stderr, "Error: n must be at least 1. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (dmin == INT_MIN) {
-			fprintf(stderr, "Error: dmin is not defined. Exiting.\n");
+			fprintf(stderr, "Error: dmin is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (dmin < 0) { // Out of range
-			fprintf(stderr, "Error: dmin cannot be negative. Exiting.\n");
+			fprintf(stderr, "Error: dmin cannot be negative. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (dmax == INT_MIN) {
-			fprintf(stderr, "Error: dmax is not defined. Exiting.\n");
+			fprintf(stderr, "Error: dmax is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (dmax < 0) { // Out of range
-			fprintf(stderr, "Error: dmax cannot be negative. Exiting.\n");
+			fprintf(stderr, "Error: dmax cannot be negative. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (prohibited_file.empty()) {
-			fprintf(stderr, "Error: Blacklist file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Blacklist file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (vfile.empty()) {
-			fprintf(stderr, "Error: Variant file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Variant file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (afile.empty()) {
-			fprintf(stderr, "Error: Annotation file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Annotation file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (out.empty()) {
-			fprintf(stderr, "Error: Output file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Output file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		
@@ -301,55 +310,55 @@ int main (int argc, char* argv[]) {
 			}
 			
 		} else if (parallel != 'n') { // Invalid value for parallel flag
-			fprintf(stderr, "Error: Invalid value for \"--parallel\": %c. Exiting.\n", parallel);
+			fprintf(stderr, "Error: Invalid value for \"--parallel\": %c. Use -h or --help for usage information. Exiting.\n", parallel);
 			return 1;
 		}
 		
 		// Verify all relevant variables are defined
 		if (num_permutations == INT_MIN) {
-			fprintf(stderr, "Error: n is not defined. Exiting.\n");
+			fprintf(stderr, "Error: n is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (num_permutations <= 0) { // Out of range
-			fprintf(stderr, "Error: n must be at least 1. Exiting.\n");
+			fprintf(stderr, "Error: n must be at least 1. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (width == INT_MIN) {
-			fprintf(stderr, "Error: width is not defined. Exiting.\n");
+			fprintf(stderr, "Error: width is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (width <= 0) { // Out of range
-			fprintf(stderr, "Error: width must be positive. Exiting.\n");
+			fprintf(stderr, "Error: width must be positive. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (min_width == INT_MIN) {
-			fprintf(stderr, "Error: min_width is not defined. Exiting.\n");
+			fprintf(stderr, "Error: min_width is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (min_width <= 0) { // Out of range
-			fprintf(stderr, "Error: min_width must be positive. Exiting.\n");
+			fprintf(stderr, "Error: min_width must be positive. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (fasta_dir.empty()) {
-			fprintf(stderr, "WG FASTA directory is not defined. Exiting.\n");
+			fprintf(stderr, "WG FASTA directory is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (prohibited_file.empty()) {
-			fprintf(stderr, "Error: Blacklist file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Blacklist file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (vfile.empty()) {
-			fprintf(stderr, "Error: Variant file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Variant file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (out.empty()) {
-			fprintf(stderr, "Error: Output directory is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Output directory is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		
 		// Trimer check
 		if (!trimer) {
-			fprintf(stderr, "Error: 3mer preservation option is not defined. Exiting.\n");
+			fprintf(stderr, "Error: 3mer preservation option is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (trimer != 'y' && trimer != 'n') {
-			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", trimer);
+			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n", trimer);
 			return 1;
 		}
 		string trimer_str;
@@ -358,7 +367,7 @@ int main (int argc, char* argv[]) {
 		// MOATsim check for required covariate files
 		if (algo == 's') {
 			if (covar_files.size() < 1) {
-				fprintf(stderr, "Error: Must have at least one covariate signal file for MOATsim. Exiting.\n");
+				fprintf(stderr, "Error: Must have at least one covariate signal file for MOATsim. Use -h or --help for usage information. Exiting.\n");
 				return 1;
 			}
 			for (unsigned int i = 0; i < covar_files.size(); i++) {
@@ -367,6 +376,19 @@ int main (int argc, char* argv[]) {
 					fprintf(stderr, "Error trying to stat %s: %s\n", covar_files[i].c_str(), strerror(errno));
 					return 1;
 				}
+			}
+		}
+		
+		// MOAT-v check for defined and correct Funseq mode
+		if (algo == 'v') {
+			if (funseq_mode.empty()) {
+				fprintf(stderr, "Error: Funseq mode is not defined. Exiting.\n");
+				return 1;
+			}
+			if (funseq_mode[0] != 's' && funseq_mode[0] != 'd' && funseq_mode[0] != 'n') {
+				fprintf(stderr, "Error: Funseq mode was set to \'%c\', which is invalid. ", funseq_mode[0]);
+				fprintf(stderr, "Must be either \'s\' or \'d\' or \'n\'. Use -h or --help for usage information. Exiting.\n");
+				return 1;
 			}
 		}
 		
@@ -405,11 +427,14 @@ int main (int argc, char* argv[]) {
 				command += " ";
 				command += covar_files[i];
 			}
+		} else { // algo == 'v'
+			command += " ";
+			command += funseq_mode;
 		}
 		return system(command.c_str());
 		
 	} else { // Algo has an invalid value
-		fprintf(stderr, "Error: Invalid value for \"--algo\": %c. Exiting.\n", algo);
+		fprintf(stderr, "Error: Invalid value for \"--algo\": %c. Use -h or --help for usage information. Exiting.\n", algo);
 		return 1;
 	}
 	return 0;
