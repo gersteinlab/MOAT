@@ -1103,8 +1103,8 @@ int main (int argc, char* argv[]) {
 					// printf("Filesystem magic done\n");
 			
 					// Clean up Funseq temporary folder
-					// string rm_com = "rm -rf " + funseq_outdir;
-					// system(rm_com.c_str());
+					string rm_com = "rm -rf " + funseq_outdir;
+					system(rm_com.c_str());
 				}
 			}
 			
@@ -1479,8 +1479,8 @@ int main (int argc, char* argv[]) {
 			// printf("Filesystem magic done\n");
 	
 			// Clean up Funseq temporary folder
-			// string rm_com = "rm -rf " + funseq_outdir;
-			// system(rm_com.c_str());
+			string rm_com = "rm -rf " + funseq_outdir;
+			system(rm_com.c_str());
 		}
 		
 		// DEBUG

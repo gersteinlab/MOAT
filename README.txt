@@ -17,9 +17,21 @@ B) Prerequisite Software
 C) File List
 D) Build Instructions
 E) Prerequisite Data Context
+	1) hg19 reference genome
+	2) Funseq whole genome precomputed score file
 F) MOAT-a
+	1) Overview
+	2) Input formats
+	3) Output format
 G) MOAT-v
+	1) Overview
+	2) Input formats
+	3) Output format
+	4) Calculation of p-values
 H) MOATsim
+	1) Overview
+	2) Input formats
+	3) Output format
 
 (A) Description
 
@@ -108,6 +120,8 @@ MOAT-v can compute Funseq scores dynamically using a local installation of Funse
 
 (F) MOAT-a
 
+1) Overview
+
 [] = user-defined parameter
 
 Usage: run_moat --algo=a --parallel=[y/n] -n=[number of permutations] --dmin=[minimum distance for random bins] --dmax=[maximum distance for random bins] --blacklist_file=[blacklist file] --vfile=[variant file] --afile=[annotation file] --out=[output file]
@@ -116,7 +130,28 @@ MOAT-a is the implementation of the annotation-based permutation algorithm. It i
 
 Additionally, [algo] specifies which permutation algorithm to use: [a] for MOAT-a and [v] for MOAT-v. The [parallel] flag indicates whether to use the CUDA-accelerated version [y] (recommended) or the much slower CPU version [n]. Finally, the [blacklist file] is used to remove regions from consideration that have poor mappability, such as centromeres and telomeres, among others. Annotations that intersect the [blacklist file] will not be analyzed.
 
+2) Input formats
+
+[blacklist file]
+Tab-delimited columns: (chr, start, stop)
+Extra columns are ignored.
+
+[variant file]
+Tab-delimited columns: (chr, start, stop)
+Extra columns are ignored.
+
+[annotation file]
+Tab-delimited columns: (chr, start, stop, name)
+Extra columns are ignored.
+
+3) Output format
+
+[output file]
+Tab-delimited columns: (chr, start, stop, name, p-value)
+
 (G) MOAT-v
+
+1) Overview
 
 [] = user-defined parameter
 
@@ -134,7 +169,32 @@ The dynamic mode computes Funseq scores with a local Funseq2 installation. Hence
 
 Furthermore, [algo] specifies which permutation algorithm to use: [a] for MOAT-a and [v] for MOAT-v. The [parallel] flag indicates whether to use the OpenMPI-accelerated version [y] (recommended) or the much slower single CPU version [n]. Finally, the [ncpu] option gives the user control over the number of CPU cores to use in the parallel version. This parameter can be omitted, in which case MOAT-v will automatically use all available CPU cores. This can also be achieved by setting --ncpu to MAX. Alternatively, the user can specify any number between 2 and the maximum number of cores available.
 
-Using run_moat in this way will produce the permuted variant datasets, but to obtain annotation p-values, an additional program must be run: p_value_emp
+Using run_moat in this way will produce the permuted variant datasets, but to obtain annotation p-values, an additional program must be run: p_value_emp (explained further down)
+
+NOTE: MOAT-v relies on the "bigWigAverageOverBed" program to retrieve precomputed Funseq scores. The 64-bit Linux version is provided with the MOAT distribution, but if you need another version, other versions are available from:
+
+http://genome.ucsc.edu/goldenpath/help/bigWig.html (scroll to end of page)
+
+Additionally, the use of the Funseq options will result in the generation of a temporary "funseq" directory in the MOAT directory. Therefore, if you attempt to run multiple instances of MOAT-v, this will likely cause the data interference between the instances, thereby corrupting the results. We recommend you clone the MOAT source code to another directory for parallel runs.
+
+2) Input formats
+
+[blacklist file]
+Tab-delimited columns: (chr, start, stop)
+Extra columns are ignored.
+
+[variant file]
+Tab-delimited columns: (chr, start, stop, reference allele, alternate allele)
+Extra columns are ignored.
+
+3) Output format
+
+[output directory]
+Files consist of tab-delimited columns: (chr, start, stop, reference allele, alternate allele, Funseq score (optional))
+
+4) Calculation of p-values
+
+An additional program must be used after running MOAT-v to obtain p-values: p_value_emp
 
 Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file] [funseq option] [funseq mode]
 
@@ -146,7 +206,12 @@ Additionally, p_value_emp can derive the Funseq scores of the annotations in the
 
 [funseq mode] can also be 'd' for (d)ynamic mode, which computes Funseq scores with a local Funseq2 installation. Hence, additional setup is required, and the complete Funseq computation will take longer than the static mode. However, all Funseq output will be exact, rather than approximate. Funseq can be downloaded from funseq2.gersteinlab.org.
 
-H) MOATsim
+p_value_emp's [output file] has the following tab-delimited columns:
+(chr, start, stop, name, p-value, Funseq score (optional), Funseq score p-value (optional))
+
+(H) MOATsim
+
+1) Overview
 
 [] = user-defined parameter
 
@@ -162,4 +227,19 @@ NOTE: MOATsim relies on the "bigWigAverageOverBed" program to generate the covar
 
 http://genome.ucsc.edu/goldenpath/help/bigWig.html (scroll to end of page)
 
-Additionally, the use of "bigWigAverageOverBed" will result in the generation of temporary files in the MOAT directory. Therefore, if you attempt to run multiple instances of MOATsim, this will likely cause the data interference between the instances, thereby corrupting the results. Naturally, we recommend you not do this. ;)
+Additionally, the use of "bigWigAverageOverBed" will result in the generation of temporary files in the MOAT directory. Therefore, if you attempt to run multiple instances of MOATsim, this will likely cause the data interference between the instances, thereby corrupting the results. We recommend you clone the MOAT source code to another directory for parallel runs.
+
+2) Input formats
+
+[blacklist file]
+Tab-delimited columns: (chr, start, stop)
+Extra columns are ignored.
+
+[variant file]
+Tab-delimited columns: (chr, start, stop)
+Extra columns are ignored.
+
+3) Output format
+
+[output directory]
+Files consist of tab-delimited columns: (chr, start, stop)
