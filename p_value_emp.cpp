@@ -274,7 +274,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// Incompatible options
-	if (funseq_opt != 'n' && signal.file.empty()) {
+	if (funseq_opt != 'n' && signal_file.empty()) {
 		fprintf(stderr, "Error: Requested use of wg signal scores without specifying ");
 		fprintf(stderr, "wg signal file. Exiting.\n");
 		return 1;
