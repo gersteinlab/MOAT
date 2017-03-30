@@ -205,7 +205,7 @@ int main (int argc, char* argv[]) {
 		funseq_opt = argv[6][0];
 		
 		if (argc == 8) {
-			signal_file = string(argv[7][0]);
+			signal_file = string(argv[7]);
 		}
 	}
 	
@@ -511,11 +511,11 @@ int main (int argc, char* argv[]) {
 		funseq_outdir.erase(funseq_outdir.find_last_not_of(" \n\r\t")+1);
 		funseq_outdir += "/tmp";
 		
-		// Verify that funseq output directory exists, or create it if it doesn't
+		// Verify that temporary output directory exists, or create it if it doesn't
 		string command = "mkdir -p " + funseq_outdir;
 		system(command.c_str());
 			
-		// Produce an input file for bigWigAverageOverBed in the temporary Funseq folder
+		// Produce an input file for bigWigAverageOverBed in the temporary folder
 		string avg_infile = funseq_outdir + "/" + "avg_infile.txt";
 		string avg_outfile = funseq_outdir + "/" + "avg_outfile.txt";
 		int regnum = 1;
@@ -531,7 +531,7 @@ int main (int argc, char* argv[]) {
 		
 		// The actual command
 		// Assumes bigWigAverageOverBed is in same directory
-		string command = "./bigWigAverageOverBed hg19_wg_score.bw " + avg_infile + " " + avg_outfile;
+		command = "./bigWigAverageOverBed " + signal_file + " " + avg_infile + " " + avg_outfile;
 		system(command.c_str());
 		
 		// Next command depends on OS
