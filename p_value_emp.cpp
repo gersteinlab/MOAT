@@ -194,7 +194,7 @@ int main (int argc, char* argv[]) {
 	string signal_file;
 	
 	if (argc != 7 || argc != 8) {
-		fprintf(stderr, "Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file] [wg signal option (o/p/n)] [signal file]. Exiting.\n");
+		fprintf(stderr, "Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file] [wg signal option (o/p/n)] [wg signal file (optional)]. Exiting.\n");
 		return 1;
 	} else {
 		vfile = string(argv[1]);
