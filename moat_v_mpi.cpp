@@ -961,7 +961,7 @@ int main (int argc, char* argv[]) {
 					unsigned int fs_index = 0;
 				
 					// Need to read the other columns from the original outfile
-					linebuf3[STRSIZE];
+					// linebuf3[STRSIZE];
 					outfile_ptr = fopen(outfile.c_str(), "r");
 					while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
 						string line = string(linebuf3);
@@ -1249,7 +1249,7 @@ int main (int argc, char* argv[]) {
 			unsigned int fs_index = 0;
 		
 			// Need to read the other columns from the original outfile
-			linebuf3[STRSIZE];
+			// linebuf3[STRSIZE];
 			outfile_ptr = fopen(outfile.c_str(), "r");
 			while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
 				string line = string(linebuf3);
