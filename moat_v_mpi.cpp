@@ -952,63 +952,63 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 					fclose(avg_outfile_ptr);
-				}
 					
-				// Print the Funseq scores to a new file that will replace the old one
-				string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
-				FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
+					// Print the Funseq scores to a new file that will replace the old one
+					string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
+					FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
 				
-				// Funseq score index
-				unsigned int fs_index = 0;
+					// Funseq score index
+					unsigned int fs_index = 0;
 				
-				// Need to read the other columns from the original outfile
-				char linebuf3[STRSIZE];
-				FILE *outfile_ptr = fopen(outfile.c_str(), "r");
-				while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
-					string line = string(linebuf3);
+					// Need to read the other columns from the original outfile
+					char linebuf3[STRSIZE];
+					FILE *outfile_ptr = fopen(outfile.c_str(), "r");
+					while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
+						string line = string(linebuf3);
 					
-					// DEBUG: check what's coming in from this file
-					// printf("%s\n", line.c_str());
+						// DEBUG: check what's coming in from this file
+						// printf("%s\n", line.c_str());
 					
-					// Extract chromosome, start, end, ref, and alt (first 5 columns)
-					vector<string> vec;
-					for (int i = 0; i < 5; i++) {
-						size_t ws_index = line.find_first_of("\t\n");
-						string in = line.substr(0, ws_index);
-						vec.push_back(in);
-						line = line.substr(ws_index+1);
+						// Extract chromosome, start, end, ref, and alt (first 5 columns)
+						vector<string> vec;
+						for (int i = 0; i < 5; i++) {
+							size_t ws_index = line.find_first_of("\t\n");
+							string in = line.substr(0, ws_index);
+							vec.push_back(in);
+							line = line.substr(ws_index+1);
+						}
+					
+						fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), vec[3].c_str(), vec[4].c_str(), funseq_scores[fs_index]);
+						fs_index++;
 					}
-					
-					fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), vec[3].c_str(), vec[4].c_str(), funseq_scores[fs_index]);
-					fs_index++;
-				}
-				// Check feof of outfile
-				if (feof(outfile_ptr)) { // We're good
-					fclose(outfile_ptr);
-				} else { // It's an error
-					char errstring[STRSIZE];
-					sprintf(errstring, "Error reading from %s", outfile.c_str());
-					perror(errstring);
-					MPI_Abort(MPI_COMM_WORLD, 1);
-					return 1;
-				}
+					// Check feof of outfile
+					if (feof(outfile_ptr)) { // We're good
+						fclose(outfile_ptr);
+					} else { // It's an error
+						char errstring[STRSIZE];
+						sprintf(errstring, "Error reading from %s", outfile.c_str());
+						perror(errstring);
+						MPI_Abort(MPI_COMM_WORLD, 1);
+						return 1;
+					}
 	
-// 					for (unsigned int k = 0; k < funseq_scores.size(); k++) {
-// 						fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
-// 					}
-				fclose(funseq_outfile_ptr);
+	// 					for (unsigned int k = 0; k < funseq_scores.size(); k++) {
+	// 						fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
+	// 					}
+					fclose(funseq_outfile_ptr);
 	
-				string file_switch_1 = "rm " + outfile;
-				system(file_switch_1.c_str());
-				string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
-				system(file_switch_2.c_str());
+					string file_switch_1 = "rm " + outfile;
+					system(file_switch_1.c_str());
+					string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
+					system(file_switch_2.c_str());
 			
-					// DEBUG
-					// printf("Filesystem magic done\n");
+						// DEBUG
+						// printf("Filesystem magic done\n");
 			
-				// Clean up temporary folder
-				string rm_com = "rm -rf " + funseq_outdir;
-				system(rm_com.c_str());
+					// Clean up temporary folder
+					string rm_com = "rm -rf " + funseq_outdir;
+					system(rm_com.c_str());
+				}
 			}
 			
 			// Begin receiving data and produce output
@@ -1240,60 +1240,60 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 			fclose(avg_outfile_ptr);			
-		}
 		
-		// Print the Funseq scores to a new file that will replace the old one
-		string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
-		FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
+			// Print the Funseq scores to a new file that will replace the old one
+			string funseq_outfile = outdir + "/permutation_" + string(perm_num) + ".funseq.txt";
+			FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
 		
-		// Funseq score index
-		unsigned int fs_index = 0;
+			// Funseq score index
+			unsigned int fs_index = 0;
 		
-		// Need to read the other columns from the original outfile
-		char linebuf3[STRSIZE];
-		FILE *outfile_ptr = fopen(outfile.c_str(), "r");
-		while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
-			string line = string(linebuf3);
+			// Need to read the other columns from the original outfile
+			char linebuf3[STRSIZE];
+			FILE *outfile_ptr = fopen(outfile.c_str(), "r");
+			while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
+				string line = string(linebuf3);
 			
-			// Extract chromosome, start, end, ref, and alt (first 5 columns)
-			vector<string> vec;
-			for (int i = 0; i < 5; i++) {
-				size_t ws_index = line.find_first_of("\t\n");
-				string in = line.substr(0, ws_index);
-				vec.push_back(in);
-				line = line.substr(ws_index+1);
+				// Extract chromosome, start, end, ref, and alt (first 5 columns)
+				vector<string> vec;
+				for (int i = 0; i < 5; i++) {
+					size_t ws_index = line.find_first_of("\t\n");
+					string in = line.substr(0, ws_index);
+					vec.push_back(in);
+					line = line.substr(ws_index+1);
+				}
+			
+				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), vec[3].c_str(), vec[4].c_str(), funseq_scores[fs_index]);
+				fs_index++;
 			}
-			
-			fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), vec[3].c_str(), vec[4].c_str(), funseq_scores[fs_index]);
-			fs_index++;
+			// Check feof of vfile
+			if (feof(outfile_ptr)) { // We're good
+				fclose(outfile_ptr);
+			} else { // It's an error
+				char errstring[STRSIZE];
+				sprintf(errstring, "Error reading from %s", outfile.c_str());
+				perror(errstring);
+				MPI_Abort(MPI_COMM_WORLD, 1);
+				return 1;
+			}
+
+	// 			for (unsigned int k = 0; k < funseq_scores.size(); k++) {
+	// 				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
+	// 			}
+			fclose(funseq_outfile_ptr);
+
+			string file_switch_1 = "rm " + outfile;
+			system(file_switch_1.c_str());
+			string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
+			system(file_switch_2.c_str());
+
+			// DEBUG
+			// printf("Filesystem magic done\n");
+
+			// Clean up temporary folder
+			string rm_com = "rm -rf " + funseq_outdir;
+			system(rm_com.c_str());
 		}
-		// Check feof of vfile
-		if (feof(outfile_ptr)) { // We're good
-			fclose(outfile_ptr);
-		} else { // It's an error
-			char errstring[STRSIZE];
-			sprintf(errstring, "Error reading from %s", outfile.c_str());
-			perror(errstring);
-			MPI_Abort(MPI_COMM_WORLD, 1);
-			return 1;
-		}
-
-// 			for (unsigned int k = 0; k < funseq_scores.size(); k++) {
-// 				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
-// 			}
-		fclose(funseq_outfile_ptr);
-
-		string file_switch_1 = "rm " + outfile;
-		system(file_switch_1.c_str());
-		string file_switch_2 = "mv " + funseq_outfile + " " + outfile;
-		system(file_switch_2.c_str());
-
-		// DEBUG
-		// printf("Filesystem magic done\n");
-
-		// Clean up temporary folder
-		string rm_com = "rm -rf " + funseq_outdir;
-		system(rm_com.c_str());
 		
 		// DEBUG
 		// printf("Breakpoint 5\n");
