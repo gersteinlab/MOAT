@@ -892,7 +892,7 @@ int main (int argc, char* argv[]) {
 						
 					// The actual command
 					// Assumes bigWigAverageOverBed is in same directory
-					string command = "./bigWigAverageOverBed " + signal_file + " "  + avg_infile + " " + avg_outfile;
+					command = "./bigWigAverageOverBed " + signal_file + " "  + avg_infile + " " + avg_outfile;
 					system(command.c_str());
 			
 					// Next command depends on OS
@@ -1180,7 +1180,7 @@ int main (int argc, char* argv[]) {
 				
 			// The actual command
 			// Assumes bigWigAverageOverBed is in same directory
-			string command = "./bigWigAverageOverBed " + signal_file + " " + avg_infile + " " + avg_outfile;
+			command = "./bigWigAverageOverBed " + signal_file + " " + avg_infile + " " + avg_outfile;
 			system(command.c_str());
 	
 			// Next command depends on OS
