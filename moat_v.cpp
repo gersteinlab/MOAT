@@ -343,12 +343,8 @@ int main (int argc, char* argv[]) {
 		outdir = string(argv[8]);
 		funseq_opt = argv[9][0];
 		
-		if (argv[9][0] == 'y') {
-			funseq_opt = true;
-		} else if (argv[9][0] == 'n') {
-			funseq_opt = false;
-		} else {
-			fprintf(stderr, "Invalid option for wg signal option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[9][0]);
+		if (funseq_opt != 'y' && funseq_opt != 'n') {
+			fprintf(stderr, "Invalid option for wg signal option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", funseq_opt);
 			return 1;
 		}
 		
@@ -394,7 +390,7 @@ int main (int argc, char* argv[]) {
 		return 1;
 	}
 	
-	// Check bigWigAverageOverBed and Funseq data file in static mode
+	// Check bigWigAverageOverBed and wg signal file in static mode
 	if (funseq_opt != 'n') {
 		// Verify that bigWigAverageOverBed is in the same directory as this program
 		struct stat avgbuf;
@@ -1288,7 +1284,7 @@ int main (int argc, char* argv[]) {
 			
 			// The actual command
 			// Assumes bigWigAverageOverBed is in same directory
-			string command = "./bigWigAverageOverBed" + signal_file + " " + avg_infile + " " + avg_outfile;
+			string command = "./bigWigAverageOverBed " + signal_file + " " + avg_infile + " " + avg_outfile;
 			system(command.c_str());
 			
 			// Next command depends on OS
