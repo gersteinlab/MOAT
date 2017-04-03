@@ -8,6 +8,7 @@
 #include <vector>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdexcept>
 #include "variant_permutation_v3.h"
 
 using namespace std;
@@ -839,15 +840,15 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// Now linebuf has the value we're looking for. Put it in the funseq_scores vector.
-			double signal_score;
-			sscanf(linebuf.c_str(), "%lf", &signal_score);
+// 			double signal_score;
+// 			sscanf(linebuf.c_str(), "%lf", &signal_score);
 			
 			vector<string> temp;
 			temp.push_back(var_array[v_index][0]);
 			temp.push_back(var_array[v_index][1]);
 			temp.push_back(var_array[v_index][2]);
-			temp.push_back(signal_score);
-			signal_output.push_back(signal_score);
+			temp.push_back(linebuf);
+			signal_output.push_back(temp);
 			v_index++;
 		}
 		if (!(feof(avg_outfile_ptr)) && ferror(avg_outfile_ptr)) { // This is an error
