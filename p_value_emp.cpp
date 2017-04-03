@@ -573,6 +573,12 @@ int main (int argc, char* argv[]) {
 		command = "sort -n -k 1,1 " + avg_outfile + " > " + avg_outfile_sorted;
 		system(command.c_str());
 		
+		// Collect sum of Funseq scores per annotation
+		vector<vector<string> > funseq_output;
+		
+		// Index to track where we are in the var_array
+		unsigned int v_index = 0;
+		
 		// Read the output into memory
 		FILE *avg_outfile_ptr = fopen(avg_outfile_sorted.c_str(), "r");
 		char linebuf_cstr[STRSIZE];
@@ -589,7 +595,14 @@ int main (int argc, char* argv[]) {
 			// Now linebuf has the value we're looking for. Put it in the funseq_scores vector.
 			double funseq_score;
 			sscanf(linebuf.c_str(), "%lf", &funseq_score);
-			funseq_scores.push_back(funseq_score);
+			
+			vector<string> temp;
+			temp.push_back(var_array[v_index][0]);
+			temp.push_back(var_array[v_index][1]);
+			temp.push_back(var_array[v_index][2]);
+			temp.push_back(funseq_score);
+			funseq_output.push_back(temp);
+			v_index++;
 		}
 		if (!(feof(avg_outfile_ptr)) && ferror(avg_outfile_ptr)) { // This is an error
 			char preamble[STRSIZE];
@@ -602,6 +615,23 @@ int main (int argc, char* argv[]) {
 		// Clean up Funseq temporary folder
 		string rm_com = "rm -rf " + funseq_outdir;
 		system(rm_com.c_str());
+		
+		// Sort
+		sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
+		
+		// Gather up and sum the Funseq values over each annotation
+		unsigned int funseq_var_pointer = 0;
+		for (unsigned int i = 0; i < ann_array.size(); i++) {
+			pair<unsigned int,unsigned int> range = intersecting_variants(funseq_output, ann_array[i], funseq_var_pointer);
+			funseq_var_pointer = range.first;
+			double funseq_sum = 0.0;
+			
+			for (unsigned int j = range.first; j < range.second; j++) {
+				double score = atof(funseq_output[j][3].c_str());
+				funseq_sum += score;
+			}
+			funseq_scores.push_back(funseq_sum);
+		}
 		
 		// Additional steps for using permutation Funseq scores
 		if (funseq_opt == 'p') {
