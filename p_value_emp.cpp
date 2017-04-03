@@ -593,14 +593,14 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// Now linebuf has the value we're looking for. Put it in the funseq_scores vector.
-			double funseq_score;
-			sscanf(linebuf.c_str(), "%lf", &funseq_score);
+// 			double funseq_score;
+// 			sscanf(linebuf.c_str(), "%lf", &funseq_score);
 			
 			vector<string> temp;
 			temp.push_back(var_array[v_index][0]);
 			temp.push_back(var_array[v_index][1]);
 			temp.push_back(var_array[v_index][2]);
-			temp.push_back(funseq_score);
+			temp.push_back(linebuf);
 			funseq_output.push_back(temp);
 			v_index++;
 		}
