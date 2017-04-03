@@ -11,6 +11,7 @@
 #include <cuda.h>
 #include <curand.h>
 #include <curand_kernel.h>
+#include <stdexcept>
 #include "variant_permutation_v3.h"
 
 using namespace std;
