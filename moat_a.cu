@@ -575,8 +575,16 @@ int main (int argc, char* argv[]) {
 	// Format: tab(chr, start, end, name, p-value)
 	string outfile;
 	
-	if (argc != 8) {
-		fprintf(stderr, "Usage: moat_a_gpu [# of permutations] [d_min] [d_max] [prohibited regions file] [variant file] [annotation file] [output file]. Exiting.\n");
+	// Option to specify whether to calculate wg signal scores on the variants
+	// 'y': Compute wg signal scores alongside the MOAT results
+	// 'n': Do not compute wg signal scores
+	char funseq_opt;
+	
+	// WG signal file to use. Must be bigWig format.
+	string signal_file;
+	
+	if (argc != 9 && argc != 10) {
+		fprintf(stderr, "Usage: moat_a_gpu [# of permutations] [d_min] [d_max] [prohibited regions file] [variant file] [annotation file] [output file] [wg signal option (y/n)] [wg signal file (optional)]. Exiting.\n");
 		return 1;
 	} else {
 		n = atoi(argv[1]);
@@ -586,6 +594,16 @@ int main (int argc, char* argv[]) {
 		vfile = string(argv[5]);
 		afile = string(argv[6]);
 		outfile = string(argv[7]);
+		funseq_opt = argv[8][0];
+		
+		if (funseq_opt != 'y' && funseq_opt != 'n') {
+			fprintf(stderr, "Invalid option for wg signal option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", funseq_opt);
+			return 1;
+		}
+		
+		if (argc == 10) {
+			signal_file = string(argv[9]);
+		}
 	}
 	
 	// Verify files, and import data to memory
@@ -619,6 +637,36 @@ int main (int argc, char* argv[]) {
 	// Check that the file is not empty
 	if (pbuf.st_size == 0) {
 		fprintf(stderr, "Error: Prohibited regions file cannot be empty. Exiting.\n");
+		return 1;
+	}
+	
+	// Check bigWigAverageOverBed and wg signal file in wg signal score mode
+	if (funseq_opt != 'n') {
+		// Verify that bigWigAverageOverBed is in the same directory as this program
+		struct stat avgbuf;
+		char avgoverbed_cstr[] = "./bigWigAverageOverBed";
+		if (stat(avgoverbed_cstr, &avgbuf)) {
+			fprintf(stderr, "Error: bigWigAverageOverBed is not in the same directory as \"moat\". Exiting.\n");
+			return 1;
+		}
+		
+		// Verify wg signal file
+		struct stat databuf;
+		if (stat(prohibited_file.c_str(), &databuf)) { // Report the error and exit
+			fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+			return 1;
+		}
+		// Check that the file is not empty
+		if (databuf.st_size == 0) {
+			fprintf(stderr, "Error: WG signal file cannot be empty. Exiting.\n");
+			return 1;
+		}
+	}
+	
+	// Incompatible options
+	if (funseq_opt != 'n' && signal_file.empty()) {
+		fprintf(stderr, "Error: Requested use of wg signal scores without specifying ");
+		fprintf(stderr, "wg signal file. Exiting.\n");
 		return 1;
 	}
 	
@@ -845,7 +893,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// Can malloc free the variant array
-	var_array.clear();
+	// var_array.clear();
 	
 	// Annotation array processing
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
@@ -1035,6 +1083,132 @@ int main (int argc, char* argv[]) {
 
 	// DEBUG
 	// printf("Breakpoint 7\n");
+	
+	// wg signal score code
+	vector<double> signal_scores;
+	// vector<int> signal_overcount (ann_array.size(), 0);
+	if (funseq_opt != 'n') {
+		
+		// Retrieve current working directory for temporary output
+		string funseq_outdir = exec("pwd");
+		funseq_outdir.erase(funseq_outdir.find_last_not_of(" \n\r\t")+1);
+		funseq_outdir += "/tmp";
+		
+		// Verify that temporary output directory exists, or create it if it doesn't
+		string command = "mkdir -p " + funseq_outdir;
+		system(command.c_str());
+		
+		// Produce an input file for bigWigAverageOverBed in the temporary folder
+		string avg_infile = funseq_outdir + "/" + "avg_infile.txt";
+		string avg_outfile = funseq_outdir + "/" + "avg_outfile.txt";
+		int regnum = 1;
+		FILE *avg_infile_ptr = fopen(avg_infile.c_str(), "w");
+		for (unsigned int i = 0; i < var_array.size(); i++) {
+			char regnum_cstr[STRSIZE];
+			sprintf(regnum_cstr, "%d", regnum);
+			string regnum_str = "reg" + string(regnum_cstr);
+			fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str(), regnum_str.c_str());
+			regnum++;
+		}
+		fclose(avg_infile_ptr);
+		
+		// The actual command
+		// Assumes bigWigAverageOverBed is in same directory
+		command = "./bigWigAverageOverBed " + signal_file + " " + avg_infile + " " + avg_outfile;
+		system(command.c_str());
+		
+		// Next command depends on OS
+		command = "uname";
+		char buf[STRSIZE];
+		string os = "";
+		FILE* pipe = popen(command.c_str(), "r");
+		if (!pipe) throw runtime_error("Could not determine operating system. Exiting.\n");
+		try {
+			while (!feof(pipe)) {
+				if (fgets(buf, STRSIZE, pipe) != NULL) {
+					os += buf;
+				}
+			}
+		} catch (...) {
+			pclose(pipe);
+			throw;
+		}
+		pclose(pipe);
+		
+		// DEBUG
+		// printf("%s\n", os.c_str());
+		if (os == "Darwin\n") { // OS = Mac OS X
+			command = "sed -i .bak 's/^reg//g' " + avg_outfile;
+		} else { // Assume Linux, or rather, that this command is compatible
+			command = "sed -i 's/^reg//g' " + avg_outfile;
+		}
+		system(command.c_str());
+		
+		string avg_outfile_sorted = funseq_outdir + "/" + "avg_outfile_sorted.txt";
+		
+		command = "sort -n -k 1,1 " + avg_outfile + " > " + avg_outfile_sorted;
+		system(command.c_str());
+		
+		// Collect sum of signal scores per annotation
+		vector<vector<string> > signal_output;
+		
+		// Index to track where we are in the var_array
+		unsigned int v_index = 0;
+		
+		// Read the output into memory
+		FILE *avg_outfile_ptr = fopen(avg_outfile_sorted.c_str(), "r");
+		char linebuf_cstr[STRSIZE];
+		while (fgets(linebuf_cstr, STRSIZE-1, avg_outfile_ptr) != NULL) {
+			
+			string linebuf = string(linebuf_cstr);
+			int col_index = 0;
+			while (col_index < 5) {
+				unsigned int pos = linebuf.find_first_of("\t");
+				linebuf = linebuf.substr(pos+1);
+				col_index++;
+			}
+			
+			// Now linebuf has the value we're looking for. Put it in the funseq_scores vector.
+// 			double signal_score;
+// 			sscanf(linebuf.c_str(), "%lf", &signal_score);
+			
+			vector<string> temp;
+			temp.push_back(var_array[v_index][0]);
+			temp.push_back(var_array[v_index][1]);
+			temp.push_back(var_array[v_index][2]);
+			temp.push_back(linebuf);
+			signal_output.push_back(temp);
+			v_index++;
+		}
+		if (!(feof(avg_outfile_ptr)) && ferror(avg_outfile_ptr)) { // This is an error
+			char preamble[STRSIZE];
+			sprintf(preamble, "There was an error reading from %s", avg_outfile_sorted.c_str());
+			perror(preamble);
+			return 1;
+		}
+		fclose(avg_outfile_ptr);
+		
+		// Clean up temporary folder
+		string rm_com = "rm -rf " + funseq_outdir;
+		system(rm_com.c_str());
+		
+		// Sort
+		sort(signal_output.begin(), signal_output.end(), cmpIntervals);
+		
+		// Gather up and sum the Funseq values over each annotation
+		unsigned int signal_var_pointer = 0;
+		for (unsigned int i = 0; i < ann_array.size(); i++) {
+			pair<unsigned int,unsigned int> range = intersecting_variants(signal_output, ann_array[i], signal_var_pointer);
+			signal_var_pointer = range.first;
+			double signal_sum = 0.0;
+			
+			for (unsigned int j = range.first; j < range.second; j++) {
+				double score = atof(signal_output[j][3].c_str());
+				signal_sum += score;
+			}
+			signal_scores.push_back(signal_sum);
+		}
+	}
 
 	// Output generation
 	FILE *outfile_ptr = fopen(outfile.c_str(), "w");
@@ -1047,7 +1221,11 @@ int main (int argc, char* argv[]) {
 		string cur_ann_name = ann_array[i][3];
 		
 		// Print the output line
-		fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i]);
+		if (funseq_opt == 'y') {
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%e\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], signal_scores[i]);
+		} else {
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i]);
+		}
 	}
 	fclose(outfile_ptr);
 	
