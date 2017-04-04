@@ -467,7 +467,7 @@ int main (int argc, char* argv[]) {
 		system(rm_com.c_str());
 		
 		// Sort
-		sort(signal_output.begin(), signal_output.end(), cmpIntervals);
+		// sort(signal_output.begin(), signal_output.end(), cmpIntervals);
 		
 		// Gather up and sum the Funseq values over each annotation
 		unsigned int signal_var_pointer = 0;
@@ -748,7 +748,7 @@ int main (int argc, char* argv[]) {
 					
 					// wg signal score code
 					if (funseq_opt == 'p') {
-						signal_sum += var_array[vpointer3][3];
+						signal_sum += atof(var_array[vpointer3][3]);
 					}
 				} else { // Update vpointer2
 					if (vpointer3 != 0) {
@@ -859,7 +859,7 @@ int main (int argc, char* argv[]) {
 					
 					// wg signal score code
 					if (funseq_opt == 'p') {
-						signal_sum += var_array[vpointer3][3];
+						signal_sum += atof(var_array[vpointer3][3]);
 					}
 				} else { // Update vpointer2
 					if (vpointer3 != var_array.size()-1) {
