@@ -115,8 +115,8 @@ int main (int argc, char* argv[]) {
 	string outfile;
 	
 	// Option to specify whether to calculate wg signal scores on the variants
-	// 'p': Compute wg signal scores for observed and permuted annotations
 	// 'o': Compute wg signal scores for observed annotations only
+	// 'p': Compute wg signal scores for observed and permuted annotations
 	// 'n': Do not compute wg signal scores
 	char funseq_opt;
 	

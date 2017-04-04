@@ -95,11 +95,13 @@ __device__ void BottomUpSort(int* target_array, int n) {
 	free(temp_array);
 }
 
-__device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double* gpu_pvalues) {
+__device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double* gpu_pvalues, double *gpu_signal_pvalues. int *gpu_wg_switch) {
 
 	// DEBUG
 	// int tid = threadIdx.x + blockIdx.x * blockDim.x;
 	// printf("Intersection kernel %d\n", tid);
+	
+	int funseq_opt = (*gpu_wg_switch);
 
 	for (int i = start; i <= end; i++) {
 		// Unpack the current annotation
@@ -118,6 +120,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		int this_var_chr;
 		int this_var_start;
 		int this_var_end;
+		double this_var_signal;
 		
 		// Keep track of whether the target is greater or less than the current variant
 		// Also what was the last comparison
@@ -125,6 +128,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		int is_greater = -1;
 		
 		int int_variants;
+		double signal_sum;
 		
 		// return;
 		// DEBUG
@@ -136,6 +140,10 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			this_var_start = gpu_var_start[vthis];
 			this_var_end = gpu_var_end[vthis];
 			
+			if (funseq_opt) {
+				this_var_signal = gpu_var_signal[vthis];
+			}
+			
 			// DEBUG
 // 			printf("Variant %d: %d, %d, %d\n", test, this_var_chr, this_var_start, this_var_end);
 // 			test++;
@@ -143,6 +151,9 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			// Check for intersection
 			if (this_var_chr == this_ann_chr && this_var_start <= this_ann_end && this_ann_start <= this_var_end) {
 				int_variants = 1;
+				if (funseq_opt) {
+					signal_sum = this_var_signal;
+				}
 				break;
 			} else {
 				if (vlength > 1) { // vlength does not fall below 1
@@ -161,6 +172,9 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 				} else {
 					if (vthis == vlength_const - 1) { // Don't read off the end of the array
 						int_variants = 0;
+						if (funseq_opt) {
+							signal_sum = 0.0;
+						}
 						break;
 					} else {
 						// Take the larger half
@@ -171,6 +185,9 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 				}
 				if (vlength == 1 && ((prev_is_greater == 1 && is_greater == 0) || (prev_is_greater == 0 && is_greater == 1))) { // No intersection
 					int_variants = 0;
+					if (funseq_opt) {
+						signal_sum = 0.0;
+					}
 					break;
 				}
 			}
@@ -192,14 +209,27 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			this_var_chr = gpu_var_chr[vthis];
 			this_var_start = gpu_var_start[vthis];
 			this_var_end = gpu_var_end[vthis];
+			
+			if (funseq_opt) {
+				this_var_signal = gpu_var_signal[vthis];
+			}
 		
 			// Search for intersecting variants bidirectionally
 			while (this_var_chr == this_ann_chr && this_var_start <= this_ann_end && this_ann_start <= this_var_end) {
 				int_variants++;
+				
+				if (funseq_opt) {
+					signal_sum += this_var_signal;
+				}
+				
 				vthis--;
 				this_var_chr = gpu_var_chr[vthis];
 				this_var_start = gpu_var_start[vthis];
 				this_var_end = gpu_var_end[vthis];
+				
+				if (funseq_opt) {
+					this_var_signal = gpu_var_signal[vthis];
+				}
 			}
 		}
 		
@@ -211,14 +241,27 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			this_var_chr = gpu_var_chr[vthis];
 			this_var_start = gpu_var_start[vthis];
 			this_var_end = gpu_var_end[vthis];
+			
+			if (funseq_opt) {
+				this_var_signal = gpu_var_signal[vthis];
+			}
 		
 			// Search for intersecting variants bidirectionally
 			while (this_var_chr == this_ann_chr && this_var_start <= this_ann_end && this_ann_start <= this_var_end) {
 				int_variants++;
+				
+				if (funseq_opt) {
+					signal_sum += this_var_signal;
+				}
+				
 				vthis++;
 				this_var_chr = gpu_var_chr[vthis];
 				this_var_start = gpu_var_start[vthis];
 				this_var_end = gpu_var_end[vthis];
+				
+				if (funseq_opt) {
+					this_var_signal = gpu_var_signal[vthis];
+				}
 			}
 		}
 		
@@ -313,6 +356,13 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 	 	int *varcounts = (int *)malloc(n*sizeof(int));
 	 	int varcounts_index = 0;
 	 	
+	 	// Collection of WG signal score sums for random bins
+	 	// Uses the same index as varcounts
+	 	double *signal_scores;
+	 	if (funseq_opt) {
+	 		signal_scores = (double *)malloc(n*sizeof(double));
+	 	}
+	 	
 	 	// Backwards search!
 	 	unsigned int j = (n/2);
 	 	do {
@@ -320,6 +370,12 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 	 		
 	 		// How many variants intersect this bin?
  			int this_variants = 0;
+ 			
+ 			// wg signal code
+ 			double this_signal_sum;
+ 			if (funseq_opt) {
+ 				this_signal_sum = 0.0;
+ 			}
  			
  			// Unpack the current annotation
  			int upstream_ann_chr = this_ann_chr;
@@ -330,6 +386,11 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  			int upstream_var_chr = gpu_var_chr[vpointer2];
  			int upstream_var_start = gpu_var_start[vpointer2];
  			int upstream_var_end = gpu_var_end[vpointer2];
+ 			double upstream_var_signal;
+ 			
+ 			if (funseq_opt) {
+ 				upstream_var_signal = gpu_var_signal[vpointer2];
+ 			}
  			
  			// Now count the intersecting variants
  			// vpointer2 points to the "earliest" possible annotation, and vpointer3
@@ -342,6 +403,10 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 				// If the current variant intersects the current annotation, increment target_variants
 				if (upstream_var_chr == upstream_ann_chr && upstream_ann_start <= upstream_var_end && upstream_var_start <= upstream_ann_end) {
 					this_variants++;
+					
+					if (funseq_opt) {
+						this_signal_sum += upstream_var_signal;
+					}
 				} else { // Update vpointer2
 					if (vpointer3 != 0) {
 						vpointer2 = vpointer3 - 1;
@@ -356,10 +421,19 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 				upstream_var_chr = gpu_var_chr[vpointer3];
 				upstream_var_start = gpu_var_start[vpointer3];
 				upstream_var_end = gpu_var_end[vpointer3];
+				
+				if (funseq_opt) {
+					upstream_var_signal = gpu_var_signal[vpointer3];
+				}
 			}
 			
 			// this_variants has been settled, save for output
 			varcounts[varcounts_index] = this_variants;
+			
+			if (funseq_opt) {
+				signal_scores[varcounts_index] = this_signal_sum;
+			}
+			
 			varcounts_index++;
 		} while (j > 0);
 		
@@ -371,6 +445,12 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			// How many variants intersect this bin?
 			int this_variants = 0;
 			
+			// wg signal code
+ 			double this_signal_sum;
+ 			if (funseq_opt) {
+ 				this_signal_sum = 0.0;
+ 			}
+			
 			// Unpack the current annotation
 			int downstream_ann_chr = this_ann_chr;
  			int downstream_ann_start = downstream_start[j];
@@ -380,6 +460,11 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  			int downstream_var_chr = gpu_var_chr[vpointer2];
  			int downstream_var_start = gpu_var_start[vpointer2];
  			int downstream_var_end = gpu_var_end[vpointer2];
+ 			double downstream_var_signal;
+ 			
+ 			if (funseq_opt) {
+ 				downstream_var_signal = gpu_var_signal[vpointer2];
+ 			}
  			
  			// Now count the intersecting variants
  			// vpointer2 points to the "earliest" possible variant, and vpointer3
@@ -392,6 +477,10 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  				// If the current variant intersects the current annotation, increment target_variants
  				if (downstream_var_chr == downstream_ann_chr && downstream_ann_start <= downstream_var_end && downstream_var_start <= downstream_ann_end) {
  					this_variants++;
+ 					
+ 					if (funseq_opt) {
+						this_signal_sum += downstream_var_signal;
+					}
  				} else { // Update vpointer2
  					if (vpointer3 != (vlength_const)-1) {
  						vpointer2 = vpointer3 + 1;
@@ -406,10 +495,19 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  				downstream_var_chr = gpu_var_chr[vpointer3];
  				downstream_var_start = gpu_var_start[vpointer3];
  				downstream_var_end = gpu_var_end[vpointer3];
+ 				
+ 				if (funseq_opt) {
+					downstream_var_signal = gpu_var_signal[vpointer3];
+				}
  			}
  			
  			// this_variants has been settled, save for output
  			varcounts[varcounts_index] = this_variants;
+ 			
+ 			if (funseq_opt) {
+				signal_scores[varcounts_index] = this_signal_sum;
+			}
+ 			
  			varcounts_index++;
  		}
  		
@@ -430,18 +528,35 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		double fraction = (double)overbins/(double)n;
  		gpu_pvalues[i] = fraction;
  		
+ 		// wg signal code wrapup
+ 		if (funseq_opt) {
+			int signal_overbins = 0;
+			for (unsigned int j = 0; j < n; j++) {
+				if (signal_scores[j] >= signal_sum) {
+					overbins++;
+				}
+			}
+		
+			double pfrac = (double)signal_overbins/(double)n;
+			gpu_signal_pvalues[i] = pfrac;
+		}
+ 		
  		// Malloc free the temp arrays
  		free(upstream_start);
  		free(downstream_start);
  		free(varcounts);
  		free(d_state);
  		
+ 		if (funseq_opt) {
+ 			free(signal_scores);
+ 		}
+ 		
  		// DEBUG
  		// printf("GPU pvalue %d: %f\n", i, fraction);
 	}
 }
 
-__global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_ann_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double *gpu_pvalues) {
+__global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_ann_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double *gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch) {
 // __global__ void apportionWork() {
 
 	// DEBUG
@@ -477,7 +592,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 // 		printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
 // 		return;
 		
-		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues);
+		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch);
 	} else {
 		start = tid;
 		end = tid;
@@ -486,7 +601,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 		// printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
 		
 		if (tid < length) {
-			intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues);
+			intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch);
 		}
 	}
 }
@@ -577,7 +692,8 @@ int main (int argc, char* argv[]) {
 	string outfile;
 	
 	// Option to specify whether to calculate wg signal scores on the variants
-	// 'y': Compute wg signal scores alongside the MOAT results
+	// 'o': Compute wg signal scores for observed annotations only
+	// 'p': Compute wg signal scores for observed and permuted annotations
 	// 'n': Do not compute wg signal scores
 	char funseq_opt;
 	
@@ -585,7 +701,7 @@ int main (int argc, char* argv[]) {
 	string signal_file;
 	
 	if (argc != 9 && argc != 10) {
-		fprintf(stderr, "Usage: moat_a_gpu [# of permutations] [d_min] [d_max] [prohibited regions file] [variant file] [annotation file] [output file] [wg signal option (y/n)] [wg signal file (optional)]. Exiting.\n");
+		fprintf(stderr, "Usage: moat_a_gpu [# of permutations] [d_min] [d_max] [prohibited regions file] [variant file] [annotation file] [output file] [wg signal option (o/p/n)] [wg signal file (optional)]. Exiting.\n");
 		return 1;
 	} else {
 		n = atoi(argv[1]);
@@ -597,8 +713,8 @@ int main (int argc, char* argv[]) {
 		outfile = string(argv[7]);
 		funseq_opt = argv[8][0];
 		
-		if (funseq_opt != 'y' && funseq_opt != 'n') {
-			fprintf(stderr, "Invalid option for wg signal option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", funseq_opt);
+		if (funseq_opt != 'o' && funseq_opt != 'p' && funseq_opt != 'n') {
+			fprintf(stderr, "Invalid option for wg signal option: \'%c\'. Must be either \'o\' or \'p\' or \'n\'. Exiting.\n", funseq_opt);
 			return 1;
 		}
 		
@@ -842,250 +958,7 @@ int main (int argc, char* argv[]) {
 	// Variables for main loop
 	// unsigned int var_pointer = 0;
 	
-	// Can malloc free the prohibited regions
-	prohibited_regions.clear();
-	
-	// Length of each variant array
-	int var_arr_length = var_array.size();
-	
-	// Turn the vectors into int arrays for CUDA
-	// Var array
-	int *var_chr = (int*)malloc(var_arr_length*sizeof(int));
-	int *var_start = (int*)malloc(var_arr_length*sizeof(int));
-	int *var_end = (int*)malloc(var_arr_length*sizeof(int));
-	
-	// Lengths of each annotation array
-	int ann_arr_length = ann_array.size();
-	
-	// Ann array
-	int *ann_chr = (int*)malloc(ann_arr_length*sizeof(int));
-	int *ann_start = (int*)malloc(ann_arr_length*sizeof(int));
-	int *ann_end = (int*)malloc(ann_arr_length*sizeof(int));
-	
-	// Variant array processing
-	for (unsigned int i = 0; i < var_array.size(); i++) {
-		// Unpack the current variant
-		string cur_var_chr = var_array[i][0];
-		string cur_var_start = var_array[i][1];
-		string cur_var_end = var_array[i][2];
-		
-		int cur_var_chr_int;
-		if (cur_var_chr == "chrX") {
-			cur_var_chr_int = 24;
-		} else if (cur_var_chr == "chrY") {
-			cur_var_chr_int = 25;
-		} else if (cur_var_chr == "chrM") {
-			cur_var_chr_int = 26;
-		} else {
-			string cur_var_chr_part = cur_var_chr.substr(3);
-			cur_var_chr_int = atoi(cur_var_chr_part.c_str());
-		}
-		
-		// var_arr_length++;
-		
-		// var_chr = (int*)realloc(var_chr, var_arr_length*sizeof(int));
-		var_chr[i] = cur_var_chr_int;
-		
-		// var_start = (int*)realloc(var_start, var_arr_length*sizeof(int));
-		var_start[i] = atoi(cur_var_start.c_str());
-		
-		// var_end = (int*)realloc(var_end, var_arr_length*sizeof(int));
-		var_end[i] = atoi(cur_var_end.c_str());
-	}
-	
-	// Can malloc free the variant array
-	// var_array.clear();
-	
-	// Annotation array processing
-	for (unsigned int i = 0; i < ann_array.size(); i++) {
-		// Unpack the current variant
-		string cur_ann_chr = ann_array[i][0];
-		string cur_ann_start = ann_array[i][1];
-		string cur_ann_end = ann_array[i][2];
-		
-		int cur_ann_chr_int;
-		if (cur_ann_chr == "chrX") {
-			cur_ann_chr_int = 24;
-		} else if (cur_ann_chr == "chrY") {
-			cur_ann_chr_int = 25;
-		} else if (cur_ann_chr == "chrM") {
-			cur_ann_chr_int = 26;
-		} else {
-			string cur_ann_chr_part = cur_ann_chr.substr(3);
-			cur_ann_chr_int = atoi(cur_ann_chr_part.c_str());
-		}
-		
-		// ann_arr_length++;
-		
-		// ann_chr = (int*)realloc(ann_chr, ann_arr_length*sizeof(int));
-		ann_chr[i] = cur_ann_chr_int;
-		
-		// ann_start = (int*)realloc(ann_start, ann_arr_length*sizeof(int));
-		ann_start[i] = atoi(cur_ann_start.c_str());
-		
-		// ann_end = (int*)realloc(ann_end, ann_arr_length*sizeof(int));
-		ann_end[i] = atoi(cur_ann_end.c_str());
-	}
-	
-	// Can't malloc free the annotation array
-	// ann_array.clear();
-	
-	// DEBUG
-	// printf("Breakpoint 4\n");
-	
-	// Begin the CUDA magic
-	int *gpu_var_chr;
-	int *gpu_var_start;
-	int *gpu_var_end;
-	
-	int *gpu_ann_chr;
-	int *gpu_ann_start;
-	int *gpu_ann_end;
-	
-	int *gpu_var_arr_length;
-	int *gpu_ann_arr_length;
-	
-	int *gpu_n;
-	int *gpu_dmin;
-	int *gpu_dmax;
-	
-	// DEBUG
-// 	printf("Begin CUDA code\n");
-// 	int *test_int_cpu;
-// 	int *test_int_gpu;
-// 	test_int_cpu = (int*)malloc(sizeof(int));
-// 	cudaMalloc((void**)&test_int_gpu, sizeof(int));
-// 	*test_int_cpu = 246;
-// 	cudaMemcpy(test_int_gpu, test_int_cpu, sizeof(int), cudaMemcpyHostToDevice);
-	
-	cudaMalloc((void**)&gpu_var_chr, var_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMalloc((void**)&gpu_var_start, var_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMalloc((void**)&gpu_var_end, var_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
-	
-	cudaMalloc((void**)&gpu_ann_chr, ann_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMalloc((void**)&gpu_ann_start, ann_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMalloc((void**)&gpu_ann_end, ann_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
-	
-	cudaMalloc((void**)&gpu_var_arr_length, sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMalloc((void**)&gpu_ann_arr_length, sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
-	
-	cudaMalloc((void**)&gpu_n, sizeof(int));
-	cudaMalloc((void**)&gpu_dmin, sizeof(int));
-	cudaMalloc((void**)&gpu_dmax, sizeof(int));
-	
-	double *gpu_pvalues;
-	cudaMalloc((void**)&gpu_pvalues, ann_arr_length*sizeof(double));
-	// GPUerrchk(cudaPeekAtLastError());
-	
-	cudaMemcpy(gpu_var_chr, var_chr, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMemcpy(gpu_var_start, var_start, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMemcpy(gpu_var_end, var_end, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
-
-	cudaMemcpy(gpu_ann_chr, ann_chr, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMemcpy(gpu_ann_start, ann_start, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMemcpy(gpu_ann_end, ann_end, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
-	
-	cudaMemcpy(gpu_var_arr_length, &var_arr_length, sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
-	cudaMemcpy(gpu_ann_arr_length, &ann_arr_length, sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
-	
-	cudaMemcpy(gpu_n, &n, sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(gpu_dmin, &dmin, sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(gpu_dmax, &dmax, sizeof(int), cudaMemcpyHostToDevice);
-	
-	// Try out 16x16 and see how that goes
-	int num_blocks = NUMTHREADSBASE;
-	int threads_per_block = NUMTHREADSBASE;
-	
-	// DEBUG
-	// printf("This is debug print 1\n");
-	
-	// DEBUG
-	// printf("Breakpoint 5\n");
-	
-	// Adjust the heap size based on the size of the dataset
-// 	if (ann_array.size() > 3000) {
-// 		int fold = ann_array.size()/3000;
-// 		int new_heap_size = fold*8000000;
-// 		int new_heap_size = 800000000;
-//  		cudaDeviceSetLimit(cudaLimitMallocHeapSize, new_heap_size);
-// 	}
-	
-	apportionWork<<<num_blocks, threads_per_block>>>(gpu_var_chr, gpu_var_start, gpu_var_end, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_ann_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues);
-	GPUerrchk(cudaPeekAtLastError());
-	// apportionWork<<<1,1>>>();
-	
-	// DEBUG
-// 	printf("This is debug print 2\n");
-// 	cudaMemcpy(test_int_cpu, test_int_gpu, sizeof(int), cudaMemcpyDeviceToHost);
-// 	printf("Test int: %d\n", *test_int_cpu);
-
-	// DEBUG
-	// printf("Breakpoint 6\n");
-	
-	// GPUerrchk(cudaDeviceSynchronize());
-	
-	// Collect the output values, will end with same size as ann_array
-	double *pvalues = (double *)malloc(ann_array.size()*sizeof(double));
-	// int block = 1000;
-	
-	cudaMemcpy(pvalues, gpu_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
-	// GPUerrchk(cudaPeekAtLastError());
-//  	if (gpu_pvalues == NULL) {
-//  		printf("Malloc fail!\n");
-//  	}
-// 	return 0;
-// 	
-// 	if (ann_arr_length < block) {
-// 		cudaMemcpy(pvalues, gpu_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
-// 		GPUerrchk(cudaPeekAtLastError());
-// 	} else {
-// 		double *pvalues_ptr = pvalues;
-// 		double *gpu_pvalues_ptr = gpu_pvalues;
-// 		for (int k = 0; k < ann_arr_length; k += block) {
-// 		
-// 			// DEBUG
-// 			printf("k: %d\n", k);
-// 		
-// 			int copyblock;
-// 			if (k < ann_arr_length-block) {
-// 				copyblock = ann_arr_length-k;
-// 			} else {
-// 				copyblock = block;
-// 			}
-// 			cudaMemcpy(pvalues_ptr, gpu_pvalues_ptr, copyblock*sizeof(double), cudaMemcpyDeviceToHost);
-// 			GPUerrchk(cudaPeekAtLastError());
-// 			pvalues_ptr += block*sizeof(double);
-// 			gpu_pvalues_ptr += block*sizeof(double);
-// 		}
-// 	}
-	// GPUerrchk(cudaDeviceSynchronize());
-	
-	// DEBUG
-	// printf("Passed CUDA memcpy\n");
-// 	for (int i = 0; i < ann_arr_length; i++) {
-// 		printf("Pvalue %d: %f\n", i, gpu_pvalues[i]);
-// 	}
-
-	// DEBUG
-	// printf("Breakpoint 7\n");
-	
-	// wg signal score code
+		// wg signal score code
 	vector<double> signal_scores;
 	// vector<int> signal_overcount (ann_array.size(), 0);
 	if (funseq_opt != 'n') {
@@ -1151,7 +1024,7 @@ int main (int argc, char* argv[]) {
 		system(command.c_str());
 		
 		// Collect sum of signal scores per annotation
-		vector<vector<string> > signal_output;
+		// vector<vector<string> > signal_output;
 		
 		// Index to track where we are in the var_array
 		unsigned int v_index = 0;
@@ -1173,12 +1046,12 @@ int main (int argc, char* argv[]) {
 // 			double signal_score;
 // 			sscanf(linebuf.c_str(), "%lf", &signal_score);
 			
-			vector<string> temp;
-			temp.push_back(var_array[v_index][0]);
-			temp.push_back(var_array[v_index][1]);
-			temp.push_back(var_array[v_index][2]);
-			temp.push_back(linebuf);
-			signal_output.push_back(temp);
+// 			vector<string> temp;
+// 			temp.push_back(var_array[v_index][0]);
+// 			temp.push_back(var_array[v_index][1]);
+// 			temp.push_back(var_array[v_index][2]);
+			var_array[v_index].push_back(linebuf);
+			// signal_output.push_back(temp);
 			v_index++;
 		}
 		if (!(feof(avg_outfile_ptr)) && ferror(avg_outfile_ptr)) { // This is an error
@@ -1210,6 +1083,289 @@ int main (int argc, char* argv[]) {
 			signal_scores.push_back(signal_sum);
 		}
 	}
+	
+	// Can malloc free the prohibited regions
+	prohibited_regions.clear();
+	
+	// Length of each variant array
+	int var_arr_length = var_array.size();
+	
+	// Turn the vectors into int arrays for CUDA
+	// Var array
+	int *var_chr = (int*)malloc(var_arr_length*sizeof(int));
+	int *var_start = (int*)malloc(var_arr_length*sizeof(int));
+	int *var_end = (int*)malloc(var_arr_length*sizeof(int));
+	double *var_signal;
+	
+	if (funseq_opt == 'p') {
+		var_signal = (double*)malloc(var_arr_length*sizeof(double));
+	}
+	
+	// Lengths of each annotation array
+	int ann_arr_length = ann_array.size();
+	
+	// Ann array
+	int *ann_chr = (int*)malloc(ann_arr_length*sizeof(int));
+	int *ann_start = (int*)malloc(ann_arr_length*sizeof(int));
+	int *ann_end = (int*)malloc(ann_arr_length*sizeof(int));
+	
+	// Variant array processing
+	for (unsigned int i = 0; i < var_array.size(); i++) {
+		// Unpack the current variant
+		string cur_var_chr = var_array[i][0];
+		string cur_var_start = var_array[i][1];
+		string cur_var_end = var_array[i][2];
+		string cur_var_signal = var_array[i][3];
+		
+		int cur_var_chr_int;
+		if (cur_var_chr == "chrX") {
+			cur_var_chr_int = 24;
+		} else if (cur_var_chr == "chrY") {
+			cur_var_chr_int = 25;
+		} else if (cur_var_chr == "chrM") {
+			cur_var_chr_int = 26;
+		} else {
+			string cur_var_chr_part = cur_var_chr.substr(3);
+			cur_var_chr_int = atoi(cur_var_chr_part.c_str());
+		}
+		
+		// var_arr_length++;
+		
+		// var_chr = (int*)realloc(var_chr, var_arr_length*sizeof(int));
+		var_chr[i] = cur_var_chr_int;
+		
+		// var_start = (int*)realloc(var_start, var_arr_length*sizeof(int));
+		var_start[i] = atoi(cur_var_start.c_str());
+		
+		// var_end = (int*)realloc(var_end, var_arr_length*sizeof(int));
+		var_end[i] = atoi(cur_var_end.c_str());
+		
+		if (funseq_opt == 'p') {
+			var_signal[i] = atof(cur_var_signal.c_str());
+		}
+	}
+	
+	// Can malloc free the variant array
+	// var_array.clear();
+	
+	// Annotation array processing
+	for (unsigned int i = 0; i < ann_array.size(); i++) {
+		// Unpack the current variant
+		string cur_ann_chr = ann_array[i][0];
+		string cur_ann_start = ann_array[i][1];
+		string cur_ann_end = ann_array[i][2];
+		
+		int cur_ann_chr_int;
+		if (cur_ann_chr == "chrX") {
+			cur_ann_chr_int = 24;
+		} else if (cur_ann_chr == "chrY") {
+			cur_ann_chr_int = 25;
+		} else if (cur_ann_chr == "chrM") {
+			cur_ann_chr_int = 26;
+		} else {
+			string cur_ann_chr_part = cur_ann_chr.substr(3);
+			cur_ann_chr_int = atoi(cur_ann_chr_part.c_str());
+		}
+		
+		// ann_arr_length++;
+		
+		// ann_chr = (int*)realloc(ann_chr, ann_arr_length*sizeof(int));
+		ann_chr[i] = cur_ann_chr_int;
+		
+		// ann_start = (int*)realloc(ann_start, ann_arr_length*sizeof(int));
+		ann_start[i] = atoi(cur_ann_start.c_str());
+		
+		// ann_end = (int*)realloc(ann_end, ann_arr_length*sizeof(int));
+		ann_end[i] = atoi(cur_ann_end.c_str());
+	}
+	
+	// Can't malloc free the annotation array
+	// ann_array.clear();
+	
+	// DEBUG
+	// printf("Breakpoint 4\n");
+	
+	// Begin the CUDA magic
+	int *gpu_var_chr;
+	int *gpu_var_start;
+	int *gpu_var_end;
+	double *gpu_var_signal;
+	
+	int *gpu_ann_chr;
+	int *gpu_ann_start;
+	int *gpu_ann_end;
+	
+	int *gpu_var_arr_length;
+	int *gpu_ann_arr_length;
+	
+	int *gpu_n;
+	int *gpu_dmin;
+	int *gpu_dmax;
+	
+	// DEBUG
+// 	printf("Begin CUDA code\n");
+// 	int *test_int_cpu;
+// 	int *test_int_gpu;
+// 	test_int_cpu = (int*)malloc(sizeof(int));
+// 	cudaMalloc((void**)&test_int_gpu, sizeof(int));
+// 	*test_int_cpu = 246;
+// 	cudaMemcpy(test_int_gpu, test_int_cpu, sizeof(int), cudaMemcpyHostToDevice);
+	
+	cudaMalloc((void**)&gpu_var_chr, var_arr_length*sizeof(int));
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMalloc((void**)&gpu_var_start, var_arr_length*sizeof(int));
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMalloc((void**)&gpu_var_end, var_arr_length*sizeof(int));
+	// GPUerrchk(cudaPeekAtLastError());
+	
+	if (funseq_opt == 'p') {
+		cudaMalloc((void**)&gpu_var_signal, var_arr_length*sizeof(double));
+	}
+	
+	cudaMalloc((void**)&gpu_ann_chr, ann_arr_length*sizeof(int));
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMalloc((void**)&gpu_ann_start, ann_arr_length*sizeof(int));
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMalloc((void**)&gpu_ann_end, ann_arr_length*sizeof(int));
+	// GPUerrchk(cudaPeekAtLastError());
+	
+	cudaMalloc((void**)&gpu_var_arr_length, sizeof(int));
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMalloc((void**)&gpu_ann_arr_length, sizeof(int));
+	// GPUerrchk(cudaPeekAtLastError());
+	
+	cudaMalloc((void**)&gpu_n, sizeof(int));
+	cudaMalloc((void**)&gpu_dmin, sizeof(int));
+	cudaMalloc((void**)&gpu_dmax, sizeof(int));
+	
+	double *gpu_pvalues;
+	cudaMalloc((void**)&gpu_pvalues, ann_arr_length*sizeof(double));
+	// GPUerrchk(cudaPeekAtLastError());
+	
+	double *gpu_signal_pvalues;
+	if (funseq_opt == 'p') {
+		cudaMalloc((void**)&gpu_signal_pvalues, ann_arr_length*sizeof(double));
+	}
+	
+	cudaMemcpy(gpu_var_chr, var_chr, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMemcpy(gpu_var_start, var_start, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMemcpy(gpu_var_end, var_end, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
+	// GPUerrchk(cudaPeekAtLastError());
+	if (funseq_opt == 'p') {
+		cudaMemcpy(gpu_var_signal, var_signal, var_arr_length*sizeof(double), cudaMemcpyHostToDevice);
+	}
+
+	cudaMemcpy(gpu_ann_chr, ann_chr, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMemcpy(gpu_ann_start, ann_start, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMemcpy(gpu_ann_end, ann_end, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
+	// GPUerrchk(cudaPeekAtLastError());
+	
+	cudaMemcpy(gpu_var_arr_length, &var_arr_length, sizeof(int), cudaMemcpyHostToDevice);
+	// GPUerrchk(cudaPeekAtLastError());
+	cudaMemcpy(gpu_ann_arr_length, &ann_arr_length, sizeof(int), cudaMemcpyHostToDevice);
+	// GPUerrchk(cudaPeekAtLastError());
+	
+	cudaMemcpy(gpu_n, &n, sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(gpu_dmin, &dmin, sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(gpu_dmax, &dmax, sizeof(int), cudaMemcpyHostToDevice);
+	
+	// Switch to indicate whether to do wg signal scores on the permuted data
+	int wg_switch;
+	if (funseq_opt == 'p') {
+		wg_switch = 1;
+	} else {
+		wg_switch = 0;
+	}
+	int *gpu_wg_switch = cudaMalloc((void**)&gpu_wg_switch, sizeof(int));
+	cudaMemcpy(gpu_wg_switch, &wg_switch, sizeof(int), cudaMemcpyHostToDevice);
+	
+	// Try out 16x16 and see how that goes
+	int num_blocks = NUMTHREADSBASE;
+	int threads_per_block = NUMTHREADSBASE;
+	
+	// DEBUG
+	// printf("This is debug print 1\n");
+	
+	// DEBUG
+	// printf("Breakpoint 5\n");
+	
+	// Adjust the heap size based on the size of the dataset
+// 	if (ann_array.size() > 3000) {
+// 		int fold = ann_array.size()/3000;
+// 		int new_heap_size = fold*8000000;
+// 		int new_heap_size = 800000000;
+//  		cudaDeviceSetLimit(cudaLimitMallocHeapSize, new_heap_size);
+// 	}
+	
+	apportionWork<<<num_blocks, threads_per_block>>>(gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_ann_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch);
+	GPUerrchk(cudaPeekAtLastError());
+	// apportionWork<<<1,1>>>();
+	
+	// DEBUG
+// 	printf("This is debug print 2\n");
+// 	cudaMemcpy(test_int_cpu, test_int_gpu, sizeof(int), cudaMemcpyDeviceToHost);
+// 	printf("Test int: %d\n", *test_int_cpu);
+
+	// DEBUG
+	// printf("Breakpoint 6\n");
+	
+	// GPUerrchk(cudaDeviceSynchronize());
+	
+	// Collect the output values, will end with same size as ann_array
+	double *pvalues = (double *)malloc(ann_array.size()*sizeof(double));
+	// int block = 1000;
+	
+	cudaMemcpy(pvalues, gpu_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
+	
+	double *signal_pvalues;
+	
+	if (funseq_opt) {
+		signal_pvalues = (double *)malloc(ann_array.size()*sizeof(double));
+		cudaMemcpy(signal_pvalues, gpu_signal_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
+	}
+	// GPUerrchk(cudaPeekAtLastError());
+//  	if (gpu_pvalues == NULL) {
+//  		printf("Malloc fail!\n");
+//  	}
+// 	return 0;
+// 	
+// 	if (ann_arr_length < block) {
+// 		cudaMemcpy(pvalues, gpu_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
+// 		GPUerrchk(cudaPeekAtLastError());
+// 	} else {
+// 		double *pvalues_ptr = pvalues;
+// 		double *gpu_pvalues_ptr = gpu_pvalues;
+// 		for (int k = 0; k < ann_arr_length; k += block) {
+// 		
+// 			// DEBUG
+// 			printf("k: %d\n", k);
+// 		
+// 			int copyblock;
+// 			if (k < ann_arr_length-block) {
+// 				copyblock = ann_arr_length-k;
+// 			} else {
+// 				copyblock = block;
+// 			}
+// 			cudaMemcpy(pvalues_ptr, gpu_pvalues_ptr, copyblock*sizeof(double), cudaMemcpyDeviceToHost);
+// 			GPUerrchk(cudaPeekAtLastError());
+// 			pvalues_ptr += block*sizeof(double);
+// 			gpu_pvalues_ptr += block*sizeof(double);
+// 		}
+// 	}
+	// GPUerrchk(cudaDeviceSynchronize());
+	
+	// DEBUG
+	// printf("Passed CUDA memcpy\n");
+// 	for (int i = 0; i < ann_arr_length; i++) {
+// 		printf("Pvalue %d: %f\n", i, gpu_pvalues[i]);
+// 	}
+
+	// DEBUG
+	// printf("Breakpoint 7\n");
 
 	// Output generation
 	FILE *outfile_ptr = fopen(outfile.c_str(), "w");
@@ -1222,7 +1378,9 @@ int main (int argc, char* argv[]) {
 		string cur_ann_name = ann_array[i][3];
 		
 		// Print the output line
-		if (funseq_opt == 'y') {
+		if (funseq_opt == 'p') {
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%e\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], signal_scores[i], signal_pvalues[i]);
+		} else if (funseq_opt == 'o') {
 			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%e\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], signal_scores[i]);
 		} else {
 			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i]);
