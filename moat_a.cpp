@@ -748,7 +748,7 @@ int main (int argc, char* argv[]) {
 					
 					// wg signal score code
 					if (funseq_opt == 'p') {
-						signal_sum += atof(var_array[vpointer3][3]);
+						signal_sum += atof(var_array[vpointer3][3].c_str());
 					}
 				} else { // Update vpointer2
 					if (vpointer3 != 0) {
@@ -859,7 +859,7 @@ int main (int argc, char* argv[]) {
 					
 					// wg signal score code
 					if (funseq_opt == 'p') {
-						signal_sum += atof(var_array[vpointer3][3]);
+						signal_sum += atof(var_array[vpointer3][3].c_str());
 					}
 				} else { // Update vpointer2
 					if (vpointer3 != var_array.size()-1) {
