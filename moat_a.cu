@@ -95,7 +95,7 @@ __device__ void BottomUpSort(int* target_array, int n) {
 	free(temp_array);
 }
 
-__device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double* gpu_pvalues, double *gpu_signal_pvalues. int *gpu_wg_switch) {
+__device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double* gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch) {
 
 	// DEBUG
 	// int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -1067,7 +1067,7 @@ int main (int argc, char* argv[]) {
 		system(rm_com.c_str());
 		
 		// Sort
-		sort(signal_output.begin(), signal_output.end(), cmpIntervals);
+		// sort(signal_output.begin(), signal_output.end(), cmpIntervals);
 		
 		// Gather up and sum the Funseq values over each annotation
 		unsigned int signal_var_pointer = 0;
@@ -1280,7 +1280,8 @@ int main (int argc, char* argv[]) {
 	} else {
 		wg_switch = 0;
 	}
-	int *gpu_wg_switch = cudaMalloc((void**)&gpu_wg_switch, sizeof(int));
+	int *gpu_wg_switch;
+	cudaMalloc((void**)&gpu_wg_switch, sizeof(int));
 	cudaMemcpy(gpu_wg_switch, &wg_switch, sizeof(int), cudaMemcpyHostToDevice);
 	
 	// Try out 16x16 and see how that goes
