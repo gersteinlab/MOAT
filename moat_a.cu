@@ -1077,7 +1077,7 @@ int main (int argc, char* argv[]) {
 			double signal_sum = 0.0;
 			
 			for (unsigned int j = range.first; j < range.second; j++) {
-				double score = atof(signal_output[j][3].c_str());
+				double score = atof(var_array[j][3].c_str());
 				signal_sum += score;
 			}
 			signal_scores.push_back(signal_sum);
