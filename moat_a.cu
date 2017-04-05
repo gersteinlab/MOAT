@@ -1072,7 +1072,7 @@ int main (int argc, char* argv[]) {
 		// Gather up and sum the Funseq values over each annotation
 		unsigned int signal_var_pointer = 0;
 		for (unsigned int i = 0; i < ann_array.size(); i++) {
-			pair<unsigned int,unsigned int> range = intersecting_variants(signal_output, ann_array[i], signal_var_pointer);
+			pair<unsigned int,unsigned int> range = intersecting_variants(var_array, ann_array[i], signal_var_pointer);
 			signal_var_pointer = range.first;
 			double signal_sum = 0.0;
 			
