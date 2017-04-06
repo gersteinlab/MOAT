@@ -1026,6 +1026,9 @@ int main (int argc, char* argv[]) {
 		// Collect sum of signal scores per annotation
 		// vector<vector<string> > signal_output;
 		
+		// DEBUG
+		printf("Breakpoint 3a\n");
+		
 		// Index to track where we are in the var_array
 		unsigned int v_index = 0;
 		
@@ -1063,11 +1066,14 @@ int main (int argc, char* argv[]) {
 		fclose(avg_outfile_ptr);
 		
 		// Clean up temporary folder
-		string rm_com = "rm -rf " + funseq_outdir;
-		system(rm_com.c_str());
+		// string rm_com = "rm -rf " + funseq_outdir;
+		// system(rm_com.c_str());
 		
 		// Sort
 		// sort(signal_output.begin(), signal_output.end(), cmpIntervals);
+		
+		// DEBUG
+		printf("Breakpoint 3b\n");
 		
 		// Gather up and sum the Funseq values over each annotation
 		unsigned int signal_var_pointer = 0;
