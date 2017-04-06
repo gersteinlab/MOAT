@@ -100,7 +100,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 	// DEBUG
 	// int tid = threadIdx.x + blockIdx.x * blockDim.x;
 	// printf("Intersection kernel %d\n", tid);
-	// printf("GPU var signal 0: %f\n", gpu_var_signal[0]);
+	printf("GPU var signal 0: %f\n", gpu_var_signal[0]);
 	
 	int funseq_opt = (*gpu_wg_switch);
 
