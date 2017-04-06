@@ -129,7 +129,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		int is_greater = -1;
 		
 		int int_variants;
-		double signal_sum = 0.0;
+		double signal_sum;
 		
 		// return;
 		// DEBUG
@@ -163,6 +163,9 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 				if (!(gpuCmpIntervals(this_var_chr, this_var_start, this_var_end, this_ann_chr, this_ann_start, this_ann_end))) {
 					if (vthis == 0) { // Don't read off the end of the array
 						int_variants = 0;
+						if (funseq_opt) {
+							signal_sum = 0.0;
+						}
 						break;
 					} else {
 						// Take the smaller half
