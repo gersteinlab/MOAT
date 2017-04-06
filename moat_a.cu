@@ -100,7 +100,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 	// DEBUG
 	// int tid = threadIdx.x + blockIdx.x * blockDim.x;
 	// printf("Intersection kernel %d\n", tid);
-	printf("GPU var signal 0: %f\n", gpu_var_signal[0]);
+	// printf("GPU var signal 0: %f\n", gpu_var_signal[0]);
 	
 	int funseq_opt = (*gpu_wg_switch);
 
@@ -536,6 +536,10 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		if (funseq_opt) {
 			int signal_overbins = 0;
 			for (unsigned int j = 0; j < n; j++) {
+			
+				// DEBUG
+ 				printf("Signal score %d: %f\n", j, signal_scores[j]);
+			
 				if (signal_scores[j] >= signal_sum) {
 					overbins++;
 				}
