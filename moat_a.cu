@@ -1122,9 +1122,10 @@ int main (int argc, char* argv[]) {
 		string cur_var_chr = var_array[i][0];
 		string cur_var_start = var_array[i][1];
 		string cur_var_end = var_array[i][2];
+		string cur_var_signal;
 		
 		if (funseq_opt == 'p') {
-			string cur_var_signal = var_array[i][3];
+			cur_var_signal = var_array[i][3];
 		}
 		
 		int cur_var_chr_int;
