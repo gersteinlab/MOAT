@@ -1338,6 +1338,7 @@ int main (int argc, char* argv[]) {
 	if (funseq_opt == 'p') {
 		signal_pvalues = (double *)malloc(ann_array.size()*sizeof(double));
 		cudaMemcpy(signal_pvalues, gpu_signal_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
+		GPUerrchk(cudaPeekAtLastError());
 	}
 	// GPUerrchk(cudaPeekAtLastError());
 //  	if (gpu_pvalues == NULL) {
