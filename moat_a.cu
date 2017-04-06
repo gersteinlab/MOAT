@@ -533,7 +533,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		gpu_pvalues[i] = fraction;
  		
  		// DEBUG
- 		printf("Signal sum: %f\n", signal_sum);
+ 		// printf("Signal sum: %f\n", signal_sum);
  		
  		// wg signal code wrapup
  		if (funseq_opt) {
@@ -541,10 +541,10 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			for (unsigned int j = 0; j < n; j++) {
 			
 				// DEBUG
- 				printf("Signal score %d: %f\n", j, signal_scores[j]);
+ 				// printf("Signal score %d: %f\n", j, signal_scores[j]);
 			
 				if (signal_scores[j] >= signal_sum) {
-					overbins++;
+					signal_overbins++;
 				}
 			}
 		
