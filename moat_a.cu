@@ -532,6 +532,9 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		double fraction = (double)overbins/(double)n;
  		gpu_pvalues[i] = fraction;
  		
+ 		// DEBUG
+ 		printf("Signal sum: %f\n", signal_sum);
+ 		
  		// wg signal code wrapup
  		if (funseq_opt) {
 			int signal_overbins = 0;
