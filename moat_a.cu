@@ -564,7 +564,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		
  		// DEBUG
  		// printf("GPU pvalue %d: %f\n", i, fraction);
- 		printf("GPU pvalue %d: %f\n", i, gpu_signal_pvalues[i]);
+ 		// printf("GPU pvalue %d: %f\n", i, gpu_signal_pvalues[i]);
 	}
 }
 
