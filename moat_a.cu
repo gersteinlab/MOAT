@@ -129,7 +129,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		int is_greater = -1;
 		
 		int int_variants;
-		double signal_sum;
+		double signal_sum = 0.0;
 		
 		// return;
 		// DEBUG
