@@ -1344,11 +1344,12 @@ int main (int argc, char* argv[]) {
 	// int block = 1000;
 	
 	cudaMemcpy(pvalues, gpu_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
+	GPUerrchk(cudaPeekAtLastError());
 	
 	double *signal_pvalues;
 	
 	if (funseq_opt == 'p') {
-		signal_pvalues = (double *)malloc(ann_array.size()*sizeof(double));
+		signal_pvalues = (double *)malloc(ann_arr_length*sizeof(double));
 		cudaMemcpy(signal_pvalues, gpu_signal_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
 		GPUerrchk(cudaPeekAtLastError());
 	}
