@@ -476,9 +476,9 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			// printf("%s\n", line.c_str());
 		
-			// Extract chromosome, start, end, ref and alt from line (first 5 columns)
+			// Extract chromosome, start, end from line (first 3 columns)
 			vector<string> vec;
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 3; i++) {
 				size_t ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
 				vec.push_back(in);
@@ -793,22 +793,22 @@ int main (int argc, char* argv[]) {
 				
 					// Package the variant data for the child
 					int *chr_var_coor = (int *)malloc(chr_var_array_size*sizeof(int));
-					char *chr_var_alleles = (char *)malloc(2*chr_var_array_size*(sizeof(char)));
+					// char *chr_var_alleles = (char *)malloc(2*chr_var_array_size*(sizeof(char)));
 					for (int k = 0; k < chr_var_array_size; k++) {
 						chr_var_coor[k] = atoi(chr_var_array[k][2].c_str());
-						chr_var_alleles[2*k] = chr_var_array[k][3][0];
-						chr_var_alleles[2*k+1] = chr_var_array[k][4][0];
+						// chr_var_alleles[2*k] = chr_var_array[k][3][0];
+						// chr_var_alleles[2*k+1] = chr_var_array[k][4][0];
 					}
 				
 					// Transmit variant data
 					MPI_Send(&chr_var_array_size, 1, MPI_INT, next_child, 3, MPI_COMM_WORLD);
 					MPI_Send(chr_var_coor, chr_var_array_size, MPI_INT, next_child, 4, MPI_COMM_WORLD);
-					MPI_Send(chr_var_alleles, 2*chr_var_array_size, MPI_CHAR, next_child, 20, MPI_COMM_WORLD);
+					// MPI_Send(chr_var_alleles, 2*chr_var_array_size, MPI_CHAR, next_child, 20, MPI_COMM_WORLD);
 				
 					// Free dynamic memory allocations
 					free(chr_ann_coor);
 					free(chr_var_coor);
-					free(chr_var_alleles);
+					// free(chr_var_alleles);
 				
 					// next_child = incrementNextChild(next_child, mpi_size);
 				}
@@ -978,7 +978,7 @@ int main (int argc, char* argv[]) {
 							line = line.substr(ws_index+1);
 						}
 					
-						fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), vec[3].c_str(), vec[4].c_str(), funseq_scores[fs_index]);
+						fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), funseq_scores[fs_index]);
 						fs_index++;
 					}
 					// Check feof of outfile
@@ -1041,9 +1041,9 @@ int main (int argc, char* argv[]) {
 				
 				if (permuted_var_coor_size > 0) {
 					int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
-					char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
+					// char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
 					MPI_Recv(permuted_var_coor, permuted_var_coor_size, MPI_INT, source, 7, MPI_COMM_WORLD, &status);
-					MPI_Recv(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, source, 21, MPI_COMM_WORLD, &status);
+					// MPI_Recv(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, source, 21, MPI_COMM_WORLD, &status);
 				
 					for (int j = 0; j < permuted_var_coor_size/2; j++) {
 						string this_chr = int2chr(permuted_var_coor[2*j]);
@@ -1054,23 +1054,23 @@ int main (int argc, char* argv[]) {
 						char end_str[STRSIZE];
 						sprintf(end_str, "%d", permuted_var_coor[2*j+1]);
 						
-						char ref_str[STRSIZE];
-						sprintf(ref_str, "%c", permuted_var_alleles[2*j]);
-					
-						char alt_str[STRSIZE];
-						sprintf(alt_str, "%c", permuted_var_alleles[2*j+1]);
+// 						char ref_str[STRSIZE];
+// 						sprintf(ref_str, "%c", permuted_var_alleles[2*j]);
+// 					
+// 						char alt_str[STRSIZE];
+// 						sprintf(alt_str, "%c", permuted_var_alleles[2*j+1]);
 					
 						vector<string> vec;
 						vec.push_back(this_chr);
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
-						vec.push_back(string(ref_str));
-						vec.push_back(string(alt_str));
+// 						vec.push_back(string(ref_str));
+// 						vec.push_back(string(alt_str));
 						permuted_set.push_back(vec);
 					}
 
 					free(permuted_var_coor);
-					free(permuted_var_alleles);
+					// free(permuted_var_alleles);
 				}
 				counter++;
 			}
@@ -1092,7 +1092,7 @@ int main (int argc, char* argv[]) {
 			FILE *outfile_ptr = fopen(outfile.c_str(), "w");
 			
 			for (unsigned int k = 0; k < permuted_set.size(); k++) {
-				fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str());
+				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
 			}
 			fclose(outfile_ptr);
 			
@@ -1254,16 +1254,16 @@ int main (int argc, char* argv[]) {
 			while (fgets(linebuf3, STRSIZE, outfile_ptr) != NULL) {
 				string line = string(linebuf3);
 			
-				// Extract chromosome, start, end, ref, and alt (first 5 columns)
+				// Extract chromosome, start, end (first 3 columns)
 				vector<string> vec;
-				for (int i = 0; i < 5; i++) {
+				for (int i = 0; i < 3; i++) {
 					size_t ws_index = line.find_first_of("\t\n");
 					string in = line.substr(0, ws_index);
 					vec.push_back(in);
 					line = line.substr(ws_index+1);
 				}
 			
-				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), vec[3].c_str(), vec[4].c_str(), funseq_scores[fs_index]);
+				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%e\n", vec[0].c_str(), vec[1].c_str(), vec[2].c_str(), funseq_scores[fs_index]);
 				fs_index++;
 			}
 			// Check feof of vfile
@@ -1358,8 +1358,8 @@ int main (int argc, char* argv[]) {
 				int *chr_var_coor = (int *)malloc(chr_var_coor_size*sizeof(int));
 				MPI_Recv(chr_var_coor, chr_var_coor_size, MPI_INT, 0, 4, MPI_COMM_WORLD, &status);
 				
-				char *chr_var_alleles = (char *)malloc(2*chr_var_coor_size*(sizeof(char)));
-				MPI_Recv(chr_var_alleles, 2*chr_var_coor_size, MPI_CHAR, 0, 20, MPI_COMM_WORLD, &status);
+// 				char *chr_var_alleles = (char *)malloc(2*chr_var_coor_size*(sizeof(char)));
+// 				MPI_Recv(chr_var_alleles, 2*chr_var_coor_size, MPI_CHAR, 0, 20, MPI_COMM_WORLD, &status);
 			
 				// Turn into the expected data structures (vectors)
 				string chr = int2chr(chr_num);
@@ -1373,18 +1373,18 @@ int main (int argc, char* argv[]) {
 					char end_str[STRSIZE];
 					sprintf(end_str, "%d", chr_var_coor[i]);
 					
-					char ref_str[STRSIZE];
-					sprintf(ref_str, "%c", chr_var_alleles[2*i]);
-					
-					char alt_str[STRSIZE];
-					sprintf(alt_str, "%c", chr_var_alleles[2*i+1]);
+// 					char ref_str[STRSIZE];
+// 					sprintf(ref_str, "%c", chr_var_alleles[2*i]);
+// 					
+// 					char alt_str[STRSIZE];
+// 					sprintf(alt_str, "%c", chr_var_alleles[2*i+1]);
 				
 					vector<string> vec;
 					vec.push_back(chr);
 					vec.push_back(string(start_str));
 					vec.push_back(string(end_str));
-					vec.push_back(string(ref_str));
-					vec.push_back(string(alt_str));
+// 					vec.push_back(string(ref_str));
+// 					vec.push_back(string(alt_str));
 					var_array.push_back(vec);
 				}
 			
@@ -1746,8 +1746,8 @@ int main (int argc, char* argv[]) {
 							sprintf(end_cstr, "%d", pos2[new_index]+1); // 1-based
 							vec.push_back(string(end_cstr));
 							
-							vec.push_back(var_array[k][3]);
-							vec.push_back(var_array[k][4]);
+// 							vec.push_back(var_array[k][3]);
+// 							vec.push_back(var_array[k][4]);
 							
 						} else {
 							
@@ -1759,69 +1759,69 @@ int main (int argc, char* argv[]) {
 							sprintf(end_cstr, "%d", new_index+1); // 1-based
 							vec.push_back(string(end_cstr));
 							
-							bool is_purine; // Otherwise, pyrimidine
-							bool is_transition; // Otherwise, transversion
-							
-							char old_ref = toupper(var_array[k][3][0]);
-							char old_alt = toupper(var_array[k][4][0]);
-							
-							if (old_ref == 'A' || old_ref == 'G') {
-								is_purine = true;
-							} else {
-								is_purine = false;
-							}
-					
-							if (is_purine) {
-								if (old_alt == 'A' || old_alt == 'G') {
-									is_transition = true;
-								} else {
-									is_transition = false;
-								}
-							} else {
-								if (old_alt == 'A' || old_alt == 'G') {
-									is_transition = false;
-								} else {
-									is_transition = true;
-								}
-							}
-							
-							char ref = toupper(chr_nt[new_index]);
-							string alt;
-					
-							if (is_transition) {
-								if (ref == 'A') {
-									alt = "G";
-								} else if (ref == 'G') {
-									alt = "A";
-								} else if (ref == 'C') {
-									alt = "T";
-								} else if (ref == 'T') {
-									alt = "C";
-								}
-							} else {
-								int rando = rand() % 2;
-								if (ref == 'A' || ref == 'G') {
-									// Choose between C and T
-									if (rando) {
-										alt = "C";
-									} else {
-										alt = "T";
-									}
-								} else {
-									// Choose between A and G
-									if (rando) {
-										alt = "A";
-									} else {
-										alt = "G";
-									}
-								}
-							}
-							
-							char ref_str[STRSIZE];
-							sprintf(ref_str, "%c", ref);
-					
-							vec.push_back(string(ref_str));
-							vec.push_back(alt);
+// 							bool is_purine; // Otherwise, pyrimidine
+// 							bool is_transition; // Otherwise, transversion
+// 							
+// 							char old_ref = toupper(var_array[k][3][0]);
+// 							char old_alt = toupper(var_array[k][4][0]);
+// 							
+// 							if (old_ref == 'A' || old_ref == 'G') {
+// 								is_purine = true;
+// 							} else {
+// 								is_purine = false;
+// 							}
+// 					
+// 							if (is_purine) {
+// 								if (old_alt == 'A' || old_alt == 'G') {
+// 									is_transition = true;
+// 								} else {
+// 									is_transition = false;
+// 								}
+// 							} else {
+// 								if (old_alt == 'A' || old_alt == 'G') {
+// 									is_transition = false;
+// 								} else {
+// 									is_transition = true;
+// 								}
+// 							}
+// 							
+// 							char ref = toupper(chr_nt[new_index]);
+// 							string alt;
+// 					
+// 							if (is_transition) {
+// 								if (ref == 'A') {
+// 									alt = "G";
+// 								} else if (ref == 'G') {
+// 									alt = "A";
+// 								} else if (ref == 'C') {
+// 									alt = "T";
+// 								} else if (ref == 'T') {
+// 									alt = "C";
+// 								}
+// 							} else {
+// 								int rando = rand() % 2;
+// 								if (ref == 'A' || ref == 'G') {
+// 									// Choose between C and T
+// 									if (rando) {
+// 										alt = "C";
+// 									} else {
+// 										alt = "T";
+// 									}
+// 								} else {
+// 									// Choose between A and G
+// 									if (rando) {
+// 										alt = "A";
+// 									} else {
+// 										alt = "G";
+// 									}
+// 								}
+// 							}
+// 							
+// 							char ref_str[STRSIZE];
+// 							sprintf(ref_str, "%c", ref);
+// 					
+// 							vec.push_back(string(ref_str));
+// 							vec.push_back(alt);
 							
 						}
 		
@@ -1844,20 +1844,20 @@ int main (int argc, char* argv[]) {
 			// Proceed if nonzero size
 			if (permuted_var_coor_size > 0) {
 				int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
-				char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
+				// char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
 		
 				for (unsigned int i = 0; i < permuted_set.size(); i++) {
 					permuted_var_coor[2*i] = chr2int(permuted_set[i][0]);
 					permuted_var_coor[2*i+1] = atoi(permuted_set[i][2].c_str());
-					permuted_var_alleles[2*i] = permuted_set[i][3][0];
-					permuted_var_alleles[2*i+1] = permuted_set[i][4][0];
+					// permuted_var_alleles[2*i] = permuted_set[i][3][0];
+					// permuted_var_alleles[2*i+1] = permuted_set[i][4][0];
 				}
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
-				MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
+				// MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
 			
 				free(permuted_var_coor);
-				free(permuted_var_alleles);
+				// free(permuted_var_alleles);
 			}
 			
 			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
