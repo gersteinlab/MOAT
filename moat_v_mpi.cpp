@@ -1830,7 +1830,7 @@ int main (int argc, char* argv[]) {
 				}
 				free(chr_ann_coor);
 				free(chr_var_coor);
-				free(chr_var_alleles);
+				// free(chr_var_alleles);
 				
 				MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
 				MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
