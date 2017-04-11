@@ -563,8 +563,8 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		}
  		
  		// DEBUG
- 		printf("GPU pvalue %d: %f\n", i, fraction);
- 		printf("GPU pvalue %d: %f\n", i, gpu_signal_pvalues[i]);
+//  		printf("GPU pvalue %d: %f\n", i, fraction);
+//  		printf("GPU pvalue %d: %f\n", i, gpu_signal_pvalues[i]);
 	}
 }
 
@@ -1078,8 +1078,8 @@ int main (int argc, char* argv[]) {
 		fclose(avg_outfile_ptr);
 		
 		// Clean up temporary folder
-		string rm_com = "rm -rf " + funseq_outdir;
-		system(rm_com.c_str());
+// 		string rm_com = "rm -rf " + funseq_outdir;
+// 		system(rm_com.c_str());
 		// DEBUG remove these lines
 		
 		// Sort
