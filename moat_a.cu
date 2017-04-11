@@ -1078,8 +1078,8 @@ int main (int argc, char* argv[]) {
 		fclose(avg_outfile_ptr);
 		
 		// Clean up temporary folder
-// 		string rm_com = "rm -rf " + funseq_outdir;
-// 		system(rm_com.c_str());
+		string rm_com = "rm -rf " + funseq_outdir;
+		system(rm_com.c_str());
 		// DEBUG remove these lines
 		
 		// Sort
@@ -1312,7 +1312,15 @@ int main (int argc, char* argv[]) {
 	int threads_per_block = NUMTHREADSBASE;
 	
 	// DEBUG
-	// printf("This is debug print 1\n");
+	// var_signal, gpu_pvalues, gpu_signal_pvalues
+	printf("This is debug print 1\n");
+	for (unsigned int k = 0; k < var_arr_length; k++) {
+		printf("%d: %f\n", k, var_signal[k]);
+	}
+	for (unsigned int k = 0; k < ann_arr_length; k++) {
+		printf("%d 1: %f\n", k, gpu_pvalues[k]);
+		printf("%d 2: %f\n", k, gpu_signal_pvalues[k]);
+	}
 	
 	// DEBUG
 	// printf("Breakpoint 5\n");
