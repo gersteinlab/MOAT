@@ -1116,9 +1116,9 @@ int main (int argc, char* argv[]) {
 	int *var_end = (int*)malloc(var_arr_length*sizeof(int));
 	double *var_signal;
 	
-	if (funseq_opt == 'p') {
+	// if (funseq_opt == 'p') {
 		var_signal = (double*)malloc(var_arr_length*sizeof(double));
-	}
+	// }
 	
 	// Lengths of each annotation array
 	int ann_arr_length = ann_array.size();
@@ -1241,9 +1241,9 @@ int main (int argc, char* argv[]) {
 	cudaMalloc((void**)&gpu_var_end, var_arr_length*sizeof(int));
 	// GPUerrchk(cudaPeekAtLastError());
 	
-	if (funseq_opt == 'p') {
+	// if (funseq_opt == 'p') {
 		cudaMalloc((void**)&gpu_var_signal, var_arr_length*sizeof(double));
-	}
+	// }
 	
 	cudaMalloc((void**)&gpu_ann_chr, ann_arr_length*sizeof(int));
 	// GPUerrchk(cudaPeekAtLastError());
@@ -1266,9 +1266,9 @@ int main (int argc, char* argv[]) {
 	// GPUerrchk(cudaPeekAtLastError());
 	
 	double *gpu_signal_pvalues;
-	if (funseq_opt == 'p') {
+	// if (funseq_opt == 'p') {
 		cudaMalloc((void**)&gpu_signal_pvalues, ann_arr_length*sizeof(double));
-	}
+	// }
 	
 	cudaMemcpy(gpu_var_chr, var_chr, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
 	// GPUerrchk(cudaPeekAtLastError());
@@ -1276,9 +1276,9 @@ int main (int argc, char* argv[]) {
 	// GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_var_end, var_end, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
 	// GPUerrchk(cudaPeekAtLastError());
-	if (funseq_opt == 'p') {
+	// if (funseq_opt == 'p') {
 		cudaMemcpy(gpu_var_signal, var_signal, var_arr_length*sizeof(double), cudaMemcpyHostToDevice);
-	}
+	// }
 
 	cudaMemcpy(gpu_ann_chr, ann_chr, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
 	// GPUerrchk(cudaPeekAtLastError());
@@ -1313,14 +1313,14 @@ int main (int argc, char* argv[]) {
 	
 	// DEBUG
 	// var_signal, gpu_pvalues, gpu_signal_pvalues
-	printf("This is debug print 1\n");
-	for (unsigned int k = 0; k < var_arr_length; k++) {
-		printf("%d: %f\n", k, var_signal[k]);
-	}
-	for (unsigned int k = 0; k < ann_arr_length; k++) {
-		printf("%d 1: %f\n", k, gpu_pvalues[k]);
-		printf("%d 2: %f\n", k, gpu_signal_pvalues[k]);
-	}
+// 	printf("This is debug print 1\n");
+// 	for (unsigned int k = 0; k < var_arr_length; k++) {
+// 		printf("%d: %f\n", k, var_signal[k]);
+// 	}
+// 	for (unsigned int k = 0; k < ann_arr_length; k++) {
+// 		printf("%d 1: %f\n", k, gpu_pvalues[k]);
+// 		printf("%d 2: %f\n", k, gpu_signal_pvalues[k]);
+// 	}
 	
 	// DEBUG
 	// printf("Breakpoint 5\n");
@@ -1356,11 +1356,11 @@ int main (int argc, char* argv[]) {
 	
 	double *signal_pvalues;
 	
-	if (funseq_opt == 'p') {
+	// if (funseq_opt == 'p') {
 		signal_pvalues = (double *)malloc(ann_arr_length*sizeof(double));
 		cudaMemcpy(signal_pvalues, gpu_signal_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
 		GPUerrchk(cudaPeekAtLastError());
-	}
+	// }
 	// GPUerrchk(cudaPeekAtLastError());
 //  	if (gpu_pvalues == NULL) {
 //  		printf("Malloc fail!\n");
