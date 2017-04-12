@@ -549,7 +549,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			}
 		
 			double pfrac = (double)signal_overbins/(double)n;
-			gpu_signal_pvalues[i] = pfrac;
+			// gpu_signal_pvalues[i] = pfrac;
 		}
  		
  		// Malloc free the temp arrays
@@ -1267,7 +1267,7 @@ int main (int argc, char* argv[]) {
 	
 	double *gpu_signal_pvalues;
 	if (funseq_opt == 'p') {
-		cudaMalloc((void**)&gpu_signal_pvalues, ann_arr_length*sizeof(double));
+		// cudaMalloc((void**)&gpu_signal_pvalues, ann_arr_length*sizeof(double));
 	}
 	
 	cudaMemcpy(gpu_var_chr, var_chr, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
