@@ -563,8 +563,8 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		}
  		
  		// DEBUG
- 		printf("GPU pvalue %d: %f\n", i, fraction);
- 		printf("GPU pvalue %d: %f\n", i, gpu_signal_pvalues[i]);
+//  		printf("GPU pvalue %d: %f\n", i, fraction);
+//  		printf("GPU pvalue %d: %f\n", i, gpu_signal_pvalues[i]);
 	}
 }
 
@@ -580,9 +580,9 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	int total_threads = NUMTHREADSBASE*NUMTHREADSBASE;
 	
 	// DEBUG
-	if (tid == 0) {
-		printf("%f\n", gpu_signal_pvalues[13894]);
-	}
+// 	if (tid == 0) {
+// 		printf("%f\n", gpu_signal_pvalues[13894]);
+// 	}
 // 	printf("tid %d: %d\n", tid, *gpu_ann_arr_length);
 // 	printf("tid %d: %d\n", tid, total_threads);
 	
@@ -605,9 +605,9 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 		
 		// DEBUG: Print the thread ID, start index, and end index
 		// printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
-		if (tid != 1023) {
-			return;
-		}
+// 		if (tid != 1023) {
+// 			return;
+// 		}
 		
 		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch);
 	} else {
@@ -1360,6 +1360,9 @@ int main (int argc, char* argv[]) {
 	
 	// Collect the output values, will end with same size as ann_array
 	double *pvalues = (double *)malloc(ann_array.size()*sizeof(double));
+	if (pvalues == NULL) {
+		printf("We have a problem\n");
+	}
 	// int block = 1000;
 	
 	cudaMemcpy(pvalues, gpu_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
@@ -1369,6 +1372,9 @@ int main (int argc, char* argv[]) {
 	
 	if (funseq_opt == 'p') {
 		signal_pvalues = (double *)malloc(ann_arr_length*sizeof(double));
+		if (signal_pvalues == NULL) {
+			printf("Houston, we have a problem\n");
+		}
 		cudaMemcpy(signal_pvalues, gpu_signal_pvalues, ann_arr_length*sizeof(double), cudaMemcpyDeviceToHost);
 		GPUerrchk(cudaPeekAtLastError());
 	}
