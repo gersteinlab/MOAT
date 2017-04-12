@@ -605,7 +605,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 		
 		// DEBUG: Print the thread ID, start index, and end index
 		// printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
-		if (tid > 438) {
+		if (tid > 470) {
 			return;
 		}
 		
