@@ -580,7 +580,9 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	int total_threads = NUMTHREADSBASE*NUMTHREADSBASE;
 	
 	// DEBUG
-	printf("%f\n", gpu_pvalues[0]);
+	if (tid == 0) {
+		printf("%f\n", gpu_signal_pvalues[0]);
+	}
 // 	printf("tid %d: %d\n", tid, *gpu_ann_arr_length);
 // 	printf("tid %d: %d\n", tid, total_threads);
 	
