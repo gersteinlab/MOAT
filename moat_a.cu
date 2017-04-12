@@ -580,8 +580,9 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	int total_threads = NUMTHREADSBASE*NUMTHREADSBASE;
 	
 	// DEBUG
-	printf("tid %d: %d\n", tid, *gpu_ann_arr_length);
-	printf("tid %d: %d\n", tid, total_threads);
+	printf("%f\n", gpu_pvalues[0]);
+// 	printf("tid %d: %d\n", tid, *gpu_ann_arr_length);
+// 	printf("tid %d: %d\n", tid, total_threads);
 	
 	int length = *gpu_ann_arr_length;
 	
@@ -601,7 +602,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 		}
 		
 		// DEBUG: Print the thread ID, start index, and end index
-		printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
+		// printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
 // 		return;
 		
 		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch);
