@@ -580,8 +580,8 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	int total_threads = NUMTHREADSBASE*NUMTHREADSBASE;
 	
 	// DEBUG
-	// printf("%d\n", *gpu_ann_arr_length);
-	// printf("%d\n", total_threads);
+	printf("tid %d: %d\n", tid, *gpu_ann_arr_length);
+	printf("tid %d: %d\n", tid, total_threads);
 	
 	int length = *gpu_ann_arr_length;
 	
@@ -590,6 +590,10 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	int mod = length%total_threads;
 	int start;
 	int end;
+	
+	// DEBUG
+	printf("tid %d: %d\n", tid, start);
+	printf("tid %d: %d\n", tid, end);
 	
 	if (kernel_annsize > 0) {
 		if (tid < mod) {
