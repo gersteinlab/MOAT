@@ -563,8 +563,8 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		}
  		
  		// DEBUG
-//  		printf("GPU pvalue %d: %f\n", i, fraction);
-//  		printf("GPU pvalue %d: %f\n", i, gpu_signal_pvalues[i]);
+ 		printf("GPU pvalue %d: %f\n", i, fraction);
+ 		printf("GPU pvalue %d: %f\n", i, gpu_signal_pvalues[i]);
 	}
 }
 
@@ -580,9 +580,9 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	int total_threads = NUMTHREADSBASE*NUMTHREADSBASE;
 	
 	// DEBUG
-// 	if (tid == 0) {
-// 		printf("%f\n", gpu_signal_pvalues[0]);
-// 	}
+	if (tid == 0) {
+		printf("%f\n", gpu_signal_pvalues[13894]);
+	}
 // 	printf("tid %d: %d\n", tid, *gpu_ann_arr_length);
 // 	printf("tid %d: %d\n", tid, total_threads);
 	
