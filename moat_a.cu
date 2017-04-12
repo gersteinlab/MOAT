@@ -530,7 +530,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		}
  		
  		double fraction = (double)overbins/(double)n;
- 		// gpu_pvalues[i] = fraction;
+ 		gpu_pvalues[i] = fraction;
  		
  		// DEBUG
  		// printf("Signal sum: %f\n", signal_sum);
@@ -549,7 +549,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			}
 		
 			double pfrac = (double)signal_overbins/(double)n;
-			// gpu_signal_pvalues[i] = pfrac;
+			gpu_signal_pvalues[i] = pfrac;
 		}
  		
  		// Malloc free the temp arrays
