@@ -580,9 +580,9 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	int total_threads = NUMTHREADSBASE*NUMTHREADSBASE;
 	
 	// DEBUG
-	if (tid == 0) {
-		printf("%f\n", gpu_signal_pvalues[0]);
-	}
+// 	if (tid == 0) {
+// 		printf("%f\n", gpu_signal_pvalues[0]);
+// 	}
 // 	printf("tid %d: %d\n", tid, *gpu_ann_arr_length);
 // 	printf("tid %d: %d\n", tid, total_threads);
 	
@@ -1238,27 +1238,27 @@ int main (int argc, char* argv[]) {
 // 	cudaMemcpy(test_int_gpu, test_int_cpu, sizeof(int), cudaMemcpyHostToDevice);
 	
 	cudaMalloc((void**)&gpu_var_chr, var_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMalloc((void**)&gpu_var_start, var_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMalloc((void**)&gpu_var_end, var_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	
 	if (funseq_opt == 'p') {
 		cudaMalloc((void**)&gpu_var_signal, var_arr_length*sizeof(double));
 	}
 	
 	cudaMalloc((void**)&gpu_ann_chr, ann_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMalloc((void**)&gpu_ann_start, ann_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMalloc((void**)&gpu_ann_end, ann_arr_length*sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMalloc((void**)&gpu_var_arr_length, sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMalloc((void**)&gpu_ann_arr_length, sizeof(int));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMalloc((void**)&gpu_n, sizeof(int));
 	cudaMalloc((void**)&gpu_dmin, sizeof(int));
@@ -1266,7 +1266,7 @@ int main (int argc, char* argv[]) {
 	
 	double *gpu_pvalues;
 	cudaMalloc((void**)&gpu_pvalues, ann_arr_length*sizeof(double));
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	
 	double *gpu_signal_pvalues;
 	if (funseq_opt == 'p') {
@@ -1274,30 +1274,34 @@ int main (int argc, char* argv[]) {
 	}
 	
 	cudaMemcpy(gpu_var_chr, var_chr, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_var_start, var_start, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_var_end, var_end, var_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	if (funseq_opt == 'p') {
 		cudaMemcpy(gpu_var_signal, var_signal, var_arr_length*sizeof(double), cudaMemcpyHostToDevice);
+		GPUerrchk(cudaPeekAtLastError());
 	}
 
 	cudaMemcpy(gpu_ann_chr, ann_chr, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_ann_start, ann_start, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_ann_end, ann_end, ann_arr_length*sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMemcpy(gpu_var_arr_length, &var_arr_length, sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_ann_arr_length, &ann_arr_length, sizeof(int), cudaMemcpyHostToDevice);
-	// GPUerrchk(cudaPeekAtLastError());
+	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMemcpy(gpu_n, &n, sizeof(int), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_dmin, &dmin, sizeof(int), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_dmax, &dmax, sizeof(int), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	
 	// Switch to indicate whether to do wg signal scores on the permuted data
 	int wg_switch;
@@ -1308,7 +1312,9 @@ int main (int argc, char* argv[]) {
 	}
 	int *gpu_wg_switch;
 	cudaMalloc((void**)&gpu_wg_switch, sizeof(int));
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(gpu_wg_switch, &wg_switch, sizeof(int), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	
 	// Try out 16x16 and see how that goes
 	int num_blocks = NUMTHREADSBASE;
