@@ -441,9 +441,9 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 		// printf("%s\n", line.c_str());
 		
-		// Extract chromosome, start, end, ref and alt from line (first 5 columns)
+		// Extract chromosome, start, end from line (first 3 columns)
 		vector<string> vec;
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 3; i++) {
 			size_t ws_index = line.find_first_of("\t\n");
 			string in = line.substr(0, ws_index);
 			vec.push_back(in);
@@ -669,7 +669,7 @@ int main (int argc, char* argv[]) {
 		
 		for (unsigned int j = 0; j < ann_array.size(); j++) {
 		
-			// if (trimer) {
+			if (trimer) {
 				if (last_chr != ann_array[j][0]) {
 					// newFastaFilehandle(fasta_ptr, ann_array[j][0]);
 					// char_pointer = 0;
@@ -700,7 +700,7 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 				}
-			// }
+			}
 			
 			// DEBUG
 // 			printf("Char 11998: %c\n", chr_nt[11997]);
@@ -1144,9 +1144,6 @@ int main (int argc, char* argv[]) {
 					sprintf(end_cstr, "%d", pos2[new_index]+1); // 1-based
 					vec.push_back(string(end_cstr));
 					
-					vec.push_back(var_array[k][3]);
-					vec.push_back(var_array[k][4]);
-					
 				} else {
 				
 					char start_cstr[STRSIZE];
@@ -1156,70 +1153,6 @@ int main (int argc, char* argv[]) {
 					char end_cstr[STRSIZE];
 					sprintf(end_cstr, "%d", new_index+1); // 1-based
 					vec.push_back(string(end_cstr));
-					
-					bool is_purine; // Otherwise, pyrimidine
-					bool is_transition; // Otherwise, transversion
-					
-					char old_ref = toupper(var_array[k][3][0]);
-					char old_alt = toupper(var_array[k][4][0]);
-					
-					if (old_ref == 'A' || old_ref == 'G') {
-						is_purine = true;
-					} else {
-						is_purine = false;
-					}
-					
-					if (is_purine) {
-						if (old_alt == 'A' || old_alt == 'G') {
-							is_transition = true;
-						} else {
-							is_transition = false;
-						}
-					} else {
-						if (old_alt == 'A' || old_alt == 'G') {
-							is_transition = false;
-						} else {
-							is_transition = true;
-						}
-					}
-					
-					char ref = toupper(chr_nt[new_index]);
-					string alt;
-					
-					if (is_transition) {
-						if (ref == 'A') {
-							alt = "G";
-						} else if (ref == 'G') {
-							alt = "A";
-						} else if (ref == 'C') {
-							alt = "T";
-						} else if (ref == 'T') {
-							alt = "C";
-						}
-					} else {
-						int rando = rand() % 2;
-						if (ref == 'A' || ref == 'G') {
-							// Choose between C and T
-							if (rando) {
-								alt = "C";
-							} else {
-								alt = "T";
-							}
-						} else {
-							// Choose between A and G
-							if (rando) {
-								alt = "A";
-							} else {
-								alt = "G";
-							}
-						}
-					}
-					
-					char ref_str[STRSIZE];
-					sprintf(ref_str, "%c", ref);
-					
-					vec.push_back(string(ref_str));
-					vec.push_back(alt);
 					
 				}
 				
@@ -1250,7 +1183,7 @@ int main (int argc, char* argv[]) {
 			last_chr = ann_array[j][0];
 		}
 		for (unsigned int k = 0; k < permuted_set.size(); k++) {
-			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str());
+			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
 		}
 		fclose(outfile_ptr);
 		
@@ -1362,7 +1295,7 @@ int main (int argc, char* argv[]) {
 			FILE *funseq_outfile_ptr = fopen(funseq_outfile.c_str(), "w");
 		
 			for (unsigned int k = 0; k < funseq_scores.size(); k++) {
-				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), funseq_scores[k]);
+				fprintf(funseq_outfile_ptr, "%s\t%s\t%s\t%e\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), funseq_scores[k]);
 			}
 			fclose(funseq_outfile_ptr);
 		
