@@ -402,8 +402,8 @@ int main (int argc, char* argv[]) {
 		
 		// Verify wg signal file
 		struct stat databuf;
-		if (stat(prohibited_file.c_str(), &databuf)) { // Report the error and exit
-			fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+		if (stat(signal_file.c_str(), &databuf)) { // Report the error and exit
+			fprintf(stderr, "Error trying to stat %s: %s\n", signal_file.c_str(), strerror(errno));
 			return 1;
 		}
 		// Check that the file is not empty
@@ -421,7 +421,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	/* Data structures for the starting data */
-	// Variant array, contains variants of the format vector(chr, start, end, ref allele, alt allele)
+	// Variant array, contains variants of the format vector(chr, start, end)
 	vector<vector<string> > var_array;
 	
 	// Annotation array, contains annotations of the format vector(chr, start, end, ann_name)

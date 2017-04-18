@@ -787,8 +787,8 @@ int main (int argc, char* argv[]) {
 		
 		// Verify wg signal file
 		struct stat databuf;
-		if (stat(prohibited_file.c_str(), &databuf)) { // Report the error and exit
-			fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+		if (stat(signal_file.c_str(), &databuf)) { // Report the error and exit
+			fprintf(stderr, "Error trying to stat %s: %s\n", signal_file.c_str(), strerror(errno));
 			return 1;
 		}
 		// Check that the file is not empty

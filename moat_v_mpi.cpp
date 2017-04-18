@@ -436,8 +436,8 @@ int main (int argc, char* argv[]) {
 		
 			// Verify precomputed Funseq scores are in the same directory as this program
 			struct stat databuf;
-			if (stat(prohibited_file.c_str(), &databuf)) { // Report the error and exit
-				fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+			if (stat(signal_file.c_str(), &databuf)) { // Report the error and exit
+				fprintf(stderr, "Error trying to stat %s: %s\n", signal_file.c_str(), strerror(errno));
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
@@ -456,7 +456,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		/* Data structures for the starting data */
-		// Variant array, contains variants of the format vector(chr, start, end, ref, alt)
+		// Variant array, contains variants of the format vector(chr, start, end)
 		vector<vector<string> > var_array;
 	
 		// Annotation array, contains annotations of the format vector(chr, start, end, ann_name)

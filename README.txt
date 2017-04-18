@@ -184,13 +184,13 @@ Tab-delimited columns: (chr, start, stop)
 Extra columns are ignored.
 
 [variant file]
-Tab-delimited columns: (chr, start, stop, reference allele, alternate allele)
+Tab-delimited columns: (chr, start, stop)
 Extra columns are ignored.
 
 3) Output format
 
 [output directory]
-Files consist of tab-delimited columns: (chr, start, stop, reference allele, alternate allele, wg signal score (optional))
+Files consist of tab-delimited columns: (chr, start, stop, wg signal score (optional))
 
 4) Calculation of p-values
 
