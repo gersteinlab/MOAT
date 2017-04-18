@@ -98,12 +98,11 @@ int main (int argc, char* argv[]) {
 	// Is the trinucleotide preservation option enabled? (y/n)
 	char trimer;
 	
-	// Character that indicates Funseq mode (stored as a string)
-	// 's': Static mode. Retrieves precomputed results from a data file.
-	// 'd': Dynamic mode: Compute Funseq results alongside the MOAT results, using a
-	// locally installed Funseq
-	// 'n': Do not use Funseq
-	string funseq_mode;
+	// Character that indicates wg signal mode (stored as a string)
+	string wg_signal_mode;
+	
+	// Whole genome signal track file
+	string wg_signal_file;
 	
 	// String constants for comparisons in argument handling
 	char h_string[] = "-h";
@@ -126,12 +125,13 @@ int main (int argc, char* argv[]) {
 		fprintf(stderr, "Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS\n");
 		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE\n");
-		fprintf(stderr, "--out=OUTPUT_FILE\n");
+		fprintf(stderr, "--out=OUTPUT_FILE --wg_signal_mode=[y/n] [--wg_signal_file=WHOLE_GENOME_SIGNAL_FILE]\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR\n");
 		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY \n");
-		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --funseq_mode=[n/s/d]\n");
+		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --wg_signal_mode=[y/n]\n");
+		fprintf(stderr, "[--wg_signal_file=WHOLE_GENOME_SIGNAL_FILE]\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR \n");
@@ -195,8 +195,10 @@ int main (int argc, char* argv[]) {
 			covar_files.push_back(value);
 		} else if (name == "--3mer") {
 			trimer = value[0];
-		} else if (name == "--funseq_mode") {
-			funseq_mode = value;
+		} else if (name == "--wg_signal_mode") {
+			wg_signal_mode = value;
+		} else if (name == "--wg_signal_file") {
+			wg_signal_file = value;
 		} else { // User put in an invalid argument
 			fprintf(stderr, "Error: Invalid argument name: %s. Use -h or --help for usage information. Exiting.\n", name.c_str());
 			return 1;
@@ -257,6 +259,23 @@ int main (int argc, char* argv[]) {
 			return 1;
 		}
 		
+		// Check for defined and correct wg signal mode
+		if (wg_signal_mode.empty()) {
+			fprintf(stderr, "Error: Wg signal mode is not defined. Exiting.\n");
+			return 1;
+		}
+		if (wg_signal_mode[0] != 'y' && wg_signal_mode[0] != 'n') {
+			fprintf(stderr, "Error: Wg signal mode was set to \'%c\', which is invalid. ", wg_signal_mode[0]);
+			fprintf(stderr, "Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n");
+			return 1;
+		}
+		if (wg_signal_mode[0] == 'y') {
+			if (wg_signal_file.empty()) {
+				fprintf(stderr, "Error: Wg signal file is not defined. Use -h or --help for usage information. Exiting.\n");
+				return 1;
+			}
+		}
+		
 		char num_permutations_cstr[STRSIZE];
 		sprintf(num_permutations_cstr, "%d", num_permutations);
 		
@@ -274,7 +293,11 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// execl(exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), (char *)0);
-		string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out;
+		string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out + " " + string(wg_signal_mode[0]);
+		if (wg_signal_mode[0] == 'y') {
+			command += " ";
+			command += wg_signal_file;
+		}
 		return system(command.c_str());
 	
 	} else if (algo == 'v' || algo == 's') { // MOAT-v/MOATsim
@@ -379,16 +402,22 @@ int main (int argc, char* argv[]) {
 			}
 		}
 		
-		// MOAT-v check for defined and correct Funseq mode
+		// MOAT-v check for defined and correct wg signal mode
 		if (algo == 'v') {
-			if (funseq_mode.empty()) {
-				fprintf(stderr, "Error: Funseq mode is not defined. Exiting.\n");
+			if (wg_signal_mode.empty()) {
+				fprintf(stderr, "Error: Wg signal mode is not defined. Exiting.\n");
 				return 1;
 			}
-			if (funseq_mode[0] != 's' && funseq_mode[0] != 'd' && funseq_mode[0] != 'n') {
-				fprintf(stderr, "Error: Funseq mode was set to \'%c\', which is invalid. ", funseq_mode[0]);
-				fprintf(stderr, "Must be either \'s\' or \'d\' or \'n\'. Use -h or --help for usage information. Exiting.\n");
+			if (wg_signal_mode[0] != 'y' && wg_signal_mode[0] != 'n') {
+				fprintf(stderr, "Error: Wg signal mode was set to \'%c\', which is invalid. ", wg_signal_mode[0]);
+				fprintf(stderr, "Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n");
 				return 1;
+			}
+			if (wg_signal_mode[0] == 'y') {
+				if (wg_signal_file.empty()) {
+					fprintf(stderr, "Error: Wg signal file is not defined. Use -h or --help for usage information. Exiting.\n");
+					return 1;
+				}
 			}
 		}
 		
@@ -428,8 +457,13 @@ int main (int argc, char* argv[]) {
 				command += covar_files[i];
 			}
 		} else { // algo == 'v'
+			// + " " + string(wg_signal_mode[0]) + " " + wg_signal_file
 			command += " ";
-			command += funseq_mode;
+			command += string(wg_signal_mode[0]);
+			if (wg_signal_mode[0] == 'y') {
+				command += " ";
+				command += wg_signal_file;
+			}
 		}
 		return system(command.c_str());
 		
