@@ -293,7 +293,7 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// execl(exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), (char *)0);
-		string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out + " " + string(wg_signal_mode[0]);
+		string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out + " " + wg_signal_mode[0];
 		if (wg_signal_mode[0] == 'y') {
 			command += " ";
 			command += wg_signal_file;
@@ -459,7 +459,7 @@ int main (int argc, char* argv[]) {
 		} else { // algo == 'v'
 			// + " " + string(wg_signal_mode[0]) + " " + wg_signal_file
 			command += " ";
-			command += string(wg_signal_mode[0]);
+			command += wg_signal_mode[0];
 			if (wg_signal_mode[0] == 'y') {
 				command += " ";
 				command += wg_signal_file;
