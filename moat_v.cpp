@@ -638,12 +638,12 @@ int main (int argc, char* argv[]) {
 	// printf("Breakpoint 2\n");
 	
 	// DEBUG - check ann_array values after prohibited region subtraction
-// 	FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
-// 	for (unsigned int i = 0; i < ann_array.size(); i++) {
-// 		fprintf(testfile_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
-// 	}
-// 	fclose(testfile_ptr);
-// 	return 0;
+	FILE *testfile_ptr = fopen("/nfs/storage17/ll426/hg19-bins/5mb.bed", "w");
+	for (unsigned int i = 0; i < ann_array.size(); i++) {
+		fprintf(testfile_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
+	}
+	fclose(testfile_ptr);
+	return 0;
 	
 	FILE *fasta_ptr = NULL;
 	string last_chr = "";
