@@ -125,13 +125,13 @@ MOAT-a and MOAT-v can retrieve precomputed whole genome signal scores for the in
 [] = user-defined parameter
 {} = optional parameter
 
-Usage: run_moat --algo=a --parallel=[y/n] -n=[number of permutations] --dmin=[minimum distance for random bins] --dmax=[maximum distance for random bins] --blacklist_file=[blacklist file] --vfile=[variant file] --afile=[annotation file] --out=[output file] --wg_signal_mode=[y/n] {--wg_signal_file=[whole genome signal file]}
+Usage: run_moat --algo=a --parallel=[y/n] -n=[number of permutations] --dmin=[minimum distance for random bins] --dmax=[maximum distance for random bins] --blacklist_file=[blacklist file] --vfile=[variant file] --afile=[annotation file] --out=[output file] --wg_signal_mode=[o/p/n] {--wg_signal_file=[whole genome signal file]}
 
 MOAT-a is the implementation of the annotation-based permutation algorithm. It iterates through the annotations in the [annotation file], and randomizes [number of permutations (n)] new locations for each annotation in the local genome context, whose boundaries are defined by [minimum distance for random bins (dmin)] and [maximum distance for random bins (dmax)]. Therefore, the local genome context is two intervals: one upstream of the annotation [-dmax, -dmin] and one downstream of the annotation [dmin, dmax]. Variants from the [variant file] are intersected with each of these permuted annotations to produce [n] permuted variant counts. The p-value of each annotation is the fraction of the permuted variant counts that are equal to or greater than the observed variant count (derived from intersecting the [variant file] variants with the annotation). These p-values are written to the [output file].
 
 Additionally, [algo] specifies which permutation algorithm to use: [a] for MOAT-a and [v] for MOAT-v. The [parallel] flag indicates whether to use the CUDA-accelerated version [y] (recommended) or the much slower CPU version [n]. Additionally, the [blacklist file] is used to remove regions from consideration that have poor mappability, such as centromeres and telomeres, among others. Annotations that intersect the [blacklist file] will not be analyzed.
 
-Furthermore, MOAT-a can provide the wg signal scores of the permuted variant datasets using the [whole genome signal file] provided. This option is enabled by setting [wg signal mode] to (y)es. Otherwise, MOAT-a will only conduct a mutation burden analysis.
+Furthermore, MOAT-a can provide the wg signal scores of the permuted variant datasets using the [whole genome signal file] provided. This option is enabled by setting [wg signal mode] to (p)ermuted variants mode. Signal scores computed from the permuted data will be compared to the scores of the observed data to derive the p-value significance of elevated scores. The second mode, (o)bserved variants only, computes the signal scores for the annotations as determined by the intersecting input variants, and outputs these scores alongside the mutation burden analysis results. The third mode, (n)o wg signal score analysis, will cause MOAT-a to only conduct a mutation burden analysis.
 
 2) Input formats
 

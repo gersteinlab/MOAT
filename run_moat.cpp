@@ -125,7 +125,7 @@ int main (int argc, char* argv[]) {
 		fprintf(stderr, "Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS\n");
 		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE\n");
-		fprintf(stderr, "--out=OUTPUT_FILE --wg_signal_mode=[y/n] [--wg_signal_file=WHOLE_GENOME_SIGNAL_FILE]\n");
+		fprintf(stderr, "--out=OUTPUT_FILE --wg_signal_mode=[o/p/n] [--wg_signal_file=WHOLE_GENOME_SIGNAL_FILE]\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
 		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR\n");
@@ -264,9 +264,9 @@ int main (int argc, char* argv[]) {
 			fprintf(stderr, "Error: Wg signal mode is not defined. Exiting.\n");
 			return 1;
 		}
-		if (wg_signal_mode[0] != 'y' && wg_signal_mode[0] != 'n') {
+		if (wg_signal_mode[0] != 'o' && wg_signal_mode[0] != 'p' && wg_signal_mode[0] != 'n') {
 			fprintf(stderr, "Error: Wg signal mode was set to \'%c\', which is invalid. ", wg_signal_mode[0]);
-			fprintf(stderr, "Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n");
+			fprintf(stderr, "Must be either \'o\' or \'p\' or \'n\'. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (wg_signal_mode[0] == 'y') {
