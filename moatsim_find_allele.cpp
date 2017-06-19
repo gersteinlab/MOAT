@@ -975,27 +975,35 @@ int main (int argc, char* argv[]) {
 		alt = linebuf.substr(0, ws_index);
 		
 		int refnum;
-		if (ref == "A") {
-			refnum = 0;
-		} else if (ref == "C") {
-			refnum = 1;
-		} else if (ref == "G") {
-			refnum = 2;
-		} else if (ref == "T") {
-			refnum = 3;
+		if (ref.size() == 1) {
+			if (ref[0] == 'A') {
+				refnum = 0;
+			} else if (ref[0] == 'C') {
+				refnum = 1;
+			} else if (ref[0] == 'G') {
+				refnum = 2;
+			} else if (ref[0] == 'T') {
+				refnum = 3;
+			} else {
+				continue;
+			}
 		} else {
 			continue;
 		}
 		
 		int altnum;
-		if (alt == "A") {
-			altnum = 0;
-		} else if (alt == "C") {
-			altnum = 1;
-		} else if (alt == "G") {
-			altnum = 2;
-		} else if (alt == "T") {
-			altnum = 3;
+		if (alt.size() == 1) {
+			if (alt[0] == 'A') {
+				altnum = 0;
+			} else if (alt[0] == 'C') {
+				altnum = 1;
+			} else if (alt[0] == 'G') {
+				altnum = 2;
+			} else if (alt[0] == 'T') {
+				altnum = 3;
+			} else {
+				continue;
+			}
 		} else {
 			continue;
 		}
@@ -1027,13 +1035,13 @@ int main (int argc, char* argv[]) {
 		char ref = chr_nt[chr_num-1][pos_num];
 		
 		int refnum;
-		if (ref == "A") {
+		if (ref == 'A') {
 			refnum = 0;
-		} else if (ref == "C") {
+		} else if (ref == 'C') {
 			refnum = 1;
-		} else if (ref == "G") {
+		} else if (ref == 'G') {
 			refnum = 2;
-		} else if (ref == "T") {
+		} else if (ref == 'T') {
 			refnum = 3;
 		} else {
 			continue;
@@ -1064,7 +1072,10 @@ int main (int argc, char* argv[]) {
 			alt = "T";
 		}
 		
-		string outstr = var_array[i][0] + "\t" + var_array[i][1] + "\t" + var_array[i][2] + "\t" + string(ref) + "\t" + alt + "\n";
+		char ref_cstr[STRSIZE];
+		sprintf(ref_cstr, "%c", ref);
+		
+		string outstr = var_array[i][0] + "\t" + var_array[i][1] + "\t" + var_array[i][2] + "\t" + string(ref_cstr) + "\t" + alt + "\n";
 		fprintf(outfile_ptr, "%s", outstr.c_str());
 	}
 	fclose(outfile_ptr);
