@@ -1053,15 +1053,24 @@ int main (int argc, char* argv[]) {
 		for (int j = 0; j < 4; j++) {
 			sum += allele_count[refnum][j];
 		}
-		int rand_selection = rand() % sum; // Selection in interval [0,sum-1]
 		
 		int j = 0;
-		while (rand_selection >= allele_count[refnum][j]) {
-			rand_selection -= allele_count[refnum][j];
-			j++;
-		}
 		
-		allele_count[refnum][j] -= 1;
+		// If the sum is zero, then just choose j with uniform probability over [0,3]
+		if (sum == 0) {
+			j = rand() % 4;
+		} else {
+		
+			int rand_selection = rand() % sum; // Selection in interval [0,sum-1]
+		
+			// int j = 0;
+			while (rand_selection >= allele_count[refnum][j]) {
+				rand_selection -= allele_count[refnum][j];
+				j++;
+			}
+		
+			allele_count[refnum][j] -= 1;
+		}
 		
 		string alt;
 		if (j == 0) {
