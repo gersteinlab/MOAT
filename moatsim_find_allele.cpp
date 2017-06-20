@@ -974,15 +974,16 @@ int main (int argc, char* argv[]) {
 		ws_index = linebuf.find_first_of("\t\n");
 		alt = linebuf.substr(0, ws_index);
 		
+		char ref_char = toupper(ref[0]);
 		int refnum;
 		if (ref.size() == 1) {
-			if (ref[0] == 'A') {
+			if (ref_char == 'A') {
 				refnum = 0;
-			} else if (ref[0] == 'C') {
+			} else if (ref_char == 'C') {
 				refnum = 1;
-			} else if (ref[0] == 'G') {
+			} else if (ref_char == 'G') {
 				refnum = 2;
-			} else if (ref[0] == 'T') {
+			} else if (ref_char == 'T') {
 				refnum = 3;
 			} else {
 				continue;
@@ -991,15 +992,16 @@ int main (int argc, char* argv[]) {
 			continue;
 		}
 		
+		char alt_char = toupper(alt[0]);
 		int altnum;
 		if (alt.size() == 1) {
-			if (alt[0] == 'A') {
+			if (alt_char == 'A') {
 				altnum = 0;
-			} else if (alt[0] == 'C') {
+			} else if (alt_char == 'C') {
 				altnum = 1;
-			} else if (alt[0] == 'G') {
+			} else if (alt_char == 'G') {
 				altnum = 2;
-			} else if (alt[0] == 'T') {
+			} else if (alt_char == 'T') {
 				altnum = 3;
 			} else {
 				continue;
@@ -1032,7 +1034,7 @@ int main (int argc, char* argv[]) {
 		int chr_num = chr2int(chr);
 		int pos_num = atoi(pos.c_str());
 		
-		char ref = chr_nt[chr_num-1][pos_num];
+		char ref = toupper(chr_nt[chr_num-1][pos_num]);
 		
 		int refnum;
 		if (ref == 'A') {
