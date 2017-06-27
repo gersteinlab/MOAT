@@ -1438,7 +1438,7 @@ int main (int argc, char* argv[]) {
 						if (cur_nt.find_first_of('N') != string::npos) {
 							// DEBUG - print information on this variant to stdout
 							printf("Epoch coordinate: %d\n", obs_var_pos[k].first);
-							int p = obs_var_pos[k];
+							int p = obs_var_pos[k].first;
 							string mychr;
 							int mystart;
 							int myend;
@@ -1474,7 +1474,7 @@ int main (int argc, char* argv[]) {
 						if (pos.size()-1 == 0) {
 							// DEBUG - print information on this variant to stdout
 							printf("Epoch coordinate: %d\n", obs_var_pos[k].first);
-							int p = obs_var_pos[k];
+							int p = obs_var_pos[k].first;
 							string mychr;
 							int mystart;
 							int myend;
