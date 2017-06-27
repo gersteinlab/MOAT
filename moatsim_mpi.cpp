@@ -367,7 +367,7 @@ int main (int argc, char* argv[]) {
 		string fasta_dir;
 	
 		// File with single nucleotide variants
-		// Expected format: tab(chr, start, end, ...)
+		// Expected format: tab(chr, start, end, ref, alt, patient ID, ...)
 		string vfile;
 	
 		// Directory with the output files
@@ -459,7 +459,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		/* Data structures for the starting data */
-		// Variant array, contains variants of the format vector(chr, start, end)
+		// Variant array, contains variants of the format vector(chr, start, end, ref, alt, patient ID)
 		vector<vector<string> > var_array;
 	
 		// Annotation array, contains annotations of the format vector(chr, start, end)
@@ -485,9 +485,9 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			// printf("%s\n", line.c_str());
 		
-			// Extract chromosome, start, and end from line (first 3 columns)
+			// Extract chromosome, start, end, ref, alt, and patient ID from line (first 6 columns)
 			vector<string> vec;
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 6; i++) {
 				size_t ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
 				vec.push_back(in);
@@ -1436,6 +1436,31 @@ int main (int argc, char* argv[]) {
 				
 						// If there is an N in this string, we skip this variant
 						if (cur_nt.find_first_of('N') != string::npos) {
+							// DEBUG - print information on this variant to stdout
+							printf("Epoch coordinate: %d\n", obs_var_pos[k].first);
+							int p = obs_var_pos[k];
+							string mychr;
+							int mystart;
+							int myend;
+							for (unsigned int l = 0; l < 25; l++) {
+								if (p <= hg19_coor[int2chr(l+1)]) {
+									mychr = int2chr(l+1);
+									myend = p;
+									mystart = p-1;
+									break;
+								} else {
+									p -= hg19_coor[int2chr(l+1)];
+								}
+							}
+							printf("Genome coordinates: %s:%d-%d\n", mychr.c_str(), mystart, myend);
+							printf("Trimer: %s\n", cur_nt.c_str());
+							printf("Cluster bins:\n");
+							for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+								printf("%s:%s-%s\n", cluster_bins[l][0].c_str(), cluster_bins[l][1].c_str(), cluster_bins[l][2].c_str());
+							}
+							// Nt for this cluster
+							printf("%s\n", concat_nt.c_str());
+							
 							continue;
 						}
 				
@@ -1447,6 +1472,31 @@ int main (int argc, char* argv[]) {
 				
 						// If no positions are available, skip
 						if (pos.size()-1 == 0) {
+							// DEBUG - print information on this variant to stdout
+							printf("Epoch coordinate: %d\n", obs_var_pos[k].first);
+							int p = obs_var_pos[k];
+							string mychr;
+							int mystart;
+							int myend;
+							for (unsigned int l = 0; l < 25; l++) {
+								if (p <= hg19_coor[int2chr(l+1)]) {
+									mychr = int2chr(l+1);
+									myend = p;
+									mystart = p-1;
+									break;
+								} else {
+									p -= hg19_coor[int2chr(l+1)];
+								}
+							}
+							printf("Genome coordinates: %s:%d-%d\n", mychr.c_str(), mystart, myend);
+							printf("Trimer: %s\n", cur_nt.c_str());
+							printf("Cluster bins:\n");
+							for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+								printf("%s:%s-%s\n", cluster_bins[l][0].c_str(), cluster_bins[l][1].c_str(), cluster_bins[l][2].c_str());
+							}
+							// Nt for this cluster
+							printf("%s\n", concat_nt.c_str());
+						
 							continue;
 						}
 				
