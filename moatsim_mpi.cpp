@@ -1103,6 +1103,9 @@ int main (int argc, char* argv[]) {
 		
 		srand(0+mpi_rank);
 		
+		// DEBUG - children sound off
+		printf("I am child %d\n", mpi_rank);
+		
 		// Receive the trimer boolean flag
 		bool trimer;
 		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
