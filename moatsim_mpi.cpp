@@ -984,6 +984,12 @@ int main (int argc, char* argv[]) {
 					}
 				}
 				
+				// DEBUG - what bins comprise this cluster
+				printf("<== Cluster #%d ==>\n", j);
+				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
+					printf("%s:%s-%s\n", cluster_bins[k][0].c_str(), cluster_bins[k][1].c_str(), cluster_bins[k][2].c_str());
+				}
+				
 				// Determine which child is available to take this job
 				int available_flag;
 				MPI_Recv(&available_flag, 1, MPI_INT, MPI_ANY_SOURCE, 9, MPI_COMM_WORLD, &status);
@@ -1104,7 +1110,7 @@ int main (int argc, char* argv[]) {
 		srand(0+mpi_rank);
 		
 		// DEBUG - children sound off
-		printf("I am child %d\n", mpi_rank);
+		// printf("I am child %d\n", mpi_rank);
 		
 		// Receive the trimer boolean flag
 		bool trimer;
