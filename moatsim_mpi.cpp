@@ -677,7 +677,7 @@ int main (int argc, char* argv[]) {
 	// 	}
 	// 	fclose(debug_ptr);
 		// Early termination
-		return 0;
+		// return 0;
 	
 		/* Begin building covariate signal profiles of the genome bins */
 		// First step is to produce a file of genome bins
