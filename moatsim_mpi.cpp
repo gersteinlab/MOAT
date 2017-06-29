@@ -668,7 +668,7 @@ int main (int argc, char* argv[]) {
 		// return 0;
 	
 		// DEBUG - check the genome bins
-		// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
+		printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
 	// 	string debug_file = "/net/gerstein/ll426/code/moat-test/test-bin-code/debug.txt";
 	// 	FILE *debug_ptr = fopen(debug_file.c_str(), "w");
 	// 	for (unsigned int i = 0; i < ann_array.size(); i++) {
@@ -677,7 +677,7 @@ int main (int argc, char* argv[]) {
 	// 	}
 	// 	fclose(debug_ptr);
 		// Early termination
-		// return 0;
+		return 0;
 	
 		/* Begin building covariate signal profiles of the genome bins */
 		// First step is to produce a file of genome bins
