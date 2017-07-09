@@ -971,7 +971,7 @@ int main (int argc, char* argv[]) {
 		for (int j = 0; j < num_threads; j++) {
 		
 			// Create new th_package
-			th_package thp = { .start = 0, .end = 0, .ann_array = &ann_array, .member = &member, .var_array = &var_array, .chr_nt = &chr_nt, .hg19_coor = &hg19_coor, .permuted_set = &permuted_set, .empty = &empty };
+			struct th_package thp = { .start = 0, .end = 0, .ann_array = &ann_array, .member = &member, .var_array = &var_array, .chr_nt = &chr_nt, .hg19_coor = &hg19_coor, .permuted_set = &permuted_set, .empty = &empty };
 		
 // 			int start;
 // 			int end;
