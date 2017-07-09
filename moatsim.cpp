@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <float.h>
 #include <limits.h>
+#include <pthread.h>
 #include "variant_permutation_v3.h"
 
 using namespace std;
@@ -95,6 +96,22 @@ using namespace std;
 // 	vec.push_back(string(rand_end_cstr));
 // 	return vec;
 // }
+
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+
+struct th_package {
+	int start;
+	int end;
+	vector<vector<string> > *ann_array;
+	vector<unsigned int> *member;
+	vector<vector<string> > *var_array;
+	vector<string> *chr_nt;
+	map<string,int> *hg19_coor;
+	vector<vector<string> > *permuted_set;
+	map<unsigned int,int> *empty;
+};
+
+void *thread_function (th_package *arg);
 
 // Refactorization of the code that turns a chromosome string into an integer
 int chr2int (string chr_str) {
@@ -939,16 +956,106 @@ int main (int argc, char* argv[]) {
 	/* Permutate variant locations */
 	srand(0);
 	
+	int num_threads = 30;
+	pthread_t th_array[num_threads];
+	int iret[num_threads];
+	
 	for (int i = 0; i < num_permutations; i++) {
 		
 		vector<vector<string> > permuted_set;
 		
-		for (unsigned int j = 0; j < numclust; j++) {
+		int thread_size = numclust/num_threads;
+		int mod = numclust%num_threads;
+		
+		// Create threads
+		for (j = 0; j < num_threads; j++) {
+		
+			// Create new th_package
+			th_package thp = { .start = 0, .end = 0, .ann_array = &ann_array, .member = &member, .var_array = &var_array, .chr_nt = &chr_nt, .hg19_coor = &hg19_coor, .permuted_set = &permuted_set, .empty = &empty };
+		
+// 			int start;
+// 			int end;
+		
+			if (thread_size > 0) {
+				if (j < mod) {
+					thp.start = j*(thread_size+1);
+					thp.end = ((j+1)*(thread_size+1))-1;
+				} else {
+					thp.start = (mod*(thread_size+1))+((j-mod)*thread_size);
+					thp.end = ((mod*(thread_size+1))+((j-mod+1)*thread_size))-1;
+				}
+				// Pthread launch
+				iret[j] = pthread_create(th_array[j], NULL, thread_function, &thp);
+				if (iret[j]) {
+	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
+	         exit(1);
+	     	}
+			} else {
+				thp.start = j;
+				thp.end = j;
+		
+				if (j < numclust) {
+					// Pthread launch
+					iret[j] = pthread_create(th_array[j], NULL, thread_function, &thp);
+					if (iret[j]) {
+	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
+	         exit(1);
+	     		}
+				}
+			}
+		}
+		
+		// Join threads, compiling results
+		for (j = 0; j < num_threads; j++) {
+			if (thread_size > 0 || j < numclust) {
+				pthread_join(th_array[j], NULL);
+			}
+		}
+		
+		sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
+		
+		// Print results to output
+		// Open new output file
+		char perm_num[STRSIZE];
+		sprintf(perm_num, "%d", i+1);
+		
+		string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
+		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
+		// vector<int> this_permutation_counts;
+		
+		for (unsigned int k = 0; k < permuted_set.size(); k++) {
+			
+			// DEBUG
+			// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
+		
+			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+		}
+		fclose(outfile_ptr);
+	}
+	
+	// DEBUG
+	// printf("Breakpoint 3\n");
+	
+	// Wrap up by removing the temporary files created along the way
+	string rmcom = "rm " + regions_presig;
+	system(rmcom.c_str());
+	rmcom = "rm " + regions_postsig;
+	system(rmcom.c_str());
+	rmcom = "rm " + regions_postsig_sorted;
+	system(rmcom.c_str());
+	
+	// Verdun
+	return 0;
+}
+			
+void *thread_function (th_package *thp) {
+		
+		for (unsigned int j = (*thp).start; j <= (*thp).end; j++) {
 		
 			// DEBUG
 			// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
 		
-			if (empty[j]) {
+			if ((*thp).empty[j]) {
 				continue;
 			}
 		
@@ -957,9 +1064,9 @@ int main (int argc, char* argv[]) {
 			vector<vector<string> > cluster_bins;
 		
 			// Gather up bins in this cluster
-			for (unsigned int k = 0; k < ann_array.size(); k++) {
-				if (member[k] == j) {
-					cluster_bins.push_back(ann_array[k]);
+			for (unsigned int k = 0; k < (*thp).ann_array.size(); k++) {
+				if ((*thp).member[k] == j) {
+					cluster_bins.push_back((*thp).ann_array[k]);
 				}
 			}
 			
@@ -1011,7 +1118,7 @@ int main (int argc, char* argv[]) {
 			
 				vector<string> rand_range = cluster_bins[l];
 			
-				pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
+				pair<unsigned int,unsigned int> range = intersecting_variants((*thp).var_array, rand_range, variant_pointer);
 				variant_pointer = range.first;
 			
 				// DEBUG
@@ -1025,7 +1132,7 @@ int main (int argc, char* argv[]) {
 				
 				// Populate obs_var_pos
 				for (unsigned int m = range.first; m < range.second; m++) {
-					int cur_var_end = atoi(var_array[m][2].c_str());
+					int cur_var_end = atoi((*thp).var_array[m][2].c_str());
 					int this_epoch = cur_var_end - rand_range_start;
 					this_epoch += epoch_nt;
 					
@@ -1095,19 +1202,19 @@ int main (int argc, char* argv[]) {
 					// Begin indexing
 			
 					// Save the nt
-					concat_nt += chr_nt[rand_chr-1].substr(rand_range_start, rand_range_end - rand_range_start);
+					concat_nt += (*thp).chr_nt[rand_chr-1].substr(rand_range_start, rand_range_end - rand_range_start);
 			
 					string cur_chr = cluster_bins[l][0];
 					for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
 			
 						// Don't read in characters if it will read off either end
-						if (k == 1 || k == hg19_coor[cur_chr]) {
+						if (k == 1 || k == (*thp).hg19_coor[cur_chr]) {
 							continue;
 						}
 				
-						char nt1 = toupper(chr_nt[rand_chr-1][k-2]); // 0-based index
-						char nt2 = toupper(chr_nt[rand_chr-1][k-1]); // 0-based index
-						char nt3 = toupper(chr_nt[rand_chr-1][k]); // 0-based index
+						char nt1 = toupper((*thp).chr_nt[rand_chr-1][k-2]); // 0-based index
+						char nt2 = toupper((*thp).chr_nt[rand_chr-1][k-1]); // 0-based index
+						char nt3 = toupper((*thp).chr_nt[rand_chr-1][k]); // 0-based index
 				
 						// Verify there are no invalid characters
 						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
@@ -1215,7 +1322,10 @@ int main (int argc, char* argv[]) {
 				sprintf(end_cstr, "%d", new_epoch); // 1-based
 				vec.push_back(string(end_cstr));
 				
-				permuted_set.push_back(vec);
+				// Mutex here
+				pthread_mutex_lock(&mutex1);
+				(*thp).permuted_set.push_back(vec);
+				pthread_mutex_unlock(&mutex1);
 			}
 			
 			// Read in the basepairs we need for this region
@@ -1229,7 +1339,6 @@ int main (int argc, char* argv[]) {
 			// END NEW CODE
 			
 			// vector<vector<string> > permuted_set = permute_variants(var_subset_count, rand_range);
-			sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
 		
 			// DEBUG
 			// printf("Loop iter %d\n", i);
@@ -1241,36 +1350,6 @@ int main (int argc, char* argv[]) {
 		
 			// last_chr = ann_array[j][0];
 		}
-		
-		// Open new output file
-		char perm_num[STRSIZE];
-		sprintf(perm_num, "%d", i+1);
-		
-		string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
-		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
-		// vector<int> this_permutation_counts;
-		
-		for (unsigned int k = 0; k < permuted_set.size(); k++) {
-			
-			// DEBUG
-			// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
-		
-			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
-		}
-		fclose(outfile_ptr);
-	}
-	
-	// DEBUG
-	// printf("Breakpoint 3\n");
-	
-	// Wrap up by removing the temporary files created along the way
-	string rmcom = "rm " + regions_presig;
-	system(rmcom.c_str());
-	rmcom = "rm " + regions_postsig;
-	system(rmcom.c_str());
-	rmcom = "rm " + regions_postsig_sorted;
-	system(rmcom.c_str());
-	
-	// Verdun
-	return 0;
 }
+		
+		
