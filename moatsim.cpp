@@ -971,18 +971,18 @@ int main (int argc, char* argv[]) {
 		for (int j = 0; j < num_threads; j++) {
 		
 			// Create new th_package
-			struct th_package thp = { .start = 0, .end = 0, .ann_array = &ann_array, .member = &member, .var_array = &var_array, .chr_nt = &chr_nt, .hg19_coor = &hg19_coor, .permuted_set = &permuted_set, .empty = &empty };
+			struct th_package *thp = { .start = 0, .end = 0, .ann_array = &ann_array, .member = &member, .var_array = &var_array, .chr_nt = &chr_nt, .hg19_coor = &hg19_coor, .permuted_set = &permuted_set, .empty = &empty };
 		
 // 			int start;
 // 			int end;
 		
 			if (thread_size > 0) {
 				if (j < mod) {
-					thp.start = j*(thread_size+1);
-					thp.end = ((j+1)*(thread_size+1))-1;
+					(*thp).start = j*(thread_size+1);
+					(*thp).end = ((j+1)*(thread_size+1))-1;
 				} else {
-					thp.start = (mod*(thread_size+1))+((j-mod)*thread_size);
-					thp.end = ((mod*(thread_size+1))+((j-mod+1)*thread_size))-1;
+					(*thp).start = (mod*(thread_size+1))+((j-mod)*thread_size);
+					(*thp).end = ((mod*(thread_size+1))+((j-mod+1)*thread_size))-1;
 				}
 				// Pthread launch
 				iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) thp);
@@ -991,8 +991,8 @@ int main (int argc, char* argv[]) {
 	         exit(1);
 	     	}
 			} else {
-				thp.start = j;
-				thp.end = j;
+				(*thp).start = j;
+				(*thp).end = j;
 		
 				if (j < (int)numclust) {
 					// Pthread launch
