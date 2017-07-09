@@ -968,7 +968,7 @@ int main (int argc, char* argv[]) {
 		int mod = numclust%num_threads;
 		
 		// Create threads
-		for (j = 0; j < num_threads; j++) {
+		for (int j = 0; j < num_threads; j++) {
 		
 			// Create new th_package
 			th_package thp = { .start = 0, .end = 0, .ann_array = &ann_array, .member = &member, .var_array = &var_array, .chr_nt = &chr_nt, .hg19_coor = &hg19_coor, .permuted_set = &permuted_set, .empty = &empty };
@@ -1050,12 +1050,12 @@ int main (int argc, char* argv[]) {
 			
 void *thread_function (th_package *thp) {
 		
-		for (unsigned int j = (*thp).start; j <= (*thp).end; j++) {
+		for (int j = (*thp).start; j <= (*thp).end; j++) {
 		
 			// DEBUG
 			// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
 		
-			if ((*thp).empty[j]) {
+			if ((*thp).(*empty)[j]) {
 				continue;
 			}
 		
