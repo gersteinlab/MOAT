@@ -985,7 +985,7 @@ int main (int argc, char* argv[]) {
 					thp.end = ((mod*(thread_size+1))+((j-mod+1)*thread_size))-1;
 				}
 				// Pthread launch
-				iret[j] = pthread_create(th_array[j], NULL, thread_function, &thp);
+				iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) &thp);
 				if (iret[j]) {
 	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
 	         exit(1);
@@ -996,7 +996,7 @@ int main (int argc, char* argv[]) {
 		
 				if (j < numclust) {
 					// Pthread launch
-					iret[j] = pthread_create(th_array[j], NULL, thread_function, &thp);
+					iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) &thp);
 					if (iret[j]) {
 	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
 	         exit(1);
@@ -1048,7 +1048,7 @@ int main (int argc, char* argv[]) {
 	return 0;
 }
 			
-void *thread_function (th_package *thp) {
+void *thread_function (void *thp) {
 		
 		for (int j = (*thp).start; j <= (*thp).end; j++) {
 		
