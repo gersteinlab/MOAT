@@ -972,6 +972,7 @@ int main (int argc, char* argv[]) {
 		
 			// Create new th_package
 			struct th_package *thp;
+			thp = malloc(sizeof(struct th_package));
 			(*thp).start = 0;
 			(*thp).end = 0;
 			(*thp).ann_array = &ann_array;
