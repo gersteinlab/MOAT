@@ -102,13 +102,13 @@ pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 struct th_package {
 	int start;
 	int end;
-	vector<vector<string> > *ann_array;
-	vector<unsigned int> *member;
-	vector<vector<string> > *var_array;
-	vector<string> *chr_nt;
-	map<string,int> *hg19_coor;
-	vector<vector<string> > *permuted_set;
-	map<unsigned int,int> *empty;
+	void *ann_array;
+	void *member;
+	void *var_array;
+	void *chr_nt;
+	void *hg19_coor;
+	void *permuted_set;
+	void *empty;
 };
 
 void *thread_function (th_package *arg);
