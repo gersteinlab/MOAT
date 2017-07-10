@@ -1067,7 +1067,7 @@ void *thread_function (void *thp) {
 			// DEBUG
 			// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
 		
-			if ((*thp).(*empty)[j]) {
+			if ((*thp2).(*empty)[j]) {
 				continue;
 			}
 		
@@ -1076,8 +1076,8 @@ void *thread_function (void *thp) {
 			vector<vector<string> > cluster_bins;
 		
 			// Gather up bins in this cluster
-			for (unsigned int k = 0; k < (*thp).ann_array.size(); k++) {
-				if ((*thp).member[k] == j) {
+			for (unsigned int k = 0; k < (*thp2).ann_array.size(); k++) {
+				if ((*thp2).member[k] == j) {
 					cluster_bins.push_back((*thp).ann_array[k]);
 				}
 			}
@@ -1130,7 +1130,7 @@ void *thread_function (void *thp) {
 			
 				vector<string> rand_range = cluster_bins[l];
 			
-				pair<unsigned int,unsigned int> range = intersecting_variants((*thp).var_array, rand_range, variant_pointer);
+				pair<unsigned int,unsigned int> range = intersecting_variants((*thp2).var_array, rand_range, variant_pointer);
 				variant_pointer = range.first;
 			
 				// DEBUG
@@ -1144,7 +1144,7 @@ void *thread_function (void *thp) {
 				
 				// Populate obs_var_pos
 				for (unsigned int m = range.first; m < range.second; m++) {
-					int cur_var_end = atoi((*thp).var_array[m][2].c_str());
+					int cur_var_end = atoi((*thp2).var_array[m][2].c_str());
 					int this_epoch = cur_var_end - rand_range_start;
 					this_epoch += epoch_nt;
 					
@@ -1214,19 +1214,19 @@ void *thread_function (void *thp) {
 					// Begin indexing
 			
 					// Save the nt
-					concat_nt += (*thp).chr_nt[rand_chr-1].substr(rand_range_start, rand_range_end - rand_range_start);
+					concat_nt += (*thp2).chr_nt[rand_chr-1].substr(rand_range_start, rand_range_end - rand_range_start);
 			
 					string cur_chr = cluster_bins[l][0];
 					for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
 			
 						// Don't read in characters if it will read off either end
-						if (k == 1 || k == (*thp).hg19_coor[cur_chr]) {
+						if (k == 1 || k == (*thp2).hg19_coor[cur_chr]) {
 							continue;
 						}
 				
-						char nt1 = toupper((*thp).chr_nt[rand_chr-1][k-2]); // 0-based index
-						char nt2 = toupper((*thp).chr_nt[rand_chr-1][k-1]); // 0-based index
-						char nt3 = toupper((*thp).chr_nt[rand_chr-1][k]); // 0-based index
+						char nt1 = toupper((*thp2).chr_nt[rand_chr-1][k-2]); // 0-based index
+						char nt2 = toupper((*thp2).chr_nt[rand_chr-1][k-1]); // 0-based index
+						char nt3 = toupper((*thp2).chr_nt[rand_chr-1][k]); // 0-based index
 				
 						// Verify there are no invalid characters
 						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
@@ -1336,7 +1336,7 @@ void *thread_function (void *thp) {
 				
 				// Mutex here
 				pthread_mutex_lock(&mutex1);
-				(*thp).permuted_set.push_back(vec);
+				(*thp2).permuted_set.push_back(vec);
 				pthread_mutex_unlock(&mutex1);
 			}
 			
