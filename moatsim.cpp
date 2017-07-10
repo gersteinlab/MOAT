@@ -1062,6 +1062,7 @@ void *thread_function (void *thp) {
 
 		struct th_package *thp2 = (th_package *)thp;
 		map<unsigned int,int> *empty = (*thp2).empty;
+		vector<unsigned int> *member = (*thp2).member;
 		
 		for (int j = (*thp2).start; j <= (*thp2).end; j++) {
 		
@@ -1078,7 +1079,7 @@ void *thread_function (void *thp) {
 		
 			// Gather up bins in this cluster
 			for (unsigned int k = 0; k < (*thp2).ann_array->size(); k++) {
-				if ((*thp2).member[k] == (unsigned int)j) {
+				if ((*member)[k] == (unsigned int)j) {
 					cluster_bins.push_back((*thp).ann_array[k]);
 				}
 			}
