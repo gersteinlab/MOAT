@@ -1372,7 +1372,7 @@ void *thread_function (void *thp) {
 		
 			// last_chr = ann_array[j][0];
 		}
-		return;
+		return NULL;
 }
 		
 		
