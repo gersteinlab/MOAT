@@ -1061,13 +1061,14 @@ int main (int argc, char* argv[]) {
 void *thread_function (void *thp) {
 
 		struct th_package *thp2 = (th_package *)thp;
+		map<unsigned int,int> *empty = (*thp2).empty;
 		
 		for (int j = (*thp2).start; j <= (*thp2).end; j++) {
 		
 			// DEBUG
 			// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
 		
-			if ((*thp2)->empty[j]) {
+			if ((*empty)[j]) {
 				continue;
 			}
 		
