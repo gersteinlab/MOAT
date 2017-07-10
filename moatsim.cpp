@@ -1064,6 +1064,7 @@ void *thread_function (void *thp) {
 		map<unsigned int,int> *empty = (*thp2).empty;
 		vector<unsigned int> *member = (*thp2).member;
 		vector<vector<string> > *ann_array = (*thp2).ann_array;
+		vector<vector<string> > *var_array = (*thp2).var_array;
 		
 		for (int j = (*thp2).start; j <= (*thp2).end; j++) {
 		
@@ -1133,7 +1134,7 @@ void *thread_function (void *thp) {
 			
 				vector<string> rand_range = cluster_bins[l];
 			
-				pair<unsigned int,unsigned int> range = intersecting_variants((*thp2).var_array, rand_range, variant_pointer);
+				pair<unsigned int,unsigned int> range = intersecting_variants((*var_array), rand_range, variant_pointer);
 				variant_pointer = range.first;
 			
 				// DEBUG
@@ -1147,7 +1148,7 @@ void *thread_function (void *thp) {
 				
 				// Populate obs_var_pos
 				for (unsigned int m = range.first; m < range.second; m++) {
-					int cur_var_end = atoi((*thp2).var_array[m][2].c_str());
+					int cur_var_end = atoi((*var_array)[m][2].c_str());
 					int this_epoch = cur_var_end - rand_range_start;
 					this_epoch += epoch_nt;
 					
