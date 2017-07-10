@@ -1060,7 +1060,7 @@ int main (int argc, char* argv[]) {
 			
 void *thread_function (void *thp) {
 		
-		for (int j = (*thp).start; j <= (*thp).end; j++) {
+		for (int j = thp->start; j <= thp->end; j++) {
 		
 			// DEBUG
 			// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
