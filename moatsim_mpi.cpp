@@ -978,7 +978,8 @@ int main (int argc, char* argv[]) {
 		for (unsigned int i = 1; i <= 25; i++) {
 			strlen = (int)chr_nt[i-1].size() + 1;
 			MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-			char *fasta = chr_nt[i-1].c_str();
+			char *fasta = (char *)malloc((strlen)*sizeof(char));
+			strcpy(fasta, chr_nt[i-1].c_str());
 			MPI_Bcast(fasta, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
 			free(fasta);
 		}
@@ -1381,8 +1382,8 @@ int main (int argc, char* argv[]) {
 					// Reset epoch_nt
 					epoch_nt = 0;
 			
+					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 					// Read in reference
-// 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 // 						// FASTA import here
 // 						if (last_chr != cluster_bins[l][0]) {
 // 			
