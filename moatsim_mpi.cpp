@@ -1432,9 +1432,9 @@ int main (int argc, char* argv[]) {
 								continue;
 							}
 				
-							char nt1 = toupper(chr_nt[k-2]); // 0-based index
-							char nt2 = toupper(chr_nt[k-1]); // 0-based index
-							char nt3 = toupper(chr_nt[k]); // 0-based index
+							char nt1 = toupper(chr_nt[rand_chr-1][k-2]); // 0-based index
+							char nt2 = toupper(chr_nt[rand_chr-1][k-1]); // 0-based index
+							char nt3 = toupper(chr_nt[rand_chr-1][k]); // 0-based index
 				
 							// Verify there are no invalid characters
 							if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
