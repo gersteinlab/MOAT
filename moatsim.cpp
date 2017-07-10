@@ -1067,7 +1067,7 @@ void *thread_function (void *thp) {
 			// DEBUG
 			// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
 		
-			if ((*thp2).empty[j]) {
+			if ((*thp2)->empty[j]) {
 				continue;
 			}
 		
