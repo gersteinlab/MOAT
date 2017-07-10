@@ -100,6 +100,7 @@ using namespace std;
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
 struct th_package {
+	bool trimer;
 	int start;
 	int end;
 	vector<vector<string> > *ann_array;
@@ -973,6 +974,7 @@ int main (int argc, char* argv[]) {
 			// Create new th_package
 			struct th_package *thp;
 			// thp = malloc(sizeof(struct th_package));
+			(*thp).trimer = trimer;
 			(*thp).start = 0;
 			(*thp).end = 0;
 			(*thp).ann_array = &ann_array;
@@ -1061,6 +1063,7 @@ int main (int argc, char* argv[]) {
 void *thread_function (void *thp) {
 
 		struct th_package *thp2 = (th_package *)thp;
+		bool trimer = (*thp2).trimer;
 		map<unsigned int,int> *empty = (*thp2).empty;
 		vector<unsigned int> *member = (*thp2).member;
 		vector<vector<string> > *ann_array = (*thp2).ann_array;
@@ -1369,6 +1372,7 @@ void *thread_function (void *thp) {
 		
 			// last_chr = ann_array[j][0];
 		}
+		return;
 }
 		
 		
