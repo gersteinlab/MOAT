@@ -1065,6 +1065,9 @@ void *thread_function (void *thp) {
 		vector<unsigned int> *member = (*thp2).member;
 		vector<vector<string> > *ann_array = (*thp2).ann_array;
 		vector<vector<string> > *var_array = (*thp2).var_array;
+		vector<string> *chr_nt = (*thp2).chr_nt;
+		map<string,int> *hg19_coor = (*thp2).hg19_coor;
+		vector<vector<string> > *permuted_set = (*thp2).permuted_set;
 		
 		for (int j = (*thp2).start; j <= (*thp2).end; j++) {
 		
@@ -1218,19 +1221,19 @@ void *thread_function (void *thp) {
 					// Begin indexing
 			
 					// Save the nt
-					concat_nt += (*thp2).chr_nt[rand_chr-1].substr(rand_range_start, rand_range_end - rand_range_start);
+					concat_nt += (*chr_nt)[rand_chr-1].substr(rand_range_start, rand_range_end - rand_range_start);
 			
 					string cur_chr = cluster_bins[l][0];
 					for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
 			
 						// Don't read in characters if it will read off either end
-						if (k == 1 || k == (*thp2).hg19_coor[cur_chr]) {
+						if (k == 1 || k == (*hg19_coor)[cur_chr]) {
 							continue;
 						}
 				
-						char nt1 = toupper((*thp2).chr_nt[rand_chr-1][k-2]); // 0-based index
-						char nt2 = toupper((*thp2).chr_nt[rand_chr-1][k-1]); // 0-based index
-						char nt3 = toupper((*thp2).chr_nt[rand_chr-1][k]); // 0-based index
+						char nt1 = toupper((*chr_nt)[rand_chr-1][k-2]); // 0-based index
+						char nt2 = toupper((*chr_nt)[rand_chr-1][k-1]); // 0-based index
+						char nt3 = toupper((*chr_nt)[rand_chr-1][k]); // 0-based index
 				
 						// Verify there are no invalid characters
 						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
@@ -1340,7 +1343,7 @@ void *thread_function (void *thp) {
 				
 				// Mutex here
 				pthread_mutex_lock(&mutex1);
-				(*thp2).permuted_set.push_back(vec);
+				(*permuted_set).push_back(vec);
 				pthread_mutex_unlock(&mutex1);
 			}
 			
