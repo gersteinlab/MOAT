@@ -927,15 +927,61 @@ int main (int argc, char* argv[]) {
 	// 	fclose(testfile_ptr);
 	// 	return 0;
 	
+	FILE *fasta_ptr = NULL;
+	string last_chr = "";
+	
+	// This vector contains all of the reference genome's nucleotides
+	// 0-21: chr1-22; 22: chrX; 23: chrY; 24: chrM
+	vector<string> chr_nt;
+	
+	// We're going to pre-import the entire FASTA genome first
+	for (int i = 1; i <= 25; i++) {
+		string chr = int2chr(i);
+		string filename = fasta_dir + "/" + chr + ".fa";
+		fasta_ptr = fopen(filename.c_str(), "r");
+		chr_nt.push_back("");
+		
+		int first = 1;
+		char linebuf_cstr[STRSIZE];
+		while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+			string linebuf = string(linebuf_cstr);
+			linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+			if (first) {
+				first = 0;
+				continue;
+			}
+			chr_nt[i-1] += linebuf;
+		}
+		// Check feof of fasta_ptr
+		if (feof(fasta_ptr)) { // We're good
+			fclose(fasta_ptr);
+		} else { // It's an error
+			char errstring[STRSIZE];
+			sprintf(errstring, "Error reading from %s", filename.c_str());
+			perror(errstring);
+			return 1;
+		}
+	}
+	
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 	
 		// Second, give the FASTA directory location to all children (tag = 10)
-		int strlen = fasta_dir.size() + 1;
-		char *fasta_dir_cstr = (char *)malloc((strlen)*sizeof(char));
-		strcpy(fasta_dir_cstr, fasta_dir.c_str());
-		MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		MPI_Bcast(fasta_dir_cstr, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
+// 		int strlen = fasta_dir.size() + 1;
+// 		char *fasta_dir_cstr = (char *)malloc((strlen)*sizeof(char));
+// 		strcpy(fasta_dir_cstr, fasta_dir.c_str());
+// 		MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+// 		MPI_Bcast(fasta_dir_cstr, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+		// Second, give all the FASTA data to the children (tag = 10)
+		int strlen;
+		for (unsigned int i = 1; i <= 25; i++) {
+			strlen = (int)chr_nt[i-1].size() + 1;
+			MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			char *fasta = chr_nt[i-1].c_str();
+			MPI_Bcast(fasta, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
+			free(fasta);
+		}
 		
 		// Now send the variant data
 		int var_array_size = var_array.size();
@@ -1107,12 +1153,18 @@ int main (int argc, char* argv[]) {
 		bool trimer;
 		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 		
-		// Receive directory with wg FASTA files
-		char fasta_dir_cstr[STRSIZE];
+		// Receive wg FASTA files
+		// char fasta_dir_cstr[STRSIZE];
 		int strlen;
-		MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		MPI_Bcast(fasta_dir_cstr, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
-		string fasta_dir = string(fasta_dir_cstr);
+		vector<string> chr_nt;
+		for (unsigned int i = 1; i <= 25; i++) {
+			MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			char *fasta = (char *)malloc((strlen)*sizeof(char));
+	 		MPI_Bcast(fasta, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
+	 		chr_nt.push_back(string(fasta));
+	 		free(fasta);
+	 	}
+// 		string fasta_dir = string(fasta_dir_cstr);
 		
 		// Receive variant data
 		// MPI_Probe first
@@ -1148,10 +1200,10 @@ int main (int argc, char* argv[]) {
 // 			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
 // 		}
 		
-		FILE *fasta_ptr = NULL;
-		string last_chr = "";
-		// int char_pointer;
-		string chr_nt;
+// 		FILE *fasta_ptr = NULL;
+// 		string last_chr = "";
+// 		// int char_pointer;
+// 		string chr_nt;
 		
 		// Flag that indicates if all permutations are complete
 		// 1 = permutations to do, 0 = all permutations done
@@ -1330,45 +1382,46 @@ int main (int argc, char* argv[]) {
 					epoch_nt = 0;
 			
 					// Read in reference
-					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-						// FASTA import here
-						if (last_chr != cluster_bins[l][0]) {
-			
-							string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
-							fasta_ptr = fopen(filename.c_str(), "r");
-			
-							int first = 1;
-							last_chr = cluster_bins[l][0];
-							chr_nt = "";
-							char linebuf_cstr[STRSIZE];
-							while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-								string linebuf = string(linebuf_cstr);
-								linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-								if (first) {
-									first = 0;
-									continue;
-								}
-								chr_nt += linebuf;
-							}
-							// Check feof of fasta_ptr
-							if (feof(fasta_ptr)) { // We're good
-								fclose(fasta_ptr);
-							} else { // It's an error
-								char errstring[STRSIZE];
-								sprintf(errstring, "Error reading from %s", filename.c_str());
-								perror(errstring);
-								MPI_Abort(MPI_COMM_WORLD, 1);
-								return 1;
-							}
-						}
+// 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+// 						// FASTA import here
+// 						if (last_chr != cluster_bins[l][0]) {
+// 			
+// 							string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
+// 							fasta_ptr = fopen(filename.c_str(), "r");
+// 			
+// 							int first = 1;
+// 							last_chr = cluster_bins[l][0];
+// 							chr_nt = "";
+// 							char linebuf_cstr[STRSIZE];
+// 							while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+// 								string linebuf = string(linebuf_cstr);
+// 								linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+// 								if (first) {
+// 									first = 0;
+// 									continue;
+// 								}
+// 								chr_nt += linebuf;
+// 							}
+// 							// Check feof of fasta_ptr
+// 							if (feof(fasta_ptr)) { // We're good
+// 								fclose(fasta_ptr);
+// 							} else { // It's an error
+// 								char errstring[STRSIZE];
+// 								sprintf(errstring, "Error reading from %s", filename.c_str());
+// 								perror(errstring);
+// 								MPI_Abort(MPI_COMM_WORLD, 1);
+// 								return 1;
+// 							}
+// 						}
 				
+						int rand_chr = chr2int(cluster_bins[l][0]);
 						int rand_range_start = atoi(cluster_bins[l][1].c_str());
 						int rand_range_end = atoi(cluster_bins[l][2].c_str());
 				
 						// Begin indexing
 			
 						// Save the nt
-						concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
+						concat_nt += chr_nt[rand_chr-1].substr(rand_range_start, rand_range_end - rand_range_start);
 			
 						string cur_chr = cluster_bins[l][0];
 						for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
