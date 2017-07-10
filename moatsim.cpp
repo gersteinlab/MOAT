@@ -1243,7 +1243,7 @@ void *thread_function (void *thp) {
 							char errstring[STRSIZE];
 							sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
 							fprintf(stderr, errstring);
-							return 1;
+							exit(1);
 						}
 				
 						stringstream ss;
