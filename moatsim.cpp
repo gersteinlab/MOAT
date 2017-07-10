@@ -1067,7 +1067,7 @@ void *thread_function (void *thp) {
 			// DEBUG
 			// printf("Permuted set size: %d\n (clust: %d)\n", (int)permuted_set.size(), (int)j);
 		
-			if ((*thp2).(*empty)[j]) {
+			if ((*thp2).empty[j]) {
 				continue;
 			}
 		
@@ -1076,8 +1076,8 @@ void *thread_function (void *thp) {
 			vector<vector<string> > cluster_bins;
 		
 			// Gather up bins in this cluster
-			for (unsigned int k = 0; k < (*thp2).ann_array.size(); k++) {
-				if ((*thp2).member[k] == j) {
+			for (unsigned int k = 0; k < (*thp2).ann_array->size(); k++) {
+				if ((*thp2).member[k] == (unsigned int)j) {
 					cluster_bins.push_back((*thp).ann_array[k]);
 				}
 			}
