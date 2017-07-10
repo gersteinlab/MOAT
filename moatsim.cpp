@@ -111,7 +111,7 @@ struct th_package {
 	map<unsigned int,int> *empty;
 };
 
-(void *)*thread_function (th_package *arg);
+void *thread_function (void *arg);
 
 // Refactorization of the code that turns a chromosome string into an integer
 int chr2int (string chr_str) {
@@ -1058,7 +1058,7 @@ int main (int argc, char* argv[]) {
 	return 0;
 }
 			
-(void *)*thread_function (void *thp) {
+void *thread_function (void *thp) {
 		
 		for (int j = (*thp).start; j <= (*thp).end; j++) {
 		
