@@ -973,7 +973,7 @@ int main (int argc, char* argv[]) {
 		
 			// Create new th_package
 			struct th_package *thp;
-			// thp = malloc(sizeof(struct th_package));
+			thp = malloc(sizeof(struct th_package));
 			(*thp).trimer = trimer;
 			(*thp).start = 0;
 			(*thp).end = 0;
