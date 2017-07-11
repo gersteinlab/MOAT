@@ -975,7 +975,7 @@ int main (int argc, char* argv[]) {
 		
 			// Create new th_package
 			struct th_package *thp;
-			thp = malloc(sizeof(struct th_package));
+			thp = (th_package *)malloc(sizeof(struct th_package));
 			(*thp).start = 0;
 			(*thp).end = 0;
 			(*thp).ann_array = &ann_array;
@@ -1389,13 +1389,13 @@ void thread_function (th_package *thp) {
 				vec.push_back(string(end_cstr));
 				
 				// I/O step
-				sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
+				sort((*permuted_set).begin(), (*permuted_set).end(), cmpIntervals);
 				
 				string temp_outfile = outdir + "/" + string((*thp).pfile);
 				FILE *outfile_ptr = fopen(temp_outfile.c_str(), "w");
 				
-				for (unsigned int k = 0; k < permuted_set.size(); k++) {
-					fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+				for (unsigned int k = 0; k < (*permuted_set).size(); k++) {
+					fprintf(outfile_ptr, "%s\t%s\t%s\n", (*permuted_set)[k][0].c_str(), (*permuted_set)[k][1].c_str(), (*permuted_set)[k][2].c_str());
 				}
 				fclose(outfile_ptr);
 				
