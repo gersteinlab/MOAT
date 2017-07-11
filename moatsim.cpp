@@ -1066,7 +1066,7 @@ int main (int argc, char* argv[]) {
 			// Temporary permutation filenames
 			char temp[STRSIZE];
 			sprintf(temp, "%d", j+1);
-			string pfile = "tpermutation_" + string(temp) + ".txt";
+			string pfile = outdir + "/tpermutation_" + string(temp) + ".txt";
 			command += pfile + " ";
 		}
 		command += "> " + outfile;
@@ -1075,7 +1075,7 @@ int main (int argc, char* argv[]) {
 			// Temporary permutation filenames
 			char temp[STRSIZE];
 			sprintf(temp, "%d", j+1);
-			string pfile = "tpermutation_" + string(temp) + ".txt";
+			string pfile = outdir + "/tpermutation_" + string(temp) + ".txt";
 			string rmcom = "rm " + pfile;
 			system(rmcom.c_str());
 		}
@@ -1392,16 +1392,7 @@ void thread_function (th_package *thp) {
 				sprintf(end_cstr, "%d", new_epoch); // 1-based
 				vec.push_back(string(end_cstr));
 				
-				// I/O step
-				sort((*permuted_set).begin(), (*permuted_set).end(), cmpIntervals);
-				
-				string temp_outfile = outdir + "/" + string((*thp).pfile);
-				FILE *outfile_ptr = fopen(temp_outfile.c_str(), "w");
-				
-				for (unsigned int k = 0; k < (*permuted_set).size(); k++) {
-					fprintf(outfile_ptr, "%s\t%s\t%s\n", (*permuted_set)[k][0].c_str(), (*permuted_set)[k][1].c_str(), (*permuted_set)[k][2].c_str());
-				}
-				fclose(outfile_ptr);
+				(*permuted_set).push_back(vec);
 				
 				// Mutex here
 // 				pthread_mutex_lock(&mutex1);
@@ -1431,7 +1422,16 @@ void thread_function (th_package *thp) {
 		
 			// last_chr = ann_array[j][0];
 		}
+		
+		// I/O step
+		sort((*permuted_set).begin(), (*permuted_set).end(), cmpIntervals);
+		
+		string temp_outfile = outdir + "/" + string((*thp).pfile);
+		FILE *outfile_ptr = fopen(temp_outfile.c_str(), "w");
+		
+		for (unsigned int k = 0; k < (*permuted_set).size(); k++) {
+			fprintf(outfile_ptr, "%s\t%s\t%s\n", (*permuted_set)[k][0].c_str(), (*permuted_set)[k][1].c_str(), (*permuted_set)[k][2].c_str());
+		}
+		fclose(outfile_ptr);
 		// return 0;
 }
-		
-		
