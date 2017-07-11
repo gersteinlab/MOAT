@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
@@ -13,7 +14,7 @@
 #include <stdexcept>
 #include <float.h>
 #include <limits.h>
-#include <pthread.h>
+#include <sys/wait.h>
 #include "variant_permutation_v3.h"
 
 using namespace std;
@@ -97,7 +98,7 @@ using namespace std;
 // 	return vec;
 // }
 
-pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+// pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
 struct th_package {
 	bool trimer;
@@ -110,9 +111,10 @@ struct th_package {
 	map<string,int> *hg19_coor;
 	vector<vector<string> > *permuted_set;
 	map<unsigned int,int> *empty;
+	char pfile[STRSIZE];
 };
 
-void *thread_function (void *arg);
+void thread_function (th_package *thp);
 
 // Refactorization of the code that turns a chromosome string into an integer
 int chr2int (string chr_str) {
@@ -958,8 +960,8 @@ int main (int argc, char* argv[]) {
 	srand(0);
 	
 	int num_threads = 30;
-	pthread_t th_array[num_threads];
-	int iret[num_threads];
+	pid_t th_pid[num_threads];
+	int status;
 	
 	for (int i = 0; i < num_permutations; i++) {
 		
@@ -973,8 +975,7 @@ int main (int argc, char* argv[]) {
 		
 			// Create new th_package
 			struct th_package *thp;
-			thp = (th_package *)malloc(sizeof(struct th_package));
-			(*thp).trimer = trimer;
+			thp = malloc(sizeof(struct th_package));
 			(*thp).start = 0;
 			(*thp).end = 0;
 			(*thp).ann_array = &ann_array;
@@ -984,6 +985,12 @@ int main (int argc, char* argv[]) {
 			(*thp).hg19_coor = &hg19_coor;
 			(*thp).permuted_set = &permuted_set;
 			(*thp).empty = &empty;
+			
+			// Temporary permutation filenames
+			char temp[STRSIZE];
+			sprintf(temp, "%d", j+1);
+			string pfile = "tpermutation_" + string(temp) + ".txt";
+			strcpy((*thp).pfile, pfile.c_str());
 		
 // 			int start;
 // 			int end;
@@ -997,52 +1004,89 @@ int main (int argc, char* argv[]) {
 					(*thp).end = ((mod*(thread_size+1))+((j-mod+1)*thread_size))-1;
 				}
 				// Pthread launch
-				iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) thp);
-				if (iret[j]) {
-	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
-	         exit(1);
-	     	}
+				if ((th_pid[j] = fork()) == 0) {
+					thread_function(thp);
+					return 0;
+				} else if (th_pid[j] < 0) { // Fork error
+					fprintf(stderr, "Error: Process fork did not succeed. Exiting.\n");
+					return 1;
+				}
+// 				iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) thp);
+// 				if (iret[j]) {
+// 	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
+// 	         exit(1);
+// 	     	}
 			} else {
 				(*thp).start = j;
 				(*thp).end = j;
 		
 				if (j < (int)numclust) {
 					// Pthread launch
-					iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) thp);
-					if (iret[j]) {
-	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
-	         exit(1);
-	     		}
+					if ((th_pid[j] = fork()) == 0) {
+						thread_function(thp);
+						return 0;
+					} else if (th_pid[j] < 0) { // Fork error
+						fprintf(stderr, "Error: Process fork did not succeed. Exiting.\n");
+						return 1;
+					}
+// 					iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) thp);
+// 					if (iret[j]) {
+// 	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
+// 	         exit(1);
+// 	     		}
 				}
 			}
 		}
 		
 		// Join threads, compiling results
-		for (int j = 0; j < num_threads; j++) {
-			if (thread_size > 0 || j < (int)numclust) {
-				pthread_join(th_array[j], NULL);
-			}
-		}
+ 		for (int j = 0; j < num_threads; j++) {
+ 			if (thread_size > 0 || j < (int)numclust) {
+ 				pid_t result = wait(&status);
+ 				if (result == -1) {
+ 					fprintf(stderr, "Error: Running child process encountered an error. Exiting.\n");
+ 					return 1;
+ 				}
+ 			}
+ 		}
 		
-		sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
+		// sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
 		
-		// Print results to output
-		// Open new output file
+		// Reorganize output
+		
+		// New output file
 		char perm_num[STRSIZE];
 		sprintf(perm_num, "%d", i+1);
 		
 		string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
-		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
-		// vector<int> this_permutation_counts;
-		
-		for (unsigned int k = 0; k < permuted_set.size(); k++) {
-			
-			// DEBUG
-			// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
-		
-			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+		string command = "cat ";
+		for (int j = 0; j < num_threads; j++) {
+			// Temporary permutation filenames
+			char temp[STRSIZE];
+			sprintf(temp, "%d", j+1);
+			string pfile = "tpermutation_" + string(temp) + ".txt";
+			command += pfile + " ";
 		}
-		fclose(outfile_ptr);
+		command += "> " + outfile;
+		system(command.c_str());
+		for (int j = 0; j < num_threads; j++) {
+			// Temporary permutation filenames
+			char temp[STRSIZE];
+			sprintf(temp, "%d", j+1);
+			string pfile = "tpermutation_" + string(temp) + ".txt";
+			string rmcom = "rm " + pfile;
+			system(rmcom.c_str());
+		}
+// 		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
+// 		// vector<int> this_permutation_counts;
+// 		
+// 		for (unsigned int k = 0; k < permuted_set.size(); k++) {
+// 			
+// 			// DEBUG
+// 			// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
+// 		
+// 			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+// 		}
+// 		fclose(outfile_ptr);
 	}
 	
 	// DEBUG
@@ -1060,7 +1104,7 @@ int main (int argc, char* argv[]) {
 	return 0;
 }
 			
-void *thread_function (void *thp) {
+void thread_function (th_package *thp) {
 
 		struct th_package *thp2 = (th_package *)thp;
 		bool trimer = (*thp2).trimer;
@@ -1344,10 +1388,21 @@ void *thread_function (void *thp) {
 				sprintf(end_cstr, "%d", new_epoch); // 1-based
 				vec.push_back(string(end_cstr));
 				
+				// I/O step
+				sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
+				
+				string temp_outfile = outdir + "/" + string((*thp).pfile);
+				FILE *outfile_ptr = fopen(temp_outfile.c_str(), "w");
+				
+				for (unsigned int k = 0; k < permuted_set.size(); k++) {
+					fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+				}
+				fclose(outfile_ptr);
+				
 				// Mutex here
-				pthread_mutex_lock(&mutex1);
-				(*permuted_set).push_back(vec);
-				pthread_mutex_unlock(&mutex1);
+// 				pthread_mutex_lock(&mutex1);
+// 				(*permuted_set).push_back(vec);
+// 				pthread_mutex_unlock(&mutex1);
 			}
 			
 			// Read in the basepairs we need for this region
@@ -1372,7 +1427,7 @@ void *thread_function (void *thp) {
 		
 			// last_chr = ann_array[j][0];
 		}
-		return NULL;
+		// return 0;
 }
 		
 		

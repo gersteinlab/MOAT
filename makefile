@@ -32,7 +32,7 @@ moat_v_pval: p_value_emp.cpp variant_permutation_v3.h variant_permutation_v3.cpp
 	g++ -Wall -o p_value_emp p_value_emp.cpp variant_permutation_v3.cpp
 
 moatsim: moatsim.cpp variant_permutation_v3.h variant_permutation_v3.cpp
-	g++ -lpthread -Wall -o moatsim moatsim.cpp variant_permutation_v3.cpp
+	g++ -Wall -o moatsim moatsim.cpp variant_permutation_v3.cpp
 
 moatsim_parallel: moatsim_mpi.cpp variant_permutation_v3.h variant_permutation_v3.cpp
 ifndef MPI
