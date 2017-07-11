@@ -112,6 +112,7 @@ struct th_package {
 	vector<vector<string> > *permuted_set;
 	map<unsigned int,int> *empty;
 	char pfile[STRSIZE];
+	char outdir[STRSIZE];
 };
 
 void thread_function (th_package *thp);
@@ -976,6 +977,7 @@ int main (int argc, char* argv[]) {
 			// Create new th_package
 			struct th_package *thp;
 			thp = (th_package *)malloc(sizeof(struct th_package));
+			(*thp).trimer = trimer;
 			(*thp).start = 0;
 			(*thp).end = 0;
 			(*thp).ann_array = &ann_array;
@@ -985,6 +987,7 @@ int main (int argc, char* argv[]) {
 			(*thp).hg19_coor = &hg19_coor;
 			(*thp).permuted_set = &permuted_set;
 			(*thp).empty = &empty;
+			strcpy((*thp).outdir, outdir.c_str());
 			
 			// Temporary permutation filenames
 			char temp[STRSIZE];
@@ -1115,6 +1118,7 @@ void thread_function (th_package *thp) {
 		vector<string> *chr_nt = (*thp2).chr_nt;
 		map<string,int> *hg19_coor = (*thp2).hg19_coor;
 		vector<vector<string> > *permuted_set = (*thp2).permuted_set;
+		string outdir = string((*thp2).outdir);
 		
 		for (int j = (*thp2).start; j <= (*thp2).end; j++) {
 		
