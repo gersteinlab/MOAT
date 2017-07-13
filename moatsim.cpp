@@ -960,7 +960,7 @@ int main (int argc, char* argv[]) {
 	/* Permutate variant locations */
 	srand(0);
 	
-	int num_threads = 40;
+	int num_threads = 35;
 	pid_t th_pid[num_threads];
 	int status;
 	
