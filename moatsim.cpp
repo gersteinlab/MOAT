@@ -1000,8 +1000,10 @@ int main (int argc, char* argv[]) {
 			(*thp).permuted_set = &permuted_set;
 			(*thp).empty = &empty;
 			strcpy((*thp).outdir, outdir.c_str());
-			(*thp).fd0 = fd0[j];
-			(*thp).fd1 = fd1[j];
+			(*thp).fd0[0] = fd0[j][0];
+			(*thp).fd0[1] = fd0[j][1];
+			(*thp).fd1[0] = fd1[j][0];
+			(*thp).fd1[1] = fd1[j][1];
 			
 			// Temporary permutation filenames
 			char temp[STRSIZE];
