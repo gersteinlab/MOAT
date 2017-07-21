@@ -1097,7 +1097,7 @@ int main (int argc, char* argv[]) {
 				chromosome_str += string(inbuf);
 			}
 			chromosomes.push_back(chromosome_str);
-			close(fd0[j]);
+			// close(fd0[j][0]);
 			
 			// Repeat for end coordinates
 			if ((nbytes = read(fd1[j][0], inbuf, sizeof(inbuf))) < 0) {
@@ -1145,7 +1145,8 @@ int main (int argc, char* argv[]) {
 			string chr_str = chromosomes[j];
 			string end_str = ends[j];
 			
-			while ((unsigned int pos = chr_str.find_first_of(",")) != string::npos) {
+			unsigned int pos;
+			while ((pos = chr_str.find_first_of(",")) != string::npos) {
 				string new_chr = chr_str.substring(0,pos);
 				chr_str = chr_str.substring(pos+1);
 				
@@ -1241,8 +1242,12 @@ void thread_function (th_package *thp) {
 		map<string,int> *hg19_coor = (*thp2).hg19_coor;
 		vector<vector<string> > *permuted_set = (*thp2).permuted_set;
 		string outdir = string((*thp2).outdir);
-		int fd0[2] = (*thp2).fd0;
-		int fd1[2] = (*thp2).fd1;
+		int fd0[2];
+		fd0[0] = (*thp2).fd0[0];
+		fd0[1] = (*thp2).fd0[1];
+		int fd1[2];
+		fd1[0] = (*thp2).fd1[0];
+		fd1[1] = (*thp2).fd1[1];
 		
 		// Child closes unused pipe fd's
 		close(fd0[0]);
@@ -1576,10 +1581,10 @@ void thread_function (th_package *thp) {
 		
 		// Chromosome string transmission
 		while (chromosome_str.size() > STRSIZE-1) {
-			string transmit = chromosome_str.substring(0,STRSIZE-1);
-			transmit_cstr = transmit.c_str();
+			string transmit = chromosome_str.substr(0,STRSIZE-1);
+			char transmit_cstr[STRSIZE] = transmit.c_str();
 			write(fd0[1], transmit_cstr, strlen(transmit_cstr)+1);
-			chromosome_str = chromosome_str.substring(STRSIZE-1);
+			chromosome_str = chromosome_str.substr(STRSIZE-1);
 		}
 		close(fd0[1]);
 		
@@ -1592,7 +1597,7 @@ void thread_function (th_package *thp) {
 		// End coor string transmission
 		while (end_str.size() > STRSIZE-1) {
 			string transmit = end_str.substring(0,STRSIZE-1);
-			transmit_cstr = transmit.c_str();
+			char transmit_cstr[STRSIZE] = transmit.c_str();
 			write(fd1[1], transmit_cstr, strlen(transmit_cstr)+1);
 			end_str = end_str.substring(STRSIZE-1);
 		}
