@@ -1582,7 +1582,7 @@ void thread_function (th_package *thp) {
 		// Chromosome string transmission
 		while (chromosome_str.size() > STRSIZE-1) {
 			string transmit = chromosome_str.substr(0,STRSIZE-1);
-			char *transmit_cstr = transmit.c_str();
+			const char *transmit_cstr = transmit.c_str();
 			write(fd0[1], transmit_cstr, strlen(transmit_cstr)+1);
 			chromosome_str = chromosome_str.substr(STRSIZE-1);
 		}
@@ -1597,7 +1597,7 @@ void thread_function (th_package *thp) {
 		// End coor string transmission
 		while (end_str.size() > STRSIZE-1) {
 			string transmit = end_str.substr(0,STRSIZE-1);
-			char *transmit_cstr = transmit.c_str();
+			const char *transmit_cstr = transmit.c_str();
 			write(fd1[1], transmit_cstr, strlen(transmit_cstr)+1);
 			end_str = end_str.substr(STRSIZE-1);
 		}
