@@ -1081,6 +1081,8 @@ int main (int argc, char* argv[]) {
 			
 			if ((nbytes = read(fd0[j][0], inbuf, sizeof(inbuf))) < 0) {
 				// Error state
+				fprintf(stderr, "Error reading from child process %d. Exiting.\n", j);
+				return 1;
 			}
 			
 			// Set up the number of characters
@@ -1092,8 +1094,10 @@ int main (int argc, char* argv[]) {
 			while (rchar < nchar) {
 				if ((nbytes = read(fd0[j][0], inbuf, sizeof(inbuf))) < 0) {
 					// Error state
+					fprintf(stderr, "Error reading from child process %d. Exiting.\n", j);
+					return 1;
 				}
-				rchar += nbytes/sizeof(char);
+				rchar += (nbytes-1)/sizeof(char);
 				chromosome_str += string(inbuf);
 			}
 			chromosomes.push_back(chromosome_str);
@@ -1102,6 +1106,8 @@ int main (int argc, char* argv[]) {
 			// Repeat for end coordinates
 			if ((nbytes = read(fd1[j][0], inbuf, sizeof(inbuf))) < 0) {
 				// Error state
+				fprintf(stderr, "Error reading from child process %d. Exiting.\n", j);
+				return 1;
 			}
 			
 			// Set up the number of characters
@@ -1113,8 +1119,10 @@ int main (int argc, char* argv[]) {
 			while (rchar < nchar) {
 				if ((nbytes = read(fd1[j][0], inbuf, sizeof(inbuf))) < 0) {
 					// Error state
+					fprintf(stderr, "Error reading from child process %d. Exiting.\n", j);
+					return 1;
 				}
-				rchar += nbytes/sizeof(char);
+				rchar += (nbytes-1)/sizeof(char);
 				end_str += string(inbuf);
 			}
 			ends.push_back(end_str);
