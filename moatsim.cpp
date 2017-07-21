@@ -113,6 +113,8 @@ struct th_package {
 	map<unsigned int,int> *empty;
 	char pfile[STRSIZE];
 	char outdir[STRSIZE];
+	int fd0[2];
+	int fd1[2];
 };
 
 void thread_function (th_package *thp);
@@ -964,6 +966,13 @@ int main (int argc, char* argv[]) {
 	pid_t th_pid[num_threads];
 	int status;
 	
+	// File descriptors for pipes
+	// fd0 for transmitting chromosomes
+	// fd1 for transmitting end coordinates
+	int fd0[num_threads][2];
+	int fd1[num_threads][2];
+	int nbytes;
+	
 	for (int i = 0; i < num_permutations; i++) {
 		
 		vector<vector<string> > permuted_set;
@@ -973,6 +982,9 @@ int main (int argc, char* argv[]) {
 		
 		// Create threads
 		for (int j = 0; j < num_threads; j++) {
+		
+			pipe(fd0[j]);
+			pipe(fd1[j]);
 		
 			// Create new th_package
 			struct th_package *thp;
@@ -988,6 +1000,8 @@ int main (int argc, char* argv[]) {
 			(*thp).permuted_set = &permuted_set;
 			(*thp).empty = &empty;
 			strcpy((*thp).outdir, outdir.c_str());
+			(*thp).fd0 = fd0[j];
+			(*thp).fd1 = fd1[j];
 			
 			// Temporary permutation filenames
 			char temp[STRSIZE];
@@ -1014,6 +1028,10 @@ int main (int argc, char* argv[]) {
 					fprintf(stderr, "Error: Process fork did not succeed. Exiting.\n");
 					return 1;
 				}
+				
+				// Parent closes unused pipe fd's
+				close(fd0[j][1]);
+				close(fd1[j][1]);
 // 				iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) thp);
 // 				if (iret[j]) {
 // 	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
@@ -1032,6 +1050,10 @@ int main (int argc, char* argv[]) {
 						fprintf(stderr, "Error: Process fork did not succeed. Exiting.\n");
 						return 1;
 					}
+					
+					// Parent closes unused pipe fd's
+					close(fd0[j][1]);
+					close(fd1[j][1]);
 // 					iret[j] = pthread_create(&th_array[j], NULL, thread_function, (void *) thp);
 // 					if (iret[j]) {
 // 	         fprintf(stderr,"Error: - pthread creation returned: %d\n",iret[j]);
@@ -1039,6 +1061,65 @@ int main (int argc, char* argv[]) {
 // 	     		}
 				}
 			}
+		}
+		
+		// Read data from child processes
+		char inbuf[STRSIZE];
+		
+		// Raw strings from the other side
+		vector<string> chromosomes;
+		vector<string> ends;
+		
+		for (int j = 0; j < num_threads; j++) {
+			// int first = 1;
+			
+			// Raw strings from the other side
+			string chromosome_str = "";
+			string end_str = "";
+			
+			if ((nbytes = read(fd0[j][0], inbuf, sizeof(inbuf))) < 0) {
+				// Error state
+			}
+			
+			// Set up the number of characters
+			int nchar = atoi(inbuf);
+			
+			// Characters read so far
+			int rchar = 0;
+			
+			while (rchar < nchar) {
+				if ((nbytes = read(fd0[j][0], inbuf, sizeof(inbuf))) < 0) {
+					// Error state
+				}
+				rchar += nbytes/sizeof(char);
+				chromosome_str += string(inbuf);
+			}
+			chromosomes.push_back(chromosome_str);
+			close(fd0[j]);
+			
+			// Repeat for end coordinates
+			if ((nbytes = read(fd1[j][0], inbuf, sizeof(inbuf))) < 0) {
+				// Error state
+			}
+			
+			// Set up the number of characters
+			nchar = atoi(inbuf);
+			
+			// Characters read so far
+			rchar = 0;
+			
+			while (rchar < nchar) {
+				if ((nbytes = read(fd1[j][0], inbuf, sizeof(inbuf))) < 0) {
+					// Error state
+				}
+				rchar += nbytes/sizeof(char);
+				end_str += string(inbuf);
+			}
+			ends.push_back(end_str);
+			
+			// Close pipes that we're done with
+			close(fd0[j][0]);
+			close(fd1[j][0]);
 		}
 		
 		// Join threads, compiling results
@@ -1055,41 +1136,80 @@ int main (int argc, char* argv[]) {
 		// sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
 		
 		// Reorganize output
+		vector<vector<string> > final_set;
+		
+		for (int j = 0; j < num_threads; j++) {
+		
+			string chr_str = chromosomes[j];
+			string end_str = ends[j];
+			
+			while ((unsigned int pos = chr_str.find_first_of(",")) != string::npos) {
+				string new_chr = chr_str.substring(0,pos);
+				chr_str = chr_str.substring(pos+1);
+				
+				unsigned int pos2 = end_str.find_first_of(",");
+				string new_end  = end_str.substring(0,pos2);
+				end_str = end_str.substring(pos2+1);
+				
+				// Derive the start coordinate
+				int new_start = atoi(new_end.c_str())-1;
+				char new_start_cstr[STRSIZE];
+				sprintf(new_start_cstr, "%d", new_start);
+				
+				vector<string> temp;
+				temp.push_back(new_chr);
+				temp.push_back(string(new_start_cstr));
+				temp.push_back(new_end);
+				final_set.push_back(temp);
+			}
+			
+			// Fencepost: last variant for final_set
+			// Derive new start coordinate
+			int new_start = atoi(end_str.c_str())-1;
+			char new_start_cstr[STRSIZE];
+			sprintf(new_start_cstr, "%d", new_start);
+			
+			vector<string> temp;
+			temp.push_back(chr_str);
+			temp.push_back(string(new_start_cstr));
+			temp.push_back(end_str);
+			final_set.push_back(temp);
+		}
 		
 		// New output file
 		char perm_num[STRSIZE];
 		sprintf(perm_num, "%d", i+1);
 		
 		string outfile = outdir + "/permutation_" + string(perm_num) + ".txt";
-		string command = "cat ";
-		for (int j = 0; j < num_threads; j++) {
-			// Temporary permutation filenames
-			char temp[STRSIZE];
-			sprintf(temp, "%d", j+1);
-			string pfile = outdir + "/tpermutation_" + string(temp) + ".txt";
-			command += pfile + " ";
-		}
-		command += "> " + outfile;
-		system(command.c_str());
-		for (int j = 0; j < num_threads; j++) {
-			// Temporary permutation filenames
-			char temp[STRSIZE];
-			sprintf(temp, "%d", j+1);
-			string pfile = outdir + "/tpermutation_" + string(temp) + ".txt";
-			string rmcom = "rm " + pfile;
-			system(rmcom.c_str());
-		}
-// 		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
-// 		// vector<int> this_permutation_counts;
-// 		
-// 		for (unsigned int k = 0; k < permuted_set.size(); k++) {
-// 			
-// 			// DEBUG
-// 			// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
-// 		
-// 			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+// 		string command = "cat ";
+// 		for (int j = 0; j < num_threads; j++) {
+// 			// Temporary permutation filenames
+// 			char temp[STRSIZE];
+// 			sprintf(temp, "%d", j+1);
+// 			string pfile = outdir + "/tpermutation_" + string(temp) + ".txt";
+// 			command += pfile + " ";
 // 		}
-// 		fclose(outfile_ptr);
+// 		command += "> " + outfile;
+// 		system(command.c_str());
+// 		for (int j = 0; j < num_threads; j++) {
+// 			// Temporary permutation filenames
+// 			char temp[STRSIZE];
+// 			sprintf(temp, "%d", j+1);
+// 			string pfile = outdir + "/tpermutation_" + string(temp) + ".txt";
+// 			string rmcom = "rm " + pfile;
+// 			system(rmcom.c_str());
+// 		}
+		FILE *outfile_ptr = fopen(outfile.c_str(), "w");
+		// vector<int> this_permutation_counts;
+		
+		for (unsigned int k = 0; k < final_set.size(); k++) {
+			
+			// DEBUG
+			// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
+		
+			fprintf(outfile_ptr, "%s\t%s\t%s\n", final_set[k][0].c_str(), final_set[k][1].c_str(), final_set[k][2].c_str());
+		}
+		fclose(outfile_ptr);
 	}
 	
 	// DEBUG
@@ -1119,6 +1239,12 @@ void thread_function (th_package *thp) {
 		map<string,int> *hg19_coor = (*thp2).hg19_coor;
 		vector<vector<string> > *permuted_set = (*thp2).permuted_set;
 		string outdir = string((*thp2).outdir);
+		int fd0[2] = (*thp2).fd0;
+		int fd1[2] = (*thp2).fd1;
+		
+		// Child closes unused pipe fd's
+		close(fd0[0]);
+		close(fd1[0]);
 		
 		for (int j = (*thp2).start; j <= (*thp2).end; j++) {
 		
@@ -1426,12 +1552,58 @@ void thread_function (th_package *thp) {
 		// I/O step
 		sort((*permuted_set).begin(), (*permuted_set).end(), cmpIntervals);
 		
-		string temp_outfile = outdir + "/" + string((*thp).pfile);
-		FILE *outfile_ptr = fopen(temp_outfile.c_str(), "w");
+		// NEW CODE
+		// Prepare the strings for transmission
+		string chromosome_str = "";
+		string end_str = "";
 		
 		for (unsigned int k = 0; k < (*permuted_set).size(); k++) {
-			fprintf(outfile_ptr, "%s\t%s\t%s\n", (*permuted_set)[k][0].c_str(), (*permuted_set)[k][1].c_str(), (*permuted_set)[k][2].c_str());
+			chromosome_str += (*permuted_set)[k][0];
+			end_str += (*permuted_set)[k][2];
+			if (k < (*permuted_set).size()-1) {
+				chromosome_str += ",";
+				end_str += ",";
+			}
 		}
-		fclose(outfile_ptr);
+		
+		// First transmit the number of bytes
+		unsigned int clen = chromosome_str.size()*sizeof(char);
+		char clen_cstr[STRSIZE];
+		sprintf(clen_cstr, "%d", clen);
+		write(fd0[1], clen_cstr, strlen(clen_cstr)+1);
+		
+		// Chromosome string transmission
+		while (chromosome_str.size() > STRSIZE-1) {
+			string transmit = chromosome_str.substring(0,STRSIZE-1);
+			transmit_cstr = transmit.c_str();
+			write(fd0[1], transmit_cstr, strlen(transmit_cstr)+1);
+			chromosome_str = chromosome_str.substring(STRSIZE-1);
+		}
+		close(fd0[1]);
+		
+		// Number of bytes
+		unsigned int elen = end_str.size()*sizeof(char);
+		char elen_cstr[STRSIZE];
+		sprintf(elen_cstr, "%d", elen);
+		write(fd1[1], elen_cstr, strlen(elen_cstr)+1);
+		
+		// End coor string transmission
+		while (end_str.size() > STRSIZE-1) {
+			string transmit = end_str.substring(0,STRSIZE-1);
+			transmit_cstr = transmit.c_str();
+			write(fd1[1], transmit_cstr, strlen(transmit_cstr)+1);
+			end_str = end_str.substring(STRSIZE-1);
+		}
+		close(fd1[1]);
+		
+		// OLD CODE
+		
+// 		string temp_outfile = outdir + "/" + string((*thp).pfile);
+// 		FILE *outfile_ptr = fopen(temp_outfile.c_str(), "w");
+// 		
+// 		for (unsigned int k = 0; k < (*permuted_set).size(); k++) {
+// 			fprintf(outfile_ptr, "%s\t%s\t%s\n", (*permuted_set)[k][0].c_str(), (*permuted_set)[k][1].c_str(), (*permuted_set)[k][2].c_str());
+// 		}
+// 		fclose(outfile_ptr);
 		// return 0;
 }
