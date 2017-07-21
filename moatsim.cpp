@@ -1147,12 +1147,12 @@ int main (int argc, char* argv[]) {
 			
 			unsigned int pos;
 			while ((pos = chr_str.find_first_of(",")) != string::npos) {
-				string new_chr = chr_str.substring(0,pos);
-				chr_str = chr_str.substring(pos+1);
+				string new_chr = chr_str.substr(0,pos);
+				chr_str = chr_str.substr(pos+1);
 				
 				unsigned int pos2 = end_str.find_first_of(",");
-				string new_end  = end_str.substring(0,pos2);
-				end_str = end_str.substring(pos2+1);
+				string new_end  = end_str.substr(0,pos2);
+				end_str = end_str.substr(pos2+1);
 				
 				// Derive the start coordinate
 				int new_start = atoi(new_end.c_str())-1;
@@ -1582,7 +1582,7 @@ void thread_function (th_package *thp) {
 		// Chromosome string transmission
 		while (chromosome_str.size() > STRSIZE-1) {
 			string transmit = chromosome_str.substr(0,STRSIZE-1);
-			char transmit_cstr[STRSIZE] = transmit.c_str();
+			char *transmit_cstr = transmit.c_str();
 			write(fd0[1], transmit_cstr, strlen(transmit_cstr)+1);
 			chromosome_str = chromosome_str.substr(STRSIZE-1);
 		}
@@ -1596,10 +1596,10 @@ void thread_function (th_package *thp) {
 		
 		// End coor string transmission
 		while (end_str.size() > STRSIZE-1) {
-			string transmit = end_str.substring(0,STRSIZE-1);
-			char transmit_cstr[STRSIZE] = transmit.c_str();
+			string transmit = end_str.substr(0,STRSIZE-1);
+			char *transmit_cstr = transmit.c_str();
 			write(fd1[1], transmit_cstr, strlen(transmit_cstr)+1);
-			end_str = end_str.substring(STRSIZE-1);
+			end_str = end_str.substr(STRSIZE-1);
 		}
 		close(fd1[1]);
 		
