@@ -324,6 +324,9 @@ int main (int argc, char* argv[]) {
 	
 	/* User-supplied arguments */
 	
+	// Number of processes
+	int num_threads;
+	
 	// Is the trinucleotide preservation option enabled?
 	bool trimer;
 	
@@ -354,29 +357,31 @@ int main (int argc, char* argv[]) {
 	// Covariate signal files in bigWig format
 	vector<string> covar_files;
 	
-	if (argc < 10) {
-		fprintf(stderr, "Usage: moatsim [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+	if (argc < 11) {
+		fprintf(stderr, "Usage: moatsim [# processes] [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 		return 1;
 	} else {
 	
-		if (argv[1][0] == 'y') {
+		num_threads = atoi(argv[1]);
+	
+		if (argv[2][0] == 'y') {
 			trimer = true;
-		} else if (argv[1][0] == 'n') {
+		} else if (argv[2][0] == 'n') {
 			trimer = false;
 		} else {
 			fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
 			return 1;
 		}
 	
-		num_permutations = atoi(argv[2]);
-		window_radius = atoi(argv[3]);
-		min_width = atoi(argv[4]);
-		prohibited_file = string(argv[5]);
-		fasta_dir = string(argv[6]);
-		vfile = string(argv[7]);
-		outdir = string(argv[8]);
+		num_permutations = atoi(argv[3]);
+		window_radius = atoi(argv[4]);
+		min_width = atoi(argv[5]);
+		prohibited_file = string(argv[6]);
+		fasta_dir = string(argv[7]);
+		vfile = string(argv[8]);
+		outdir = string(argv[9]);
 		
-		for (int i = 9; i < argc; i++) {
+		for (int i = 10; i < argc; i++) {
 			covar_files.push_back(string(argv[i]));
 		}
 	}
@@ -960,7 +965,7 @@ int main (int argc, char* argv[]) {
 	/* Permutate variant locations */
 	srand(0);
 	
-	int num_threads = 35;
+	// int num_threads = 35;
 	pid_t th_pid[num_threads];
 	int status;
 	
