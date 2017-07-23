@@ -1217,7 +1217,7 @@ void thread_function (th_package *thp) {
 // 					ss << chr_nt[cur_var_end-1];
 // 					ss << chr_nt[cur_var_end];
 // 					ss >> cur_nt;
-					pair<char,char> placeholder = ((*var_array)[m][3][0], (*var_array)[m][4][0]);
+					pair<char,char> placeholder ((*var_array)[m][3][0], (*var_array)[m][4][0]);
 					
 					pair<int,pair<char,char> > variant (this_epoch, placeholder);
 					obs_var_pos.push_back(variant);
