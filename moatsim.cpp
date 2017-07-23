@@ -432,7 +432,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	/* Data structures for the starting data */
-	// Variant array, contains variants of the format vector(chr, start, end)
+	// Variant array, contains variants of the format vector(chr, start, end, ref, alt)
 	vector<vector<string> > var_array;
 	
 	// Annotation array, contains annotations of the format vector(chr, start, end)
@@ -449,7 +449,7 @@ int main (int argc, char* argv[]) {
 	unsigned int numclust = 100;
 	
 	// Bring variant file data into memory
-	// Save the first 3 columns, ignore the rest if there are any
+	// Save the first 5 columns, ignore the rest if there are any
 	char linebuf[STRSIZE];
 	FILE *vfile_ptr = fopen(vfile.c_str(), "r");
 	while (fgets(linebuf, STRSIZE, vfile_ptr) != NULL) {
@@ -458,9 +458,9 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 		// printf("%s\n", line.c_str());
 		
-		// Extract chromosome, start, and end from line (first 3 columns)
+		// Extract chromosome, start, end, ref and alt from line (first 5 columns)
 		vector<string> vec;
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 5; i++) {
 			size_t ws_index = line.find_first_of("\t\n");
 			string in = line.substr(0, ws_index);
 			vec.push_back(in);
@@ -1155,7 +1155,7 @@ void thread_function (th_package *thp) {
 			// Epoch coordinates are 1-based
 			// Also includes the trinucleotide context, so we only need to make one pass
 			// on the reference genome
-			vector<pair<int,string> > obs_var_pos;
+			vector<pair<int,pair<char,char> > > obs_var_pos;
 			
 			// This keeps track of the number of nucleotides in previously observed
 			// cluster bins so that we can calculate accurate epoch coordinates
@@ -1217,9 +1217,9 @@ void thread_function (th_package *thp) {
 // 					ss << chr_nt[cur_var_end-1];
 // 					ss << chr_nt[cur_var_end];
 // 					ss >> cur_nt;
-					string placeholder = "";
+					pair<char,char> placeholder = ((*var_array)[m][3][0], (*var_array)[m][4][0]);
 					
-					pair<int,string> variant (this_epoch, placeholder);
+					pair<int,pair<char,char> > variant (this_epoch, placeholder);
 					obs_var_pos.push_back(variant);
 				}
 					
@@ -1363,6 +1363,12 @@ void thread_function (th_package *thp) {
 							pos2.push_back(pos[l]);
 						}
 					}
+					
+					// If no positions are available, skip
+					if (pos2.size() == 0) {
+						continue;
+					}
+					
 					// Pick new position
 					int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 					new_epoch = pos2[new_index];
@@ -1396,6 +1402,11 @@ void thread_function (th_package *thp) {
 				char end_cstr[STRSIZE];
 				sprintf(end_cstr, "%d", new_epoch); // 1-based
 				vec.push_back(string(end_cstr));
+				
+				string ref = string(1,obs_var_pos[k].second.first);
+				string alt = string(1,obs_var_pos[k].second.second);
+				vec.push_back(ref);
+				vec.push_back(alt);
 				
 				(*permuted_set).push_back(vec);
 				
@@ -1435,7 +1446,7 @@ void thread_function (th_package *thp) {
 		FILE *outfile_ptr = fopen(temp_outfile.c_str(), "w");
 		
 		for (unsigned int k = 0; k < (*permuted_set).size(); k++) {
-			fprintf(outfile_ptr, "%s\t%s\t%s\n", (*permuted_set)[k][0].c_str(), (*permuted_set)[k][1].c_str(), (*permuted_set)[k][2].c_str());
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%s\n", (*permuted_set)[k][0].c_str(), (*permuted_set)[k][1].c_str(), (*permuted_set)[k][2].c_str(), (*permuted_set)[k][3].c_str(), (*permuted_set)[k][4].c_str());
 		}
 		fclose(outfile_ptr);
 		// return 0;
