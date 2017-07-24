@@ -459,7 +459,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		/* Data structures for the starting data */
-		// Variant array, contains variants of the format vector(chr, start, end)
+		// Variant array, contains variants of the format vector(chr, start, end, ref, alt)
 		vector<vector<string> > var_array;
 	
 		// Annotation array, contains annotations of the format vector(chr, start, end)
@@ -476,7 +476,7 @@ int main (int argc, char* argv[]) {
 		unsigned int numclust = 100;
 	
 		// Bring variant file data into memory
-		// Save the first 3 columns, ignore the rest if there are any
+		// Save the first 5 columns, ignore the rest if there are any
 		char linebuf[STRSIZE];
 		FILE *vfile_ptr = fopen(vfile.c_str(), "r");
 		while (fgets(linebuf, STRSIZE, vfile_ptr) != NULL) {
@@ -485,9 +485,9 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			// printf("%s\n", line.c_str());
 		
-			// Extract chromosome, start, and end from line (first 3 columns)
+			// Extract chromosome, start, end, ref and alt from line (first 5 columns)
 			vector<string> vec;
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 5; i++) {
 				size_t ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
 				vec.push_back(in);
@@ -942,14 +942,18 @@ int main (int argc, char* argv[]) {
 		
 		// Package the variant data for the child
 		int *var_coor = (int *)malloc(2*var_array_size*sizeof(int));
+		char *var_alleles = (char *)malloc(2*var_array_size*sizeof(char));
 		for (int k = 0; k < var_array_size; k++) {
 			var_coor[2*k] = chr2int(var_array[k][0]);
 			var_coor[2*k+1] = atoi(var_array[k][2].c_str());
+			var_alleles[2*k] = var_array[k][3][0];
+			var_alleles[2*k+1] = var_array[k][4][0];
 		}
 		
 		// Transmit variant data
 		for (int i = 1; i < mpi_size; i++) {
 			MPI_Send(var_coor, 2*var_array_size, MPI_INT, i, 12, MPI_COMM_WORLD);
+			MPI_Send(var_alleles, 2*var_array_size, MPI_CHAR, i, 20, MPI_COMM_WORLD);
 		}
 		
 		// Free dynamic memory allocations
@@ -1031,7 +1035,9 @@ int main (int argc, char* argv[]) {
 				
 				if (permuted_var_coor_size > 0) {
 					int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
+					char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
 					MPI_Recv(permuted_var_coor, permuted_var_coor_size, MPI_INT, source, 7, MPI_COMM_WORLD, &status);
+					MPI_Recv(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, source, 21, MPI_COMM_WORLD, &status);
 				
 					for (int j = 0; j < permuted_var_coor_size/2; j++) {
 						string this_chr = int2chr(permuted_var_coor[2*j]);
@@ -1041,15 +1047,21 @@ int main (int argc, char* argv[]) {
 					
 						char end_str[STRSIZE];
 						sprintf(end_str, "%d", permuted_var_coor[2*j+1]);
+						
+						string ref = string(1,permuted_var_alleles[2*j]);
+						string alt = string(1,permuted_var_alleles[2*j+1]);
 					
 						vector<string> vec;
 						vec.push_back(this_chr);
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
+						vec.push_back(ref);
+						vec.push_back(alt);
 						permuted_set.push_back(vec);
 					}
 
 					free(permuted_var_coor);
+					free(permuted_var_alleles);
 				}
 				counter++;
 			}
@@ -1079,7 +1091,7 @@ int main (int argc, char* argv[]) {
 				// DEBUG
 				// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
 	
-				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+				fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str());
 			}
 			fclose(outfile_ptr);
 		}
@@ -1122,6 +1134,9 @@ int main (int argc, char* argv[]) {
 		int *var_coor = (int *)malloc(varcount*sizeof(int));
 		MPI_Recv(var_coor, varcount, MPI_INT, 0, 12, MPI_COMM_WORLD, &status);
 		
+		char *var_alleles = (char *)malloc(varcount*sizeof(char));
+		MPI_Recv(var_alleles, varcount, MPI_CHAR, 0, 20, MPI_COMM_WORLD, &status);
+		
 		// Translate into expected data structure
 		vector<vector<string> > var_array;
 		for (int i = 0; i < varcount/2; i++) {
@@ -1139,9 +1154,15 @@ int main (int argc, char* argv[]) {
 			sprintf(cur_var_end_cstr, "%d", cur_var_end_num);
 			temp.push_back(string(cur_var_end_cstr));
 			
+			string ref = string(1,var_alleles[2*i]);
+			string alt = string(1,var_alleles[2*i+1]);
+			temp.push_back(ref);
+			temp.push_back(alt);
+			
 			var_array.push_back(temp);
 		}
 		free(var_coor);
+		free(var_alleles);
 		
 		// DEBUG
 // 		for (unsigned int i = 0; i < var_array.size(); i++) {
@@ -1229,7 +1250,7 @@ int main (int argc, char* argv[]) {
 				// Epoch coordinates are 1-based
 				// Also includes the trinucleotide context, so we only need to make one pass
 				// on the reference genome
-				vector<pair<int,string> > obs_var_pos;
+				vector<pair<int,pair<char,char> > > obs_var_pos;
 			
 				// This keeps track of the number of nucleotides in previously observed
 				// cluster bins so that we can calculate accurate epoch coordinates
@@ -1302,7 +1323,7 @@ int main (int argc, char* argv[]) {
 	// 					ss << chr_nt[cur_var_end-1];
 	// 					ss << chr_nt[cur_var_end];
 	// 					ss >> cur_nt;
-						string placeholder = "";
+						pair<char,char> placeholder (var_array[m][3][0], var_array[m][4][0]);
 					
 						pair<int,string> variant (this_epoch, placeholder);
 						obs_var_pos.push_back(variant);
@@ -1459,6 +1480,11 @@ int main (int argc, char* argv[]) {
 					
 						// DEBUG
 						// printf("Available positions: %d\n", (int)pos2.size());
+						
+						// If no positions are available, skip
+						if (pos2.size() == 0) {
+							continue;
+						}
 					
 						// Pick new position
 						int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
@@ -1493,6 +1519,11 @@ int main (int argc, char* argv[]) {
 					char end_cstr[STRSIZE];
 					sprintf(end_cstr, "%d", new_epoch); // 1-based
 					vec.push_back(string(end_cstr));
+					
+					string ref = string(1,obs_var_pos[k].second.first);
+					string alt = string(1,obs_var_pos[k].second.second);
+					vec.push_back(ref);
+					vec.push_back(alt);
 				
 					permuted_set.push_back(vec);
 				}
@@ -1512,15 +1543,20 @@ int main (int argc, char* argv[]) {
 			// Proceed if nonzero size
 			if (permuted_var_coor_size > 0) {
 				int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
+				char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
 		
 				for (unsigned int i = 0; i < permuted_set.size(); i++) {
 					permuted_var_coor[2*i] = chr2int(permuted_set[i][0]);
 					permuted_var_coor[2*i+1] = atoi(permuted_set[i][2].c_str());
+					permuted_var_alleles[2*i] = permuted_set[i][3][0];
+					permuted_var_alleles[2*i+1] = permuted_set[i][4][0];
 				}
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
+				MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
 			
 				free(permuted_var_coor);
+				free(permuted_var_alleles);
 			}
 			
 			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
