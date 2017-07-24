@@ -1325,7 +1325,7 @@ int main (int argc, char* argv[]) {
 	// 					ss >> cur_nt;
 						pair<char,char> placeholder (var_array[m][3][0], var_array[m][4][0]);
 					
-						pair<int,string> variant (this_epoch, placeholder);
+						pair<int,pair<char,char> > variant (this_epoch, placeholder);
 						obs_var_pos.push_back(variant);
 					}
 					
