@@ -18,7 +18,7 @@
 
 using namespace std;
 
-#define STRSIZE 256
+#define STRSIZE 512
 
 // The notable difference with the v2 is that this code places random bins anywhere
 // in the genome
