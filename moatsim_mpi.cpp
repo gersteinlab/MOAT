@@ -1090,7 +1090,7 @@ int main (int argc, char* argv[]) {
 
 					free(permuted_var_coor);
 					free(permuted_var_alleles);
-					free(var_id);
+					free((char *)var_id);
 				}
 				counter++;
 			}
@@ -1617,7 +1617,7 @@ int main (int argc, char* argv[]) {
 			
 				free(permuted_var_coor);
 				free(permuted_var_alleles);
-				free(var_id);
+				free((char *)var_id);
 			}
 			
 			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
