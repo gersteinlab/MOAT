@@ -956,12 +956,13 @@ int main (int argc, char* argv[]) {
 		}
 		
 		const char *var_id = package_str.c_str();
+		int package_str_length = (int)package_str.size();
 		
 		// Transmit variant data
 		for (int i = 1; i < mpi_size; i++) {
 			MPI_Send(var_coor, 2*var_array_size, MPI_INT, i, 12, MPI_COMM_WORLD);
 			MPI_Send(var_alleles, 2*var_array_size, MPI_CHAR, i, 20, MPI_COMM_WORLD);
-			MPI_Send(var_id, package_str.size(), MPI_CHAR, i, 22, MPI_COMM_WORLD);
+			MPI_Send(var_id, package_str_length, MPI_CHAR, i, 22, MPI_COMM_WORLD);
 		}
 		
 		// Free dynamic memory allocations
@@ -1610,10 +1611,11 @@ int main (int argc, char* argv[]) {
 				}
 				
 				const char *var_id = package_str.c_str();
+				int package_str_length = (int)package_str.size();
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
 				MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
-				MPI_Send(var_id, package_str.size(), MPI_CHAR, 0, 23, MPI_COMM_WORLD);
+				MPI_Send(var_id, package_str_length, MPI_CHAR, 0, 23, MPI_COMM_WORLD);
 			
 				free(permuted_var_coor);
 				free(permuted_var_alleles);
