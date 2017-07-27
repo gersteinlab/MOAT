@@ -1322,6 +1322,8 @@ int main (int argc, char* argv[]) {
 						}
 					}
 				}
+				
+				vector<int> temp_id_array;
 			
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 			
@@ -1346,8 +1348,6 @@ int main (int argc, char* argv[]) {
 	// 				if (var_subset_count == 0) {
 	// 					continue;
 	// 				}
-					
-					vector<int> temp_id_array;
 					
 					// Populate obs_var_pos
 					for (unsigned int m = range.first; m < range.second; m++) {
