@@ -955,7 +955,7 @@ int main (int argc, char* argv[]) {
 			}
 		}
 		
-		char *var_id = package_str.c_str();
+		const char *var_id = package_str.c_str();
 		
 		// Transmit variant data
 		for (int i = 1; i < mpi_size; i++) {
@@ -1053,7 +1053,7 @@ int main (int argc, char* argv[]) {
 					MPI_Probe(source, 23, MPI_COMM_WORLD, &status);
 					MPI_Get_count(&status, MPI_INT, &id_size);
 					char *var_id = (char *)malloc(id_size*sizeof(char));
-					MPI_Recv(var_id, id_size, MPI_CHAR, source, 23, MPI_COMM_WORLD);
+					MPI_Recv(var_id, id_size, MPI_CHAR, source, 23, MPI_COMM_WORLD, &status);
 					
 					string var_id_package = string(var_id);
 				
@@ -1170,7 +1170,7 @@ int main (int argc, char* argv[]) {
 		MPI_Probe(0, 22, MPI_COMM_WORLD, &status);
 		MPI_Get_count(&status, MPI_INT, &id_size);
 		char *var_id = (char *)malloc(id_size*sizeof(char));
-		MPI_Recv(var_id, id_size, MPI_CHAR, 0, 22, MPI_COMM_WORLD);
+		MPI_Recv(var_id, id_size, MPI_CHAR, 0, 22, MPI_COMM_WORLD, &status);
 		
 		string var_id_package = string(var_id);
 		
@@ -1609,7 +1609,7 @@ int main (int argc, char* argv[]) {
 					}
 				}
 				
-				char *var_id = package_str.c_str();
+				const char *var_id = package_str.c_str();
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
 				MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
