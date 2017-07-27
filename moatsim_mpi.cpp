@@ -967,7 +967,7 @@ int main (int argc, char* argv[]) {
 		// Free dynamic memory allocations
 		free(var_coor);
 		free(var_alleles);
-		free(var_id);
+		free((char *)var_id);
 	
 		/* Permutate variant locations */
 		srand(0);
