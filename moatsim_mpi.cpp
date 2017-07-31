@@ -347,6 +347,9 @@ int main (int argc, char* argv[]) {
 	
 		/* User-supplied arguments */
 		
+		// Restrict permutation to the same chromosome
+		bool same_chr;
+		
 		// Is the 3mer/5mer preservation option enabled? (0/3/5)
 		int trimer;
 	
@@ -378,32 +381,43 @@ int main (int argc, char* argv[]) {
 		vector<string> covar_files;
 	
 		if (argc < 10) {
-			fprintf(stderr, "Usage: moatsim_mpi [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+			fprintf(stderr, "Usage: moatsim_mpi [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
 		
-			if (argv[1][0] == '5') {
+			if (argv[1][0] == 'y') {
+				same_chr = true;
+			} else if (argv[1][0] == 'n') {
+				same_chr = false;
+			} else {
+				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
+				MPI_Abort(MPI_COMM_WORLD, 1);
+				return 1;
+			}
+
+		
+			if (argv[2][0] == '5') {
 				trimer = 5;
-			} else if (argv[1][0] == '3') {
+			} else if (argv[2][0] == '3') {
 				trimer = 3;
-			} else if (argv[1][0] == '0') {
+			} else if (argv[2][0] == '0') {
 				trimer = 0;
 			} else {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[1][0]);
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[2][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
-			num_permutations = atoi(argv[2]);
-			window_radius = atoi(argv[3]);
-			min_width = atoi(argv[4]);
-			prohibited_file = string(argv[5]);
-			fasta_dir = string(argv[6]);
-			vfile = string(argv[7]);
-			outdir = string(argv[8]);
+			num_permutations = atoi(argv[3]);
+			window_radius = atoi(argv[4]);
+			min_width = atoi(argv[5]);
+			prohibited_file = string(argv[6]);
+			fasta_dir = string(argv[7]);
+			vfile = string(argv[8]);
+			outdir = string(argv[9]);
 		
-			for (int i = 9; i < argc; i++) {
+			for (int i = 10; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
 			}
 		}
@@ -931,6 +945,46 @@ int main (int argc, char* argv[]) {
 	// 	}
 	// 	fclose(testfile_ptr);
 	// 	return 0;
+	
+	if (same_chr) {
+		// Split up the clusters by chromosome
+		unsigned int cluster_assign = 0;
+		vector<unsigned int> member_prime (covar_features.size(),0);
+		map<unsigned int,int> empty_prime;
+		for (unsigned int j = 0; j < numclust; j++) {
+
+			if (empty[j]) {
+				continue;
+			}
+		
+			vector<vector<string> > cluster_bins;
+			vector<unsigned int> indices;
+		
+			// Gather up bins in this cluster
+			for (unsigned int k = 0; k < ann_array.size(); k++) {
+				if (member[k] == j) {
+					cluster_bins.push_back(ann_array[k]);
+					indices.push_back(k);
+				}
+			}
+		
+			bool is_empty = true;
+			for (int i = 1; i <= 25; i++) {
+				string chr = int2chr(i);
+				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
+					if (cluster_bins[k][0] == chr) {
+						member_prime[indices[k]] = cluster_assign;
+						is_empty = false;
+					}
+				}
+				if (!is_empty) {
+					cluster_assign++;
+				}
+			}			
+		}
+		member = member_prime;
+		empty = empty_prime;
+	}
 	
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
