@@ -688,15 +688,15 @@ int main (int argc, char* argv[]) {
 	
 		// DEBUG - check the genome bins
 		// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
-		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/bins.txt";
-		FILE *debug_ptr = fopen(debug_file.c_str(), "w");
-		for (unsigned int i = 0; i < ann_array.size(); i++) {
-			// printf("%d\n", i);
-			fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
-		}
-		fclose(debug_ptr);
-		// Early termination
-		return 0;
+// 		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/bins.txt";
+// 		FILE *debug_ptr = fopen(debug_file.c_str(), "w");
+// 		for (unsigned int i = 0; i < ann_array.size(); i++) {
+// 			// printf("%d\n", i);
+// 			fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
+// 		}
+// 		fclose(debug_ptr);
+// 		// Early termination
+// 		return 0;
 	
 		/* Begin building covariate signal profiles of the genome bins */
 		// First step is to produce a file of genome bins
@@ -984,16 +984,17 @@ int main (int argc, char* argv[]) {
 		}
 		member = member_prime;
 		empty = empty_prime;
+		numclust = cluster_assign+1;
 	}
 	
 	// DEBUG
-	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
-	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
-	for (unsigned int i = 0; i < member.size(); i++) {
-		fprintf(cluster_ptr, "%d\n", member[i]);
-	}
-	fclose(cluster_ptr);
-	return 0;
+// 	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
+// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+// 	for (unsigned int i = 0; i < member.size(); i++) {
+// 		fprintf(cluster_ptr, "%d\n", member[i]);
+// 	}
+// 	fclose(cluster_ptr);
+// 	return 0;
 	
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
