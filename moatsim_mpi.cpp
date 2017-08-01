@@ -918,25 +918,25 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 		// printf("Breakpoint 2\n");
 		// return 0;
-	// 	string centroids_file = "/net/gerstein/ll426/code/moat/centroids.txt";
-	// 	FILE *centroids_ptr = fopen(centroids_file.c_str(), "w");
-	// 	for (unsigned int i = 0; i < centroids.size(); i++) {
-	// 		if (empty[i]) {
-	// 			continue;
-	// 		}
-	// 		for (unsigned int j = 0; j < centroids[i].size(); j++) {
-	// 			fprintf(centroids_ptr, "%f\n", centroids[i][j]);
-	// 		}
-	// 	}
-	// 	fclose(centroids_ptr);
-	// 	
-	// 	string cluster_file = "/net/gerstein/ll426/code/moat/clusters.txt";
-	// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
-	// 	for (unsigned int i = 0; i < member.size(); i++) {
-	// 		fprintf(cluster_ptr, "%d\n", member[i]);
-	// 	}
-	// 	fclose(cluster_ptr);
-	// 	return 0;
+		string centroids_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/centroids.txt";
+		FILE *centroids_ptr = fopen(centroids_file.c_str(), "w");
+		for (unsigned int i = 0; i < centroids.size(); i++) {
+			if (empty[i]) {
+				continue;
+			}
+			for (unsigned int j = 0; j < centroids[i].size(); j++) {
+				fprintf(centroids_ptr, "%f\n", centroids[i][j]);
+			}
+		}
+		fclose(centroids_ptr);
+		
+		string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
+		FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+		for (unsigned int i = 0; i < member.size(); i++) {
+			fprintf(cluster_ptr, "%d\n", member[i]);
+		}
+		fclose(cluster_ptr);
+		return 0;
 	
 		// DEBUG - check ann_array values after prohibited region subtraction
 	// 	FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
