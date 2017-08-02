@@ -1786,8 +1786,8 @@ int main (int argc, char* argv[]) {
 									pos2[pos2.size()-1] = pos2[new_index];
 									pos2[new_index] = temp;
 									printf("BP a\n"); // DEBUG
-									pos2.erase(pos2.end());
-									printf("BP b\n");
+									pos2.erase(pos2.end()-1);
+									printf("BP b\n"); // DEBUG
 									if (pos2.size() == 0) {
 										break;
 									}
