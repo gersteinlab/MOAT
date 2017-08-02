@@ -347,11 +347,8 @@ int main (int argc, char* argv[]) {
 	
 		/* User-supplied arguments */
 		
-		// Restrict permutation to the same chromosome
-		bool same_chr;
-		
-		// Is the 3mer/5mer preservation option enabled? (0/3/5)
-		int trimer;
+		// Is the trinucleotide preservation option enabled?
+		bool trimer;
 	
 		// Number of permuted variant datasets to create
 		int num_permutations;
@@ -381,7 +378,7 @@ int main (int argc, char* argv[]) {
 		vector<string> covar_files;
 	
 		if (argc < 10) {
-			fprintf(stderr, "Usage: moatsim_mpi [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+			fprintf(stderr, "Usage: moatsim_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
@@ -397,27 +394,25 @@ int main (int argc, char* argv[]) {
 			}
 
 		
-			if (argv[2][0] == '5') {
-				trimer = 5;
-			} else if (argv[2][0] == '3') {
-				trimer = 3;
-			} else if (argv[2][0] == '0') {
-				trimer = 0;
+			if (argv[1][0] == 'y') {
+				trimer = true;
+			} else if (argv[1][0] == 'n') {
+				trimer = false;
 			} else {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[2][0]);
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
-			num_permutations = atoi(argv[3]);
-			window_radius = atoi(argv[4]);
-			min_width = atoi(argv[5]);
-			prohibited_file = string(argv[6]);
-			fasta_dir = string(argv[7]);
-			vfile = string(argv[8]);
-			outdir = string(argv[9]);
+			num_permutations = atoi(argv[2]);
+			window_radius = atoi(argv[3]);
+			min_width = atoi(argv[4]);
+			prohibited_file = string(argv[5]);
+			fasta_dir = string(argv[6]);
+			vfile = string(argv[7]);
+			outdir = string(argv[8]);
 		
-			for (int i = 10; i < argc; i++) {
+			for (int i = 9; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
 			}
 		}
@@ -946,47 +941,6 @@ int main (int argc, char* argv[]) {
 	// 	fclose(testfile_ptr);
 	// 	return 0;
 	
-	if (same_chr) {
-		// Split up the clusters by chromosome
-		unsigned int cluster_assign = 0;
-		vector<unsigned int> member_prime (covar_features.size(),0);
-		map<unsigned int,int> empty_prime;
-		for (unsigned int j = 0; j < numclust; j++) {
-
-			if (empty[j]) {
-				continue;
-			}
-		
-			vector<vector<string> > cluster_bins;
-			vector<unsigned int> indices;
-		
-			// Gather up bins in this cluster
-			for (unsigned int k = 0; k < ann_array.size(); k++) {
-				if (member[k] == j) {
-					cluster_bins.push_back(ann_array[k]);
-					indices.push_back(k);
-				}
-			}
-		
-			bool is_empty = true;
-			for (int i = 1; i <= 25; i++) {
-				string chr = int2chr(i);
-				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
-					if (cluster_bins[k][0] == chr) {
-						member_prime[indices[k]] = cluster_assign;
-						is_empty = false;
-					}
-				}
-				if (!is_empty) {
-					cluster_assign++;
-				}
-			}			
-		}
-		member = member_prime;
-		empty = empty_prime;
-		numclust = cluster_assign+1;
-	}
-	
 	// DEBUG
 // 	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
 // 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
@@ -997,7 +951,7 @@ int main (int argc, char* argv[]) {
 // 	return 0;
 	
 		// First, give the trimer boolean flag to all children
-		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 	
 		// Second, give the FASTA directory location to all children (tag = 10)
 		int strlen = fasta_dir.size() + 1;
@@ -1217,7 +1171,7 @@ int main (int argc, char* argv[]) {
 		
 		// Receive the trimer boolean flag
 		int trimer;
-		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 		
 		// Receive directory with wg FASTA files
 		char fasta_dir_cstr[STRSIZE];
@@ -1381,7 +1335,7 @@ int main (int argc, char* argv[]) {
 				
 				map<string,vector<int> > local_nt;
 			
-				if (trimer == 3) {
+				if (trimer) {
 					// Gather up the locations of all confidently mapped trinucleotides (capital letters)
 					// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
 					// map<string,vector<int> > local_nt;
@@ -1403,37 +1357,6 @@ int main (int argc, char* argv[]) {
 								ss >> cur_nt;
 								vector<int> temp;
 								local_nt[cur_nt] = temp;
-							}
-						}
-					}
-				} else if (trimer == 5) {
-					// Gather up the locations of all confidently mapped pentanucleotides (capital letters)
-					// Coordinates are for the third letter in the pentanucleotide (where the actual mutation is located)
-					// map<string,vector<int> > local_nt;
-			
-					vector<char> base; // No treble
-					base.push_back('A');
-					base.push_back('G');
-					base.push_back('C');
-					base.push_back('T');
-			
-					for (int z = 0; z < 4; z++) {
-						for (int y = 0; y < 4; y++) {
-							for (int x = 0; x < 4; x++) {
-								for (int a = 0; a < 4; a++) {
-									for (int b = 0; b < 4; b++) {
-										stringstream ss;
-										string cur_nt;
-										ss << base[z];
-										ss << base[y];
-										ss << base[x];
-										ss << base[a];
-										ss << base[b];
-										ss >> cur_nt;
-										vector<int> temp;
-										local_nt[cur_nt] = temp;
-									}
-								}
 							}
 						}
 					}
@@ -1510,7 +1433,7 @@ int main (int argc, char* argv[]) {
 				
 				// BEGIN 3MER CODE
 			
-				if (trimer == 3 || trimer == 5) {
+				if (trimer) {
 					// Reset epoch_nt
 					epoch_nt = 0;
 			
@@ -1560,13 +1483,13 @@ int main (int argc, char* argv[]) {
 						// Set limits for indexing
 						int lower_bound;
 						int upper_bound;
-						if (trimer == 3) {
+						// if (trimer == 3) {
 							lower_bound = 1;
 							upper_bound = hg19_coor[cur_chr];
-						} else if (trimer == 5) {
-							lower_bound = 2;
-							upper_bound = hg19_coor[cur_chr]-1;
-						}
+// 						} else if (trimer == 5) {
+// 							lower_bound = 2;
+// 							upper_bound = hg19_coor[cur_chr]-1;
+// 						}
 			
 						for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
 			
@@ -1575,11 +1498,11 @@ int main (int argc, char* argv[]) {
 								continue;
 							}
 				
-							char nt0, nt4;
-							if (trimer == 5) {
-								nt0 = toupper(chr_nt[k-3]); // 0-based index
-								nt4 = toupper(chr_nt[k+1]); // 0-based index
-							}
+// 							char nt0, nt4;
+// 							if (trimer == 5) {
+// 								nt0 = toupper(chr_nt[k-3]); // 0-based index
+// 								nt4 = toupper(chr_nt[k+1]); // 0-based index
+// 							}
 							char nt1 = toupper(chr_nt[k-2]); // 0-based index
 							char nt2 = toupper(chr_nt[k-1]); // 0-based index
 							char nt3 = toupper(chr_nt[k]); // 0-based index
@@ -1595,15 +1518,15 @@ int main (int argc, char* argv[]) {
 				
 							stringstream ss;
 							string cur_nt;
-							if (trimer == 5) {
-								ss << nt0;
-							}
+// 							if (trimer == 5) {
+// 								ss << nt0;
+// 							}
 							ss << nt1;
 							ss << nt2;
 							ss << nt3;
-							if (trimer == 5) {
-								ss << nt4;
-							}
+// 							if (trimer == 5) {
+// 								ss << nt4;
+// 							}
 							ss >> cur_nt;
 				
 							int this_epoch = k - rand_range_start;
@@ -1616,7 +1539,7 @@ int main (int argc, char* argv[]) {
 					}
 				}
 				
-				// END 3MER/5MER CODE
+				// END 3MER CODE
 			
 				// Variant processing loop
 				for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
@@ -1631,26 +1554,26 @@ int main (int argc, char* argv[]) {
 					int new_epoch;
 				
 					if (trimer) {
-						char cur_nt0, cur_nt4;
-						if (trimer == 5) {
-							cur_nt0 = toupper(concat_nt[obs_var_pos[k].first-3]);
-							cur_nt4 = toupper(concat_nt[obs_var_pos[k].first+1]);
-						}
+// 						char cur_nt0, cur_nt4;
+// 						if (trimer == 5) {
+// 							cur_nt0 = toupper(concat_nt[obs_var_pos[k].first-3]);
+// 							cur_nt4 = toupper(concat_nt[obs_var_pos[k].first+1]);
+// 						}
 						char cur_nt1 = toupper(concat_nt[obs_var_pos[k].first-2]);
 						char cur_nt2 = toupper(concat_nt[obs_var_pos[k].first-1]); // 0-based index
 						char cur_nt3 = toupper(concat_nt[obs_var_pos[k].first]);
 				
 						stringstream ss;
 						string cur_nt;
-						if (trimer == 5) {
-							ss << cur_nt0;
-						}
+// 						if (trimer == 5) {
+// 							ss << cur_nt0;
+// 						}
 						ss << cur_nt1;
 						ss << cur_nt2;
 						ss << cur_nt3;
-						if (trimer == 5) {
-							ss << cur_nt4;
-						}
+// 						if (trimer == 5) {
+// 							ss << cur_nt4;
+// 						}
 						ss >> cur_nt;
 				
 						// If there is an N in this string, we skip this variant
