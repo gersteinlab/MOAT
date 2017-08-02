@@ -1703,9 +1703,9 @@ int main (int argc, char* argv[]) {
 				for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
 			
 					// DEBUG
-					// printf("Inner loop\n");
+					printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-					// printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
+					printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
 			
 					// string cur_nt = obs_var_pos[k].second;
 					
