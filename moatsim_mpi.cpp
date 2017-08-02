@@ -276,11 +276,11 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 		retval.push_back(cluster_bins[0][0]);
 		
 		char start_cstr[STRSIZE];
-		sprintf(start_cstr, "%d", epoch-1);
+		sprintf(start_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch-1);
 		retval.push_back(string(start_cstr));
 
 		char end_cstr[STRSIZE];
-		sprintf(end_cstr, "%d", epoch);
+		sprintf(end_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch);
 		retval.push_back(string(end_cstr));
 		
 // 		retval.push_back(cluster_bins[0][1]);
@@ -309,11 +309,11 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 				retval.push_back(cluster_bins[0][0]);
 				
 				char start_cstr[STRSIZE];
-				sprintf(start_cstr, "%d", epoch-1);
+				sprintf(start_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch-1);
 				retval.push_back(string(start_cstr));
 	
 				char end_cstr[STRSIZE];
-				sprintf(end_cstr, "%d", epoch);
+				sprintf(end_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch);
 				retval.push_back(string(end_cstr));
 				
 // 				retval.push_back(cluster_bins[0][1]);
@@ -326,7 +326,7 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 		} else { // This is it
 			vector<string> retval;
 			retval.push_back(cluster_bins[pivot+1][0]);
-			int end = epoch - sum_nt[pivot];
+			int end = atoi(cluster_bins[pivot+1][1].c_str()) + (epoch - sum_nt[pivot]);
 			
 			char start_cstr[STRSIZE];
 			sprintf(start_cstr, "%d", end-1);
