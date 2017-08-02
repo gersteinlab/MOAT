@@ -1785,7 +1785,7 @@ int main (int argc, char* argv[]) {
 									int temp = pos2[pos2.size()-1];
 									pos2[pos2.size()-1] = pos2[new_index];
 									pos2[new_index] = temp;
-									pos2.erase(pos2.size()-1);
+									pos2.erase(pos2.end());
 									if (pos2.size() == 0) {
 										break;
 									}
