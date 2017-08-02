@@ -1772,12 +1772,12 @@ int main (int argc, char* argv[]) {
 							new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 							new_epoch = pos2[new_index];
 						
+							coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							// If new_epoch is, in genome coordinates, not within local_radius of
 							// the original, then rechoose
 							if (local_radius == -1) {
 								break;
 							} else {
-								coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
 									break;
 								} else {
@@ -1800,12 +1800,12 @@ int main (int argc, char* argv[]) {
 						while (1) {
 							new_epoch = (rand() % epoch_nt) + 1; // Selection in interval [1,epoch_nt]
 							
+							coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							// If new_epoch is, in genome coordinates, not within local_radius of
 							// the original, then rechoose
 							if (local_radius == -1) {
 								break;
 							} else {
-								coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
 									break;
 								}
