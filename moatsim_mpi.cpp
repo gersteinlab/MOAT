@@ -274,8 +274,17 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 		// Return the only one
 		vector<string> retval;
 		retval.push_back(cluster_bins[0][0]);
-		retval.push_back(cluster_bins[0][1]);
-		retval.push_back(cluster_bins[0][2]);
+		
+		char start_cstr[STRSIZE];
+		sprintf(start_cstr, "%d", epoch-1);
+		retval.push_back(string(start_cstr));
+
+		char end_cstr[STRSIZE];
+		sprintf(end_cstr, "%d", epoch);
+		retval.push_back(string(end_cstr));
+		
+// 		retval.push_back(cluster_bins[0][1]);
+// 		retval.push_back(cluster_bins[0][2]);
 		return retval;
 	} else if (sum_nt.size() == 2) {
 		pivot = 0;
@@ -298,8 +307,17 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 			if (pivot == 0) {
 				vector<string> retval;
 				retval.push_back(cluster_bins[0][0]);
-				retval.push_back(cluster_bins[0][1]);
-				retval.push_back(cluster_bins[0][2]);
+				
+				char start_cstr[STRSIZE];
+				sprintf(start_cstr, "%d", epoch-1);
+				retval.push_back(string(start_cstr));
+	
+				char end_cstr[STRSIZE];
+				sprintf(end_cstr, "%d", epoch);
+				retval.push_back(string(end_cstr));
+				
+// 				retval.push_back(cluster_bins[0][1]);
+// 				retval.push_back(cluster_bins[0][2]);
 				return retval;
 			}
 			pivot -= step;
@@ -308,8 +326,18 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 		} else { // This is it
 			vector<string> retval;
 			retval.push_back(cluster_bins[pivot+1][0]);
-			retval.push_back(cluster_bins[pivot+1][1]);
-			retval.push_back(cluster_bins[pivot+1][2]);
+			int end = epoch - sum_nt[pivot];
+			
+			char start_cstr[STRSIZE];
+			sprintf(start_cstr, "%d", end-1);
+			retval.push_back(string(start_cstr));
+	
+			char end_cstr[STRSIZE];
+			sprintf(end_cstr, "%d", end);
+			retval.push_back(string(end_cstr));
+			
+// 			retval.push_back(cluster_bins[pivot+1][1]);
+// 			retval.push_back(cluster_bins[pivot+1][2]);
 			return retval;
 		}
 	}
@@ -1703,7 +1731,7 @@ int main (int argc, char* argv[]) {
 				for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
 			
 					// DEBUG
-					printf("Inner loop\n");
+					// printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
 					// printf("Variant processing loop: iter: %d\n", (int)k);
 			
@@ -1775,7 +1803,7 @@ int main (int argc, char* argv[]) {
 							coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							
 							// DEBUG: check coor
-							printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
+							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
 							
 							// If new_epoch is, in genome coordinates, not within local_radius of
 							// the original, then rechoose
