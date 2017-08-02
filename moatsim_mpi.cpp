@@ -347,6 +347,11 @@ int main (int argc, char* argv[]) {
 	
 		/* User-supplied arguments */
 		
+		// Local context radius: How many nucleotides away are we allowed to move the
+		// variant?
+		// -1 to ignore this option
+		int local_radius;
+		
 		// Restrict permutation to the same chromosome
 		bool same_chr;
 		
@@ -380,44 +385,46 @@ int main (int argc, char* argv[]) {
 		// Covariate signal files in bigWig format
 		vector<string> covar_files;
 	
-		if (argc < 10) {
-			fprintf(stderr, "Usage: moatsim_mpi [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+		if (argc < 11) {
+			fprintf(stderr, "Usage: moatsim_mpi [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
 		
-			if (argv[1][0] == 'y') {
+			local_radius = atoi(argv[1]);
+		
+			if (argv[2][0] == 'y') {
 				same_chr = true;
-			} else if (argv[1][0] == 'n') {
+			} else if (argv[2][0] == 'n') {
 				same_chr = false;
 			} else {
-				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
+				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[2][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 
 		
-			if (argv[2][0] == '5') {
+			if (argv[3][0] == '5') {
 				trimer = 5;
-			} else if (argv[2][0] == '3') {
+			} else if (argv[3][0] == '3') {
 				trimer = 3;
-			} else if (argv[2][0] == '0') {
+			} else if (argv[3][0] == '0') {
 				trimer = 0;
 			} else {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[2][0]);
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[3][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
-			num_permutations = atoi(argv[3]);
-			window_radius = atoi(argv[4]);
-			min_width = atoi(argv[5]);
-			prohibited_file = string(argv[6]);
-			fasta_dir = string(argv[7]);
-			vfile = string(argv[8]);
-			outdir = string(argv[9]);
+			num_permutations = atoi(argv[4]);
+			window_radius = atoi(argv[5]);
+			min_width = atoi(argv[6]);
+			prohibited_file = string(argv[7]);
+			fasta_dir = string(argv[8]);
+			vfile = string(argv[9]);
+			outdir = string(argv[10]);
 		
-			for (int i = 10; i < argc; i++) {
+			for (int i = 11; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
 			}
 		}
