@@ -1705,7 +1705,7 @@ int main (int argc, char* argv[]) {
 					// DEBUG
 					printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-					printf("Variant processing loop: iter: %d\n", (int)k);
+					// printf("Variant processing loop: iter: %d\n", (int)k);
 			
 					// string cur_nt = obs_var_pos[k].second;
 					
@@ -1773,6 +1773,10 @@ int main (int argc, char* argv[]) {
 							new_epoch = pos2[new_index];
 						
 							coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
+							
+							// DEBUG: check coor
+							printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
+							
 							// If new_epoch is, in genome coordinates, not within local_radius of
 							// the original, then rechoose
 							if (local_radius == -1) {
@@ -1785,9 +1789,9 @@ int main (int argc, char* argv[]) {
 									int temp = pos2[pos2.size()-1];
 									pos2[pos2.size()-1] = pos2[new_index];
 									pos2[new_index] = temp;
-									printf("BP a\n"); // DEBUG
+									// printf("BP a\n"); // DEBUG
 									pos2.erase(pos2.end()-1);
-									printf("BP b\n"); // DEBUG
+									// printf("BP b\n"); // DEBUG
 									if (pos2.size() == 0) {
 										break;
 									}
