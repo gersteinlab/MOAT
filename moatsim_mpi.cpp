@@ -258,6 +258,66 @@ double euclidean(vector<double> &a, vector<double> &b) {
 	return sqrt(sum);
 }
 
+// Helper function that translates epoch coordinates into genome coordinates
+// Parameters:
+// epoch: The epoch coordinate to translate
+// sum_nt: The vector of cumulative nt sums across clusters from 0 to i
+// cluster_bins: The genome coordinates of the bins in this cluster
+// Return value: String vector of genome coordinates (chr, start, stop)
+vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string> > &cluster_bins) {
+	
+	unsigned int pivot;
+	unsigned int step;
+
+	// Special cases
+	if (sum_nt.size() == 1) {
+		// Return the only one
+		vector<string> retval;
+		retval.push_back(cluster_bins[0][0]);
+		retval.push_back(cluster_bins[0][1]);
+		retval.push_back(cluster_bins[0][2]);
+		return retval;
+	} else if (sum_nt.size() == 2) {
+		pivot = 0;
+		step = 1;
+	} else { // Size 3 and up
+		// Pick middle of the sum_nt to initialize
+		pivot = sum_nt.size()/2;
+		step = pivot;
+	}
+	
+	while (1) {
+		int left = sum_nt[pivot];
+		int right = sum_nt[pivot+1];
+		
+		if (step > 1) {
+			step = step/2;
+		}
+	
+		if (epoch < left) { // Below pivot case
+			if (pivot == 0) {
+				vector<string> retval;
+				retval.push_back(cluster_bins[0][0]);
+				retval.push_back(cluster_bins[0][1]);
+				retval.push_back(cluster_bins[0][2]);
+				return retval;
+			}
+			pivot -= step;
+		} else if (epoch >= right) { // Above pivot case
+			pivot += step;
+		} else { // This is it
+			vector<string> retval;
+			retval.push_back(cluster_bins[pivot+1][0]);
+			retval.push_back(cluster_bins[pivot+1][1]);
+			retval.push_back(cluster_bins[pivot+1][2]);
+			return retval;
+		}
+	}
+}
+
+// Helper function that translates genome coordinates into epoch coordinates
+// genome2epoch
+
 // Get the next FASTA file in the sequence
 // void newFastaFilehandle (FILE *fasta_ptr, string chr) {
 // 	if (fasta_ptr != NULL) {
@@ -1005,6 +1065,9 @@ int main (int argc, char* argv[]) {
 	
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		
+		// Now transmit the local radius number
+		MPI_Bcast(&local_radius, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	
 		// Second, give the FASTA directory location to all children (tag = 10)
 		int strlen = fasta_dir.size() + 1;
@@ -1226,6 +1289,10 @@ int main (int argc, char* argv[]) {
 		int trimer;
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		
+		// Receive local radius
+		int local_radius;
+		MPI_Bcast(&local_radius, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		
 		// Receive directory with wg FASTA files
 		char fasta_dir_cstr[STRSIZE];
 		int strlen;
@@ -1446,7 +1513,13 @@ int main (int argc, char* argv[]) {
 					}
 				}
 				
+				// Store the var_array indices of the variants that we're working with
+				// Used to join with extra columns in output step
 				vector<int> temp_id_array;
+				
+				// Cumulative sum vector of epoch nucleotides
+				// Each entry i contains the number of nucleotides seen in clusters [0:i] (0-based indexing)
+				vector<int> sum_nt;
 			
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 			
@@ -1485,9 +1558,9 @@ int main (int argc, char* argv[]) {
 	// 					ss << chr_nt[cur_var_end];
 	// 					ss >> cur_nt;
 						vector<string> placeholder;
-// 						placeholder.push_back(var_array[m][3]);
-// 						placeholder.push_back(var_array[m][4]);
-						// placeholder.push_back(var_array[m][5]);
+						placeholder.push_back(var_array[m][0]);
+						placeholder.push_back(var_array[m][1]);
+						placeholder.push_back(var_array[m][2]);
 					
 						pair<int,vector<string> > variant (this_epoch, placeholder);
 						obs_var_pos.push_back(variant);
@@ -1497,6 +1570,7 @@ int main (int argc, char* argv[]) {
 					}
 					
 					epoch_nt += (rand_range_end - rand_range_start);
+					sum_nt.push_back(epoch_nt);
 				}
 				
 				// DEBUG
@@ -1636,6 +1710,7 @@ int main (int argc, char* argv[]) {
 					// string cur_nt = obs_var_pos[k].second;
 					
 					int new_epoch;
+					vector<string> coor;
 				
 					if (trimer) {
 						char cur_nt0, cur_nt4;
@@ -1692,38 +1767,78 @@ int main (int argc, char* argv[]) {
 						}
 					
 						// Pick new position
-						int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
-						new_epoch = pos2[new_index];
+						int new_index;
+						while (1) {
+							new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+							new_epoch = pos2[new_index];
+						
+							// If new_epoch is, in genome coordinates, not within local_radius of
+							// the original, then rechoose
+							if (local_radius == -1) {
+								break;
+							} else {
+								coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
+								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
+									break;
+								} else {
+									// Erase the one that didn't work
+									int temp = pos2[pos2.size()-1];
+									pos2[pos2.size()-1] = pos2[new_index];
+									pos2[new_index] = temp;
+									pos2.erase(pos2.size()-1);
+									if (pos2.size() == 0) {
+										break;
+									}
+								}
+							}
+						}
+						// If no positions were left, skip
+						if (pos2.size() == 0) {
+							continue;
+						}
 					} else {
-						new_epoch = (rand() % epoch_nt) + 1; // Selection in interval [1,epoch_nt]
-					}
-				
-					string cluster_chr;
-				
-					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-						cluster_chr = cluster_bins[l][0];
-						int cluster_start = atoi(cluster_bins[l][1].c_str());
-						int cluster_end = atoi(cluster_bins[l][2].c_str());
-						int cluster_size = (cluster_end - cluster_start);
-					
-						if (new_epoch > cluster_size) {
-							new_epoch -= cluster_size;
-						} else {
-							new_epoch += cluster_start;
-							break;
+						while (1) {
+							new_epoch = (rand() % epoch_nt) + 1; // Selection in interval [1,epoch_nt]
+							
+							// If new_epoch is, in genome coordinates, not within local_radius of
+							// the original, then rechoose
+							if (local_radius == -1) {
+								break;
+							} else {
+								coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
+								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
+									break;
+								}
+							}
 						}
 					}
 				
+// 					string cluster_chr;
+// 				
+// 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+// 						cluster_chr = cluster_bins[l][0];
+// 						int cluster_start = atoi(cluster_bins[l][1].c_str());
+// 						int cluster_end = atoi(cluster_bins[l][2].c_str());
+// 						int cluster_size = (cluster_end - cluster_start);
+// 					
+// 						if (new_epoch > cluster_size) {
+// 							new_epoch -= cluster_size;
+// 						} else {
+// 							new_epoch += cluster_start;
+// 							break;
+// 						}
+// 					}
+				
 					vector<string> vec;
-					vec.push_back(cluster_chr);
+					vec.push_back(coor[0]);
 				
-					char start_cstr[STRSIZE];
-					sprintf(start_cstr, "%d", new_epoch-1); // 0-based
-					vec.push_back(string(start_cstr));
+// 					char start_cstr[STRSIZE];
+// 					sprintf(start_cstr, "%d", new_epoch-1); // 0-based
+					vec.push_back(coor[1]);
 				
-					char end_cstr[STRSIZE];
-					sprintf(end_cstr, "%d", new_epoch); // 1-based
-					vec.push_back(string(end_cstr));
+// 					char end_cstr[STRSIZE];
+// 					sprintf(end_cstr, "%d", new_epoch); // 1-based
+					vec.push_back(coor[2]);
 					
 // 					string ref = obs_var_pos[k].second[0];
 // 					string alt = obs_var_pos[k].second[1];
