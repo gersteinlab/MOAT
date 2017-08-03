@@ -346,15 +346,45 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 // Helper function to determine if an epoch coordinate is within the bounds of
 // the open_bins
 bool within_bounds (int epoch, vector<pair<int,int> > &open_bins) {
-	for (unsigned int i = 0; i < open_bins.size(); i++) {
-		while (epoch >= open_bins[i].first) {
-			if (epoch <= open_bins[i].second) {
-				return true;
-			}
+
+	unsigned int pivot;
+	unsigned int step;
+	
+	pivot = open_bins.size()/2;
+	step = pivot;
+	
+	while (1) {
+		int left = open_bins[pivot].first;
+		int right = open_bins[pivot].second;
+		
+		if (step > 1) {
+			step = step/2;
 		}
-		return false;
+		
+		if (epoch < left) { // Below pivot case
+			if (pivot == 0 || epoch > open_bins[pivot-1].second) {
+				return false;
+			}
+			pivot -= step;
+		} else if (epoch > right) { // Above pivot case
+			if (pivot == open_bins.size()-1 || epoch < open_bins[pivot+1].first) {
+				return false;
+			}
+			pivot += step;
+		} else { // This is it
+			return true;
+		}
 	}
-	return false;
+
+// 	for (unsigned int i = 0; i < open_bins.size(); i++) {
+// 		while (epoch >= open_bins[i].first) {
+// 			if (epoch <= open_bins[i].second) {
+// 				return true;
+// 			}
+// 		}
+// 		return false;
+// 	}
+// 	return false;
 }
 
 // Helper function that translates genome coordinates into epoch coordinates
