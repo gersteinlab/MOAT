@@ -1909,6 +1909,8 @@ int main (int argc, char* argv[]) {
 // 							break;
 // 						}
 // 					}
+
+					coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 				
 					vector<string> vec;
 					vec.push_back(coor[0]);
