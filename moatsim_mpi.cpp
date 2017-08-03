@@ -343,6 +343,20 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 	}
 }
 
+// Helper function to determine if an epoch coordinate is within the bounds of
+// the open_bins
+bool within_bounds (int epoch, vector<pair<int,int> > &open_bins) {
+	for (unsigned int i = 0; i < open_bins.size(); i++) {
+		while (epoch >= open_bins[i].first) {
+			if (epoch <= open_bins[i].second) {
+				return true;
+			}
+		}
+		return false;
+	}
+	return false;
+}
+
 // Helper function that translates genome coordinates into epoch coordinates
 // genome2epoch
 
@@ -1773,6 +1787,33 @@ int main (int argc, char* argv[]) {
 						// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
+						
+						// Begin cluster bin filtering
+						// Record the pairs of epoch coordinates we allow
+						vector<pair<int,int> > open_bins;
+						if (local_radius != -1) {
+							// Genome coordinates of the current variant
+							vector<string> g_coor = epoch2genome(obs_var_pos[k].first, sum_nt, cluster_bins);
+							for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+								string cluster_chr = cluster_bins[l][0];
+								int cluster_start = atoi(cluster_bins[l][1].c_str());
+								int cluster_end = atoi(cluster_bins[l][2].c_str());
+							
+								int start_dist = abs(cluster_start - atoi(g_coor[2].c_str()));
+								int end_dist = abs(cluster_end - atoi(g_coor[2].c_str()));
+							
+								if (g_coor[0] == cluster_chr && min(start_dist,end_dist) < local_radius) {
+									unsigned int lower_bound;
+									if (l == 0) {
+										lower_bound = 0;
+									} else {
+										lower_bound = sum_nt[l-1];
+									}
+									pair<int,int> bounds (lower_bound+1, sum_nt[l]);
+									open_bins.push_back(bounds);
+								}
+							}
+						}
 				
 						// If no positions are available, skip
 						if (pos.size()-1 == 0) {
@@ -1781,8 +1822,14 @@ int main (int argc, char* argv[]) {
 				
 						vector<int> pos2;
 						for (unsigned int l = 0; l < pos.size(); l++) {
-							if (pos[l] != obs_var_pos[k].first) {
-								pos2.push_back(pos[l]);
+							if (local_radius != -1) {
+								if (pos[l] != obs_var_pos[k].first && within_bounds(pos[l],open_bins)) {
+									pos2.push_back(pos[l]);
+								}
+							} else {
+								if (pos[l] != obs_var_pos[k].first) {
+									pos2.push_back(pos[l]);
+								}
 							}
 						}
 					
@@ -1796,55 +1843,55 @@ int main (int argc, char* argv[]) {
 					
 						// Pick new position
 						int new_index;
-						while (1) {
-							new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
-							new_epoch = pos2[new_index];
+// 						while (1) {
+						new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+						new_epoch = pos2[new_index];
 						
-							coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
+							// coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							
 							// DEBUG: check coor
 							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
 							
 							// If new_epoch is, in genome coordinates, not within local_radius of
 							// the original, then rechoose
-							if (local_radius == -1) {
-								break;
-							} else {
-								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
-									break;
-								} else {
-									// Erase the one that didn't work
-									int temp = pos2[pos2.size()-1];
-									pos2[pos2.size()-1] = pos2[new_index];
-									pos2[new_index] = temp;
-									// printf("BP a\n"); // DEBUG
-									pos2.erase(pos2.end()-1);
-									// printf("BP b\n"); // DEBUG
-									if (pos2.size() == 0) {
-										break;
-									}
-								}
-							}
-						}
+// 							if (local_radius == -1) {
+// 								break;
+// 							} else {
+// 								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
+// 									break;
+// 								} else {
+// 									// Erase the one that didn't work
+// 									int temp = pos2[pos2.size()-1];
+// 									pos2[pos2.size()-1] = pos2[new_index];
+// 									pos2[new_index] = temp;
+// 									// printf("BP a\n"); // DEBUG
+// 									pos2.erase(pos2.end()-1);
+// 									// printf("BP b\n"); // DEBUG
+// 									if (pos2.size() == 0) {
+// 										break;
+// 									}
+// 								}
+// 							}
+// 						}
 						// If no positions were left, skip
-						if (pos2.size() == 0) {
-							continue;
-						}
+// 						if (pos2.size() == 0) {
+// 							continue;
+// 						}
 					} else {
-						while (1) {
+// 						while (1) {
 							new_epoch = (rand() % epoch_nt) + 1; // Selection in interval [1,epoch_nt]
 							
-							coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
-							// If new_epoch is, in genome coordinates, not within local_radius of
-							// the original, then rechoose
-							if (local_radius == -1) {
-								break;
-							} else {
-								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
-									break;
-								}
-							}
-						}
+// 							coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
+// 							// If new_epoch is, in genome coordinates, not within local_radius of
+// 							// the original, then rechoose
+// 							if (local_radius == -1) {
+// 								break;
+// 							} else {
+// 								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
+// 									break;
+// 								}
+// 							}
+// 						}
 					}
 				
 // 					string cluster_chr;
