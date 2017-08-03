@@ -559,6 +559,10 @@ int main (int argc, char* argv[]) {
 			for (int i = 11; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
 			}
+			
+			if (local_radius != -1) {
+				same_chr = false; // Lock this down to improve running time and memory usage
+			}
 		}
 	
 		// Verify files, and import data to memory
