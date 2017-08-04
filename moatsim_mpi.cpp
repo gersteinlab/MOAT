@@ -1605,9 +1605,9 @@ int main (int argc, char* argv[]) {
 					vector<string> rand_range = cluster_bins[l];
 					
 					// DEBUG
-					printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
-					printf("cluster start: %s\n", cluster_bins[l][1].c_str());
-					printf("cluster end: %s\n", cluster_bins[l][2].c_str());
+// 					printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
+// 					printf("cluster start: %s\n", cluster_bins[l][1].c_str());
+// 					printf("cluster end: %s\n", cluster_bins[l][2].c_str());
 			
 					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
@@ -1664,6 +1664,7 @@ int main (int argc, char* argv[]) {
 				
 				// DEBUG
 				// printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+				printf("Epoch nt: %d\n", epoch_nt);
 				
 				// BEGIN 3MER CODE
 			
@@ -1673,6 +1674,12 @@ int main (int argc, char* argv[]) {
 			
 					// Read in reference
 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+					
+						// DEBUG
+						printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
+						printf("cluster start: %s\n", cluster_bins[l][1].c_str());
+						printf("cluster end: %s\n", cluster_bins[l][2].c_str());
+					
 						// FASTA import here
 						if (last_chr != cluster_bins[l][0]) {
 			
