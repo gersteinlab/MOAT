@@ -1868,7 +1868,10 @@ int main (int argc, char* argv[]) {
 						}
 					
 						// DEBUG
-						printf("Available positions: %d\n", (int)pos2.size());
+						printf("Number of available positions: %d\n", (int)pos2.size());
+						for (unsigned int z = 0; z < pos2.size(); z++) {
+							printf("Pos %d: %d\n", z, pos2[z]);
+						}
 						
 						// If no positions are available, skip
 						if (pos2.size() == 0) {
