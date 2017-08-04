@@ -831,13 +831,13 @@ int main (int argc, char* argv[]) {
 	
 		// DEBUG - check the genome bins
 		// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
-// 		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/bins.txt";
-// 		FILE *debug_ptr = fopen(debug_file.c_str(), "w");
-// 		for (unsigned int i = 0; i < ann_array.size(); i++) {
-// 			// printf("%d\n", i);
-// 			fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
-// 		}
-// 		fclose(debug_ptr);
+		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/bins.txt";
+		FILE *debug_ptr = fopen(debug_file.c_str(), "w");
+		for (unsigned int i = 0; i < ann_array.size(); i++) {
+			// printf("%d\n", i);
+			fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
+		}
+		fclose(debug_ptr);
 // 		// Early termination
 // 		return 0;
 	
@@ -1504,10 +1504,10 @@ int main (int argc, char* argv[]) {
 				free(cluster_coor);
 				
 				// DEBUG
-// 				printf("Cluster bins: %d\n", (int)cluster_bins.size());
-// 				for (unsigned int i = 0; i < cluster_bins.size(); i++) {
-// 					printf("%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
-// 				}
+				printf("Cluster bins: %d\n", (int)cluster_bins.size());
+				for (unsigned int i = 0; i < cluster_bins.size(); i++) {
+					printf("%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
+				}
 				
 				// Any code to change the order of cluster_bins would go here
 				sort(cluster_bins.begin(), cluster_bins.end(), cmpIntervals);
@@ -1818,7 +1818,7 @@ int main (int argc, char* argv[]) {
 				
 						// DEBUG
 						// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-						// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
 						
@@ -1868,7 +1868,7 @@ int main (int argc, char* argv[]) {
 						}
 					
 						// DEBUG
-						// printf("Available positions: %d\n", (int)pos2.size());
+						printf("Available positions: %d\n", (int)pos2.size());
 						
 						// If no positions are available, skip
 						if (pos2.size() == 0) {
@@ -1884,6 +1884,7 @@ int main (int argc, char* argv[]) {
 							// coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							
 							// DEBUG: check coor
+							printf("new_epoch: %d\n", new_epoch);
 							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
 							
 							// If new_epoch is, in genome coordinates, not within local_radius of
