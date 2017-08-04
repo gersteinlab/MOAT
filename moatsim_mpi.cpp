@@ -831,7 +831,7 @@ int main (int argc, char* argv[]) {
 	
 		// DEBUG - check the genome bins
 		// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
-		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/10kb_bins.txt";
+		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/5kb_bins.txt";
 		FILE *debug_ptr = fopen(debug_file.c_str(), "w");
 		for (unsigned int i = 0; i < ann_array.size(); i++) {
 			// printf("%d\n", i);
