@@ -479,6 +479,9 @@ int main (int argc, char* argv[]) {
 	
 		/* User-supplied arguments */
 		
+		// Number of clusters to use
+		unsigned int numclust;
+		
 		// Local context radius: How many nucleotides away are we allowed to move the
 		// variant?
 		// -1 to ignore this option
@@ -517,46 +520,47 @@ int main (int argc, char* argv[]) {
 		// Covariate signal files in bigWig format
 		vector<string> covar_files;
 	
-		if (argc < 11) {
-			fprintf(stderr, "Usage: moatsim_mpi [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+		if (argc < 12) {
+			fprintf(stderr, "Usage: moatsim_mpi [number of clusters] [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
 		
-			local_radius = atoi(argv[1]);
+			numclust = atoi(argv[1]);
+			local_radius = atoi(argv[2]);
 		
-			if (argv[2][0] == 'y') {
+			if (argv[3][0] == 'y') {
 				same_chr = true;
-			} else if (argv[2][0] == 'n') {
+			} else if (argv[3][0] == 'n') {
 				same_chr = false;
 			} else {
-				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[2][0]);
+				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[3][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 
 		
-			if (argv[3][0] == '5') {
+			if (argv[4][0] == '5') {
 				trimer = 5;
-			} else if (argv[3][0] == '3') {
+			} else if (argv[4][0] == '3') {
 				trimer = 3;
-			} else if (argv[3][0] == '0') {
+			} else if (argv[4][0] == '0') {
 				trimer = 0;
 			} else {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[3][0]);
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[4][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
-			num_permutations = atoi(argv[4]);
-			window_radius = atoi(argv[5]);
-			min_width = atoi(argv[6]);
-			prohibited_file = string(argv[7]);
-			fasta_dir = string(argv[8]);
-			vfile = string(argv[9]);
-			outdir = string(argv[10]);
+			num_permutations = atoi(argv[5]);
+			window_radius = atoi(argv[6]);
+			min_width = atoi(argv[7]);
+			prohibited_file = string(argv[8]);
+			fasta_dir = string(argv[9]);
+			vfile = string(argv[10]);
+			outdir = string(argv[11]);
 		
-			for (int i = 11; i < argc; i++) {
+			for (int i = 12; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
 			}
 			
@@ -632,7 +636,7 @@ int main (int argc, char* argv[]) {
 		vector<vector<double> > covar_features;
 	
 		// Number of clusters to create: numclust
-		unsigned int numclust = 100;
+		// unsigned int numclust = 100;
 	
 		// Bring variant file data into memory
 		// Save the first 6 columns, ignore the rest if there are any
@@ -1676,8 +1680,8 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
-				printf("Epoch nt: %d\n", epoch_nt);
+// 				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+// 				printf("Epoch nt: %d\n", epoch_nt);
 				
 				// BEGIN 3MER CODE
 			
@@ -1689,9 +1693,9 @@ int main (int argc, char* argv[]) {
 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 					
 						// DEBUG
-						printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
-						printf("cluster start: %s\n", cluster_bins[l][1].c_str());
-						printf("cluster end: %s\n", cluster_bins[l][2].c_str());
+// 						printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
+// 						printf("cluster start: %s\n", cluster_bins[l][1].c_str());
+// 						printf("cluster end: %s\n", cluster_bins[l][2].c_str());
 					
 						// FASTA import here
 						if (last_chr != cluster_bins[l][0]) {
@@ -1838,7 +1842,7 @@ int main (int argc, char* argv[]) {
 				
 						// DEBUG
 						// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+						// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
 						
@@ -1888,10 +1892,10 @@ int main (int argc, char* argv[]) {
 						}
 					
 						// DEBUG
-						printf("Number of available positions: %d\n", (int)pos2.size());
-						for (unsigned int z = 0; z < pos2.size(); z++) {
-							printf("Pos %d: %d\n", z, pos2[z]);
-						}
+// 						printf("Number of available positions: %d\n", (int)pos2.size());
+// 						for (unsigned int z = 0; z < pos2.size(); z++) {
+// 							printf("Pos %d: %d\n", z, pos2[z]);
+// 						}
 						
 						// If no positions are available, skip
 						if (pos2.size() == 0) {
@@ -1907,7 +1911,7 @@ int main (int argc, char* argv[]) {
 							// coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							
 							// DEBUG: check coor
-							printf("new_epoch: %d\n", new_epoch);
+							// printf("new_epoch: %d\n", new_epoch);
 							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
 							
 							// If new_epoch is, in genome coordinates, not within local_radius of
