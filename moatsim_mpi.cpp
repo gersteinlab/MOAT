@@ -1598,7 +1598,7 @@ int main (int argc, char* argv[]) {
 				vector<int> sum_nt;
 				
 				// DEBUG
-				bool tocont = false;
+				// bool tocont = false;
 			
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 			
@@ -1648,9 +1648,9 @@ int main (int argc, char* argv[]) {
 						temp_id_array.push_back((int)m);
 						
 						// DEBUG
-						if (var_array[m][0] == "chr19" && var_array[m][1] == "53244651" && var_array[m][2] == "53244652") {
-							tocont = true;
-						}
+// 						if (var_array[m][0] == "chr19" && var_array[m][1] == "53244651" && var_array[m][2] == "53244652") {
+// 							tocont = true;
+// 						}
 					}
 					
 					epoch_nt += (rand_range_end - rand_range_start);
@@ -1659,11 +1659,11 @@ int main (int argc, char* argv[]) {
 				
 				// DEBUG
 				// printf("Number of observed variants: %d\n", (int)obs_var_pos.size());
-				if (!tocont) {
-					MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
-					MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
-					continue;
-				}
+// 				if (!tocont) {
+// 					MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
+// 					MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
+// 					continue;
+// 				}
 			
 				if (obs_var_pos.size() == 0) {
 					MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
