@@ -1288,8 +1288,14 @@ int main (int argc, char* argv[]) {
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
 						
+						// DEBUG
+						printf("Rejoin ID: %d\n", permuted_var_id[j]);
+						
 						for (unsigned int k = 3; k < var_array[permuted_var_id[j]].size(); k++) {
 							vec.push_back(var_array[permuted_var_id[j]][k]);
+							
+							// DEBUG
+							printf("Rejoin attr: %s\n", permuted_var_id[j][k].c_str());
 						}
 						
 // 						vec.push_back(ref);
@@ -1677,6 +1683,8 @@ int main (int argc, char* argv[]) {
 				
 				for (unsigned int o = 0; o < temp_id_array.size(); o++) {
 					id_array.push_back(temp_id_array[o]);
+					// DEBUG
+					printf("Temp ID: %d\n", temp_id_array[o]);
 				}
 				
 				// DEBUG
