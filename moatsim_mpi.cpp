@@ -383,15 +383,15 @@ int main (int argc, char* argv[]) {
 			return 1;
 		} else {
 		
-			if (argv[1][0] == 'y') {
-				same_chr = true;
-			} else if (argv[1][0] == 'n') {
-				same_chr = false;
-			} else {
-				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
-				MPI_Abort(MPI_COMM_WORLD, 1);
-				return 1;
-			}
+// 			if (argv[1][0] == 'y') {
+// 				same_chr = true;
+// 			} else if (argv[1][0] == 'n') {
+// 				same_chr = false;
+// 			} else {
+// 				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
+// 				MPI_Abort(MPI_COMM_WORLD, 1);
+// 				return 1;
+// 			}
 
 		
 			if (argv[1][0] == 'y') {
