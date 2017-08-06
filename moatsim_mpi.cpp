@@ -1467,6 +1467,7 @@ int main (int argc, char* argv[]) {
 			
 			// Vector of var_array indices for sample IDs
 			vector<unsigned int> id_array;
+			vector<unsigned int> id_array_2;
 		
 			// Broadcast that I'm available to work
 			int available_flag = 1;
@@ -1808,7 +1809,7 @@ int main (int argc, char* argv[]) {
 				
 				// END 3MER/5MER CODE
 				
-				vector<unsigned int> id_array_2;
+				// vector<unsigned int> id_array_2;
 			
 				// Variant processing loop
 				for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
@@ -2007,11 +2008,12 @@ int main (int argc, char* argv[]) {
 					// vec.push_back(id);
 				
 					permuted_set.push_back(vec);
-					id_array_2.push_back(k);
+					id_array_2.push_back(id_array[k]);
 				}
 				
 				obs_var_pos.clear();
 				local_nt.clear();
+				id_array.clear();
 				
 				MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
 				MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
