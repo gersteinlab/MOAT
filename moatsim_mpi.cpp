@@ -2003,6 +2003,9 @@ int main (int argc, char* argv[]) {
 					permuted_set.push_back(vec);
 				}
 				
+				obs_var_pos.~vector();
+				local_nt.~map();
+				
 				MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
 				MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
 			}
@@ -2042,6 +2045,8 @@ int main (int argc, char* argv[]) {
 			
 			// DEBUG
 			// printf("Breakpoint Tau\n");
+			
+			permuted_set.~vector();
 			
 			// END CHILD CODE
 		}
