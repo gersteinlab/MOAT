@@ -835,15 +835,15 @@ int main (int argc, char* argv[]) {
 	
 		// DEBUG - check the genome bins
 		// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
-		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-6/bins.txt";
-		FILE *debug_ptr = fopen(debug_file.c_str(), "w");
-		for (unsigned int i = 0; i < ann_array.size(); i++) {
-			// printf("%d\n", i);
-			fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
-		}
-		fclose(debug_ptr);
-		// Early termination
-		return 0;
+// 		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-6/bins.txt";
+// 		FILE *debug_ptr = fopen(debug_file.c_str(), "w");
+// 		for (unsigned int i = 0; i < ann_array.size(); i++) {
+// 			// printf("%d\n", i);
+// 			fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
+// 		}
+// 		fclose(debug_ptr);
+// 		// Early termination
+// 		return 0;
 	
 		/* Begin building covariate signal profiles of the genome bins */
 		// First step is to produce a file of genome bins
@@ -1680,8 +1680,8 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-// 				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
-// 				printf("Epoch nt: %d\n", epoch_nt);
+				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+				printf("Epoch nt: %d\n", epoch_nt);
 				
 				// BEGIN 3MER CODE
 			
@@ -1805,7 +1805,7 @@ int main (int argc, char* argv[]) {
 					// DEBUG
 					// printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-					// printf("Variant processing loop: iter: %d\n", (int)k);
+					printf("Variant processing loop: iter: %d\n", (int)k);
 			
 					// string cur_nt = obs_var_pos[k].second;
 					
@@ -1842,7 +1842,7 @@ int main (int argc, char* argv[]) {
 				
 						// DEBUG
 						// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-						// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
 						
@@ -1892,7 +1892,7 @@ int main (int argc, char* argv[]) {
 						}
 					
 						// DEBUG
-// 						printf("Number of available positions: %d\n", (int)pos2.size());
+						printf("Number of available positions: %d\n", (int)pos2.size());
 // 						for (unsigned int z = 0; z < pos2.size(); z++) {
 // 							printf("Pos %d: %d\n", z, pos2[z]);
 // 						}
@@ -1911,7 +1911,7 @@ int main (int argc, char* argv[]) {
 							// coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							
 							// DEBUG: check coor
-							// printf("new_epoch: %d\n", new_epoch);
+							printf("new_epoch: %d\n", new_epoch);
 							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
 							
 							// If new_epoch is, in genome coordinates, not within local_radius of
