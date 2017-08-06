@@ -1266,8 +1266,8 @@ int main (int argc, char* argv[]) {
 					MPI_Recv(permuted_var_coor, permuted_var_coor_size, MPI_INT, source, 7, MPI_COMM_WORLD, &status);
 					// MPI_Recv(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, source, 21, MPI_COMM_WORLD, &status);
 					
-					int *permuted_var_id = (int *)malloc((permuted_var_coor_size/2)*sizeof(int));
-					MPI_Recv(permuted_var_id, (permuted_var_coor_size/2), MPI_INT, source, 23, MPI_COMM_WORLD, &status);
+					unsigned int *permuted_var_id = (unsigned int *)malloc((permuted_var_coor_size/2)*sizeof(unsigned int));
+					MPI_Recv(permuted_var_id, (permuted_var_coor_size/2), MPI_UNSIGNED, source, 23, MPI_COMM_WORLD, &status);
 				
 					for (int j = 0; j < permuted_var_coor_size/2; j++) {
 						string this_chr = int2chr(permuted_var_coor[2*j]);
@@ -1466,7 +1466,7 @@ int main (int argc, char* argv[]) {
 			vector<vector<string> > permuted_set;
 			
 			// Vector of var_array indices for sample IDs
-			vector<int> id_array;
+			vector<unsigned int> id_array;
 		
 			// Broadcast that I'm available to work
 			int available_flag = 1;
@@ -1601,7 +1601,7 @@ int main (int argc, char* argv[]) {
 				
 				// Store the var_array indices of the variants that we're working with
 				// Used to join with extra columns in output step
-				vector<int> temp_id_array;
+				vector<unsigned int> temp_id_array;
 				
 				// Cumulative sum vector of epoch nucleotides
 				// Each entry i contains the number of nucleotides seen in clusters [0:i] (0-based indexing)
@@ -1655,7 +1655,7 @@ int main (int argc, char* argv[]) {
 						obs_var_pos.push_back(variant);
 						
 						// Add to id_array
-						temp_id_array.push_back((int)m);
+						temp_id_array.push_back(m);
 						
 						// DEBUG
 // 						if (var_array[m][0] == "chr19" && var_array[m][1] == "53244651" && var_array[m][2] == "53244652") {
@@ -2019,7 +2019,7 @@ int main (int argc, char* argv[]) {
 			if (permuted_var_coor_size > 0) {
 				int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
 				// char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
-				int *permuted_var_id = (int *)malloc((permuted_var_coor_size/2)*sizeof(int));
+				unsigned int *permuted_var_id = (unsigned int *)malloc((permuted_var_coor_size/2)*sizeof(unsigned int));
 		
 				for (unsigned int i = 0; i < permuted_set.size(); i++) {
 					permuted_var_coor[2*i] = chr2int(permuted_set[i][0]);
@@ -2031,7 +2031,7 @@ int main (int argc, char* argv[]) {
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
 				// MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
-				MPI_Send(permuted_var_id, (permuted_var_coor_size/2), MPI_INT, 0, 23, MPI_COMM_WORLD);
+				MPI_Send(permuted_var_id, (permuted_var_coor_size/2), MPI_UNSIGNED, 0, 23, MPI_COMM_WORLD);
 			
 				free(permuted_var_coor);
 				// free(permuted_var_alleles);
