@@ -309,8 +309,8 @@ int main (int argc, char* argv[]) {
 	
 		/* User-supplied arguments */
 		
-		// Is the trinucleotide preservation option enabled?
-		bool trimer;
+		// Is the 3mer/5mer preservation option enabled?
+		int trimer;
 	
 		// Number of permuted variant datasets to create
 		int num_permutations;
@@ -345,21 +345,22 @@ int main (int argc, char* argv[]) {
 		string signal_file;
 	
 		if (argc != 10 && argc != 11) {
-			fprintf(stderr, "Usage: moat_v_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory] [wg signal option (y/n)] [wg signal file (optional)]. Exiting.\n");
+			fprintf(stderr, "Usage: moat_v_mpi [3mer/5mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory] [wg signal option (y/n)] [wg signal file (optional)]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
 		
-			if (argv[1][0] == 'y') {
-				trimer = true;
-			} else if (argv[1][0] == 'n') {
-				trimer = false;
-			} else {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
+// 			if (argv[1][0] == 'y') {
+// 				trimer = true;
+// 			} else if (argv[1][0] == 'n') {
+// 				trimer = false;
+			if (argv[1][0] != '0' && argv[1][0] != '3' && argv[1][0] != '5') {
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be one of 0, 3, or 5. Exiting.\n", argv[1][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 		
+			trimer = atoi(argv[1]);
 			num_permutations = atoi(argv[2]);
 			window_radius = atoi(argv[3]);
 			min_width = atoi(argv[4]);
@@ -700,7 +701,7 @@ int main (int argc, char* argv[]) {
 		// int next_child = 1;
 		
 		// First, give the trimer boolean flag to all children
-		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		
 		// Second, give the FASTA directory location to all children
 		int strlen = fasta_dir.size() + 1;
@@ -1303,8 +1304,8 @@ int main (int argc, char* argv[]) {
 		srand(0);
 		
 		// Receive the trimer boolean flag
-		bool trimer;
-		MPI_Bcast(&trimer, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+		int trimer;
+		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	
 		// Receive directory with wg FASTA files
 		char fasta_dir_cstr[STRSIZE];
@@ -1462,171 +1463,65 @@ int main (int argc, char* argv[]) {
 					map<string,vector<int> > local_nt;
 				
 					if (trimer) {
-						// Gather up the locations of all confidently mapped dinucleotides (capital letters)
-						// Coordinates are for the first letter in the dinucleotide
-						// map<string,vector<int> > local_nt;
-	
-						vector<int> AAA;
-						vector<int> AAG;
-						vector<int> AAC;
-						vector<int> AAT;
 					
-						vector<int> AGA;
-						vector<int> AGG;
-						vector<int> AGC;
-						vector<int> AGT;
-					
-						vector<int> ACA;
-						vector<int> ACG;
-						vector<int> ACC;
-						vector<int> ACT;
-					
-						vector<int> ATA;
-						vector<int> ATG;
-						vector<int> ATC;
-						vector<int> ATT;
-	
-						vector<int> GAA;
-						vector<int> GAG;
-						vector<int> GAC;
-						vector<int> GAT;
-					
-						vector<int> GGA;
-						vector<int> GGG;
-						vector<int> GGC;
-						vector<int> GGT;
-					
-						vector<int> GCA;
-						vector<int> GCG;
-						vector<int> GCC;
-						vector<int> GCT;
-					
-						vector<int> GTA;
-						vector<int> GTG;
-						vector<int> GTC;
-						vector<int> GTT;
-	
-						vector<int> CAA;
-						vector<int> CAG;
-						vector<int> CAC;
-						vector<int> CAT;
-					
-						vector<int> CGA;
-						vector<int> CGG;
-						vector<int> CGC;
-						vector<int> CGT;
-					
-						vector<int> CCA;
-						vector<int> CCG;
-						vector<int> CCC;
-						vector<int> CCT;
-					
-						vector<int> CTA;
-						vector<int> CTG;
-						vector<int> CTC;
-						vector<int> CTT;
-	
-						vector<int> TAA;
-						vector<int> TAG;
-						vector<int> TAC;
-						vector<int> TAT;
-					
-						vector<int> TGA;
-						vector<int> TGG;
-						vector<int> TGC;
-						vector<int> TGT;
-					
-						vector<int> TCA;
-						vector<int> TCG;
-						vector<int> TCC;
-						vector<int> TCT;
-					
-						vector<int> TTA;
-						vector<int> TTG;
-						vector<int> TTC;
-						vector<int> TTT;
-	
-						local_nt["AAA"] = AAA;
-						local_nt["AAG"] = AAG;
-						local_nt["AAC"] = AAC;
-						local_nt["AAT"] = AAT;
-					
-						local_nt["AGA"] = AGA;
-						local_nt["AGG"] = AGG;
-						local_nt["AGC"] = AGC;
-						local_nt["AGT"] = AGT;
-					
-						local_nt["ACA"] = ACA;
-						local_nt["ACG"] = ACG;
-						local_nt["ACC"] = ACC;
-						local_nt["ACT"] = ACT;
-					
-						local_nt["ATA"] = ATA;
-						local_nt["ATG"] = ATG;
-						local_nt["ATC"] = ATC;
-						local_nt["ATT"] = ATT;
-	
-						local_nt["GAA"] = GAA;
-						local_nt["GAG"] = GAG;
-						local_nt["GAC"] = GAC;
-						local_nt["GAT"] = GAT;
-					
-						local_nt["GGA"] = GGA;
-						local_nt["GGG"] = GGG;
-						local_nt["GGC"] = GGC;
-						local_nt["GGT"] = GGT;
-					
-						local_nt["GCA"] = GCA;
-						local_nt["GCG"] = GCG;
-						local_nt["GCC"] = GCC;
-						local_nt["GCT"] = GCT;
-					
-						local_nt["GTA"] = GTA;
-						local_nt["GTG"] = GTG;
-						local_nt["GTC"] = GTC;
-						local_nt["GTT"] = GTT;
-	
-						local_nt["CAA"] = CAA;
-						local_nt["CAG"] = CAG;
-						local_nt["CAC"] = CAC;
-						local_nt["CAT"] = CAT;
-					
-						local_nt["CGA"] = CGA;
-						local_nt["CGG"] = CGG;
-						local_nt["CGC"] = CGC;
-						local_nt["CGT"] = CGT;
-					
-						local_nt["CCA"] = CCA;
-						local_nt["CCG"] = CCG;
-						local_nt["CCC"] = CCC;
-						local_nt["CCT"] = CCT;
-					
-						local_nt["CTA"] = CTA;
-						local_nt["CTG"] = CTG;
-						local_nt["CTC"] = CTC;
-						local_nt["CTT"] = CTT;
-	
-						local_nt["TAA"] = TAA;
-						local_nt["TAG"] = TAG;
-						local_nt["TAC"] = TAC;
-						local_nt["TAT"] = TAT;
-					
-						local_nt["TGA"] = TGA;
-						local_nt["TGG"] = TGG;
-						local_nt["TGC"] = TGC;
-						local_nt["TGT"] = TGT;
-					
-						local_nt["TCA"] = TCA;
-						local_nt["TCG"] = TCG;
-						local_nt["TCC"] = TCC;
-						local_nt["TCT"] = TCT;
-					
-						local_nt["TTA"] = TTA;
-						local_nt["TTG"] = TTG;
-						local_nt["TTC"] = TTC;
-						local_nt["TTT"] = TTT;
+						vector<char> base; // No treble
+						base.push_back('A');
+						base.push_back('G');
+						base.push_back('C');
+						base.push_back('T');
+						
+						if (trimer == 3) {
+							// Gather up the locations of all confidently mapped trinucleotides (capital letters)
+							// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
+							// map<string,vector<int> > local_nt;
+			
+							for (int z = 0; z < 4; z++) {
+								for (int y = 0; y < 4; y++) {
+									for (int x = 0; x < 4; x++) {
+										stringstream ss;
+										string cur_nt;
+										ss << base[z];
+										ss << base[y];
+										ss << base[x];
+										ss >> cur_nt;
+										vector<int> temp;
+										local_nt[cur_nt] = temp;
+									}
+								}
+							}
+						} else if (trimer == 5) {
+							// Gather up the locations of all confidently mapped pentanucleotides (capital letters)
+							// Coordinates are for the third letter in the pentanucleotide (where the actual mutation is located)
+							// map<string,vector<int> > local_nt;
+			
+							for (int z = 0; z < 4; z++) {
+								for (int y = 0; y < 4; y++) {
+									for (int x = 0; x < 4; x++) {
+										for (int a = 0; a < 4; a++) {
+											for (int b = 0; b < 4; b++) {
+												stringstream ss;
+												string cur_nt;
+												ss << base[z];
+												ss << base[y];
+												ss << base[x];
+												ss << base[a];
+												ss << base[b];
+												ss >> cur_nt;
+												vector<int> temp;
+												local_nt[cur_nt] = temp;
+											}
+										}
+									}
+								}
+							}
+						}
 	
 						for (int k = rand_range_start; k < rand_range_end; k++) { // 1-based index
+							char nt0, nt4;
+							if (trimer == 5) {
+								nt0 = toupper(chr_nt[k-3]); // 0-based index
+								nt4 = toupper(chr_nt[k+1]); // 0-based index
+							}
 							char nt1 = toupper(chr_nt[k-2]); // 0-based index
 							char nt2 = toupper(chr_nt[k-1]); // 0-based index
 							char nt3 = toupper(chr_nt[k]); // 0-based index
@@ -1641,9 +1536,15 @@ int main (int argc, char* argv[]) {
 						
 							stringstream ss;
 							string nt;
+							if (trimer == 5) {
+								ss << nt0;
+							}
 							ss << nt1;
 							ss << nt2;
 							ss << nt3;
+							if (trimer == 5) {
+								ss << nt4;
+							}
 							ss >> nt;
 						
 							// DEBUG
@@ -1676,15 +1577,26 @@ int main (int argc, char* argv[]) {
 						
 						if (trimer) {
 							vector<string> cur_var = var_array[k];
+							char cur_nt0, cur_nt4;
+							if (trimer == 5) {
+								cur_nt0 = toupper(chr_nt[atoi(cur_var[2].c_str())-3]);
+								cur_nt4 = toupper(chr_nt[atoi(cur_var[2].c_str())+1]);
+							}
 							char cur_nt1 = toupper(chr_nt[atoi(cur_var[2].c_str())-2]);
 							char cur_nt2 = toupper(chr_nt[atoi(cur_var[2].c_str())-1]); // 0-based index
 							char cur_nt3 = toupper(chr_nt[atoi(cur_var[2].c_str())]);
 		
 							stringstream ss;
 							string cur_nt;
+							if (trimer == 5) {
+								ss << cur_nt0;
+							}
 							ss << cur_nt1;
 							ss << cur_nt2;
 							ss << cur_nt3;
+							if (trimer == 5) {
+								ss << cur_nt4;
+							}
 							ss >> cur_nt;
 						
 							// If there is an N in this string, we skip this variant
