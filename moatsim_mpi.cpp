@@ -1640,12 +1640,13 @@ int main (int argc, char* argv[]) {
 						int this_epoch = cur_var_end - rand_range_start;
 						this_epoch += epoch_nt;
 					
-	// 					stringstream ss;
-	// 					string cur_nt;
-	// 					ss << chr_nt[cur_var_end-2];
-	// 					ss << chr_nt[cur_var_end-1];
-	// 					ss << chr_nt[cur_var_end];
-	// 					ss >> cur_nt;
+// 						stringstream ss;
+// 						string cur_nt;
+// 						ss << chr_nt[cur_var_end-2];
+// 						ss << chr_nt[cur_var_end-1];
+// 						ss << chr_nt[cur_var_end];
+// 						ss >> cur_nt;
+						
 						vector<string> placeholder;
 						placeholder.push_back(var_array[m][0]);
 						placeholder.push_back(var_array[m][1]);
@@ -1806,6 +1807,8 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// END 3MER/5MER CODE
+				
+				vector<unsigned int> id_array_2;
 			
 				// Variant processing loop
 				for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
@@ -1845,6 +1848,7 @@ int main (int argc, char* argv[]) {
 				
 						// If there is an N in this string, we skip this variant
 						if (cur_nt.find_first_of('N') != string::npos) {
+							// to_erase.push_back(k);
 							continue;
 						}
 				
@@ -1883,6 +1887,7 @@ int main (int argc, char* argv[]) {
 				
 						// If no positions are available, skip
 						if (pos.size()-1 == 0) {
+							// to_erase.push_back(k);
 							continue;
 						}
 				
@@ -1907,6 +1912,7 @@ int main (int argc, char* argv[]) {
 						
 						// If no positions are available, skip
 						if (pos2.size() == 0) {
+							// to_erase.push_back(k);
 							continue;
 						}
 					
@@ -2001,6 +2007,7 @@ int main (int argc, char* argv[]) {
 					// vec.push_back(id);
 				
 					permuted_set.push_back(vec);
+					id_array_2.push_back(k);
 				}
 				
 				obs_var_pos.clear();
@@ -2029,7 +2036,7 @@ int main (int argc, char* argv[]) {
 					permuted_var_coor[2*i+1] = atoi(permuted_set[i][2].c_str());
 // 					permuted_var_alleles[2*i] = permuted_set[i][3][0];
 // 					permuted_var_alleles[2*i+1] = permuted_set[i][4][0];
-					permuted_var_id[i] = id_array[i];
+					permuted_var_id[i] = id_array_2[i];
 				}
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
