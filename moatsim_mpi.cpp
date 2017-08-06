@@ -1295,7 +1295,7 @@ int main (int argc, char* argv[]) {
 							vec.push_back(var_array[permuted_var_id[j]][k]);
 							
 							// DEBUG
-							printf("Rejoin attr: %s\n", permuted_var_id[j][k].c_str());
+							printf("Rejoin attr: %s\n", var_array[permuted_var_id[j]][k].c_str());
 						}
 						
 // 						vec.push_back(ref);
