@@ -1609,6 +1609,10 @@ int main (int argc, char* argv[]) {
 				
 					// Variant processing loop
 					for (unsigned int k = range.first; k < range.second; k++) {
+					
+						if (atoi(var_array[k][2].c_str()) > rand_range_end) {
+							continue;
+						}
 	
 						// DEBUG
 						// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
