@@ -1045,6 +1045,9 @@ int main (int argc, char* argv[]) {
 					// char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
 					MPI_Recv(permuted_var_coor, permuted_var_coor_size, MPI_INT, source, 7, MPI_COMM_WORLD, &status);
 					// MPI_Recv(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, source, 21, MPI_COMM_WORLD, &status);
+					
+					unsigned int *permuted_var_id = (unsigned int *)malloc((permuted_var_coor_size/2)*sizeof(unsigned int));
+					MPI_Recv(permuted_var_id, (permuted_var_coor_size/2), MPI_UNSIGNED, source, 23, MPI_COMM_WORLD, &status);
 				
 					for (int j = 0; j < permuted_var_coor_size/2; j++) {
 						string this_chr = int2chr(permuted_var_coor[2*j]);
@@ -1065,6 +1068,10 @@ int main (int argc, char* argv[]) {
 						vec.push_back(this_chr);
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
+						
+						for (unsigned int k = 3; k < var_array[permuted_var_id[j]].size(); k++) {
+							vec.push_back(var_array[permuted_var_id[j]][k]);
+						}
 // 						vec.push_back(string(ref_str));
 // 						vec.push_back(string(alt_str));
 						permuted_set.push_back(vec);
@@ -1072,6 +1079,7 @@ int main (int argc, char* argv[]) {
 
 					free(permuted_var_coor);
 					// free(permuted_var_alleles);
+					free(permuted_var_id);
 				}
 				counter++;
 			}
@@ -1324,6 +1332,10 @@ int main (int argc, char* argv[]) {
 		
 			// The output vector
 			vector<vector<string> > permuted_set;
+			
+			// Vector of var_array indices for sample IDs
+			vector<unsigned int> id_array;
+			// vector<unsigned int> id_array_2;
 		
 			// Broadcast that I'm available to work
 			int available_flag = 1;
@@ -1435,6 +1447,10 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 				// }
+				
+				// Store the var_array indices of the variants that we're working with
+				// Used to join with extra columns in output step
+				vector<unsigned int> temp_id_array;
 			
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
 					int rand_range_start = atoi(ann_array[j][1].c_str());
@@ -1453,6 +1469,11 @@ int main (int argc, char* argv[]) {
 				
 					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
+					
+					// Add to id_array
+					for (unsigned int k = range.first; k < range.second; k++) {
+						temp_id_array.push_back(k);
+					}
 				
 					int var_subset_count = range.second - range.first;
 					if (var_subset_count == 0) {
@@ -1738,6 +1759,7 @@ int main (int argc, char* argv[]) {
 						}
 		
 						permuted_set.push_back(vec);
+						id_array.push_back(temp_id_array[k]);
 					}
 				}
 				free(chr_ann_coor);
@@ -1757,19 +1779,23 @@ int main (int argc, char* argv[]) {
 			if (permuted_var_coor_size > 0) {
 				int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
 				// char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
+				unsigned int *permuted_var_id = (unsigned int *)malloc((permuted_var_coor_size/2)*sizeof(unsigned int));
 		
 				for (unsigned int i = 0; i < permuted_set.size(); i++) {
 					permuted_var_coor[2*i] = chr2int(permuted_set[i][0]);
 					permuted_var_coor[2*i+1] = atoi(permuted_set[i][2].c_str());
 					// permuted_var_alleles[2*i] = permuted_set[i][3][0];
 					// permuted_var_alleles[2*i+1] = permuted_set[i][4][0];
+					permuted_var_id[i] = id_array[i];
 				}
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
 				// MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
+				MPI_Send(permuted_var_id, (permuted_var_coor_size/2), MPI_UNSIGNED, 0, 23, MPI_COMM_WORLD);
 			
 				free(permuted_var_coor);
 				// free(permuted_var_alleles);
+				free(permuted_var_id);
 			}
 			
 			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
