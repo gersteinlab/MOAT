@@ -16,7 +16,7 @@
 
 using namespace std;
 
-#define STRSIZE 256
+#define STRSIZE 512
 #define BIGSTRSIZE 10240
 
 // The notable difference with the v2 is that this code places random bins anywhere
@@ -483,6 +483,7 @@ int main (int argc, char* argv[]) {
 			while (ws_index != string::npos) {
 				ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
+				printf("%s\n", in.c_str()); // DEBUG
 				vec.push_back(in);
 				if (ws_index != string::npos) {
 					line = line.substr(ws_index+1);
