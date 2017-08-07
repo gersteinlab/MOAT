@@ -639,7 +639,7 @@ int main (int argc, char* argv[]) {
 		// unsigned int numclust = 100;
 	
 		// Bring variant file data into memory
-		// Save the first 6 columns, ignore the rest if there are any
+		// Save all columns
 		char linebuf[STRSIZE];
 		FILE *vfile_ptr = fopen(vfile.c_str(), "r");
 		while (fgets(linebuf, STRSIZE, vfile_ptr) != NULL) {

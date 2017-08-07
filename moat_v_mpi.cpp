@@ -468,7 +468,7 @@ int main (int argc, char* argv[]) {
 		vector<vector<string> > prohibited_regions;
 	
 		// Bring variant file data into memory
-		// Save the first 3 columns, ignore the rest if there are any
+		// Save all columns
 		char linebuf[STRSIZE];
 		FILE *vfile_ptr = fopen(vfile.c_str(), "r");
 		while (fgets(linebuf, STRSIZE, vfile_ptr) != NULL) {
@@ -477,13 +477,16 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			// printf("%s\n", line.c_str());
 		
-			// Extract chromosome, start, end from line (first 3 columns)
+			// Extract chromosome, start, end, ref, alt, and any extra columns from line
 			vector<string> vec;
-			for (int i = 0; i < 3; i++) {
-				size_t ws_index = line.find_first_of("\t\n");
+			size_t ws_index = 0;
+			while (ws_index != string::npos) {
+				ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
 				vec.push_back(in);
-				line = line.substr(ws_index+1);
+				if (ws_index != string::npos) {
+					line = line.substr(ws_index+1);
+				}
 			}
 		
 			// If this is not a standard chromosome, then remove this row
