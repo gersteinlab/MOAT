@@ -483,7 +483,7 @@ int main (int argc, char* argv[]) {
 			while (ws_index != string::npos) {
 				ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
-				printf("%s\n", in.c_str()); // DEBUG
+				// printf("%s\n", in.c_str()); // DEBUG
 				vec.push_back(in);
 				if (ws_index != string::npos) {
 					line = line.substr(ws_index+1);
@@ -542,7 +542,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		// DEBUG
-		// printf("Breakpoint 1\n");
+		printf("Breakpoint 1\n");
 	
 		// Sort the arrays
 		sort(var_array.begin(), var_array.end(), cmpIntervals);
@@ -685,7 +685,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		// DEBUG
-		// printf("Breakpoint 2\n");
+		printf("Breakpoint 2\n");
 	
 		// DEBUG - check ann_array values after prohibited region subtraction
 // 		FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
@@ -826,7 +826,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			// printf("Breakpoint 1\n");
+			printf("Breakpoint 1\n");
 			
 			// NEW CODE
 			// Do wg signal step on the previously created permutation
@@ -1038,7 +1038,7 @@ int main (int argc, char* argv[]) {
 			vector<vector<string> > permuted_set;
 			
 			// DEBUG
-			// printf("Breakpoint 2\n");
+			printf("Breakpoint 2\n");
 			
 			// Count how many processes we've heard back from
 			counter = 0;
@@ -1095,7 +1095,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			// printf("Breakpoint 3\n");
+			printf("Breakpoint 3\n");
 			
 			// For DEBUG purposes, disable the sort function
 			sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
@@ -1128,7 +1128,7 @@ int main (int argc, char* argv[]) {
 			fclose(outfile_ptr);
 			
 			// DEBUG
-			// printf("Breakpoint 4\n");
+			printf("Breakpoint 4\n");
 		}
 		
 		/* Signal child processes to end */
@@ -1327,7 +1327,7 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// DEBUG
-		// printf("Breakpoint 5\n");
+		printf("Breakpoint 5\n");
 			
 	} else { // Child process, do a subdivision of the work
 	
@@ -1830,7 +1830,7 @@ int main (int argc, char* argv[]) {
 	}
 
 	// DEBUG
-	// printf("Breakpoint 3\n");
+	printf("Breakpoint 3\n");
 	
 	// Verdun
 	MPI_Finalize();
