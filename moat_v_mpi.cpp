@@ -1484,7 +1484,7 @@ int main (int argc, char* argv[]) {
 					sprintf(rand_range_end_cstr, "%d", rand_range_end);
 					rand_range.push_back(string(rand_range_end_cstr));
 				
-					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
+					pair<unsigned int,unsigned int> range = intersecting_variantsV(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
 					
 					// Store the var_array indices of the variants that we're working with
@@ -1610,9 +1610,9 @@ int main (int argc, char* argv[]) {
 					// Variant processing loop
 					for (unsigned int k = range.first; k < range.second; k++) {
 					
-// 						if (atoi(var_array[k][2].c_str()) > rand_range_end) {
-// 							continue;
-// 						}
+						if (atoi(var_array[k][2].c_str()) > rand_range_end) {
+							continue;
+						}
 	
 						// DEBUG
 						// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());

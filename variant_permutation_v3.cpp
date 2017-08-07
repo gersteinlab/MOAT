@@ -245,6 +245,60 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 	return output;
 }
 
+// Subroutine for calculating intersecting variants (MOAT-v specific)
+// Differs from intersecting_intervals in that two pointers to the first and last of
+// the var_array range are returned, rather than the variants themselves
+pair<unsigned int,unsigned int> intersecting_variantsV (vector<vector<string> > const &intervals, vector<string> region, unsigned int left_pointer) {
+	
+	// Output vector
+	vector<vector<string> > output_intervals;
+	
+	// Unpack region
+	string region_chr = region[0];
+	string region_start = region[1];
+	string region_end = region[2];
+	int region_start_num = atoi(region_start.c_str());
+	int region_end_num = atoi(region_end.c_str());
+	
+	unsigned int right_pointer = left_pointer;
+	
+	// Main loop
+	// vector<vector<string> > variants = *intervals;
+	for (unsigned int i = left_pointer; i < intervals.size(); i++) {
+		// Unpack interval
+		string val_chr = intervals[i][0];
+		string val_start = intervals[i][1];
+		string val_end = intervals[i][2];
+		int val_start_num = atoi(val_start.c_str());
+		int val_end_num = atoi(val_end.c_str());
+		
+		// Intersection test
+		if (!(isGreaterIntervals(intervals[i], region))) {
+			if (region_chr == val_chr && region_start_num <= val_end_num && region_end_num >= val_start_num) {
+				right_pointer++;
+			} else {
+				left_pointer++;
+				right_pointer++;
+			}
+		} else { // Verdun
+		
+			// DEBUG
+// 			printf("val_chr: %s\n", val_chr.c_str());
+// 			printf("val_start: %d\n", val_start_num);
+// 			printf("val_end: %d\n", val_end_num);
+// 			printf("reg_chr: %s\n", region_chr.c_str());
+// 			printf("reg_start: %d\n", region_start_num);
+// 			printf("reg_end: %d\n", region_end_num);
+// 			printf("left: %d\n", (int)left_pointer);
+// 			printf("right: %d\n", (int)right_pointer);
+		
+			break;
+		}
+	}
+	pair<unsigned int,unsigned int> output (left_pointer,right_pointer);
+	return output;
+}
+
 // Subtract multiple B regions from a single A region
 // Assume the B regions are intersecting intervals with A region, and sorted
 vector<vector<string> > subtract_intervals (vector<string> region, vector<vector<string> > intervals) {
