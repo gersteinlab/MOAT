@@ -218,14 +218,6 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 		int val_start_num = atoi(val_start.c_str());
 		int val_end_num = atoi(val_end.c_str());
 		
-		// DEBUG
-		printf("val_chr: %s\n", val_chr.c_str());
-		printf("val_start: %d\n", val_start_num);
-		printf("val_end: %d\n", val_end_num);
-		printf("reg_chr: %s\n", region_chr.c_str());
-		printf("reg_start: %d\n", region_start_num);
-		printf("reg_end: %d\n", region_end_num);
-		
 		// Intersection test
 		if (!(isGreaterIntervals(intervals[i], region))) {
 			if (region_chr == val_chr && region_start_num <= val_end_num && region_end_num >= val_start_num) {
@@ -235,6 +227,17 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 				right_pointer++;
 			}
 		} else { // Verdun
+		
+			// DEBUG
+			printf("val_chr: %s\n", val_chr.c_str());
+			printf("val_start: %d\n", val_start_num);
+			printf("val_end: %d\n", val_end_num);
+			printf("reg_chr: %s\n", region_chr.c_str());
+			printf("reg_start: %d\n", region_start_num);
+			printf("reg_end: %d\n", region_end_num);
+			printf("left: %d\n", (int)left_pointer);
+			printf("right: %d\n", (int)right_pointer);
+		
 			break;
 		}
 	}
