@@ -1289,13 +1289,13 @@ int main (int argc, char* argv[]) {
 						vec.push_back(string(end_str));
 						
 						// DEBUG
-						printf("Rejoin ID: %d\n", permuted_var_id[j]);
+						// printf("Rejoin ID: %d\n", permuted_var_id[j]);
 						
 						for (unsigned int k = 3; k < var_array[permuted_var_id[j]].size(); k++) {
 							vec.push_back(var_array[permuted_var_id[j]][k]);
 							
 							// DEBUG
-							printf("Rejoin attr: %s\n", var_array[permuted_var_id[j]][k].c_str());
+							// printf("Rejoin attr: %s\n", var_array[permuted_var_id[j]][k].c_str());
 						}
 						
 // 						vec.push_back(ref);
@@ -1686,12 +1686,12 @@ int main (int argc, char* argv[]) {
 				for (unsigned int o = 0; o < temp_id_array.size(); o++) {
 					id_array.push_back(temp_id_array[o]);
 					// DEBUG
-					printf("Temp ID: %d\n", temp_id_array[o]);
+					// printf("Temp ID: %d\n", temp_id_array[o]);
 				}
 				
 				// DEBUG
-				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
-				printf("Epoch nt: %d\n", epoch_nt);
+// 				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+// 				printf("Epoch nt: %d\n", epoch_nt);
 				
 				// BEGIN 3MER CODE
 			
@@ -1817,7 +1817,7 @@ int main (int argc, char* argv[]) {
 					// DEBUG
 					// printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-					printf("Variant processing loop: iter: %d\n", (int)k);
+					// printf("Variant processing loop: iter: %d\n", (int)k);
 			
 					// string cur_nt = obs_var_pos[k].second;
 					
@@ -1855,7 +1855,7 @@ int main (int argc, char* argv[]) {
 				
 						// DEBUG
 						// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+						// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
 						
@@ -1906,7 +1906,7 @@ int main (int argc, char* argv[]) {
 						}
 					
 						// DEBUG
-						printf("Number of available positions: %d\n", (int)pos2.size());
+						// printf("Number of available positions: %d\n", (int)pos2.size());
 // 						for (unsigned int z = 0; z < pos2.size(); z++) {
 // 							printf("Pos %d: %d\n", z, pos2[z]);
 // 						}
@@ -1926,7 +1926,7 @@ int main (int argc, char* argv[]) {
 							// coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							
 							// DEBUG: check coor
-							printf("new_epoch: %d\n", new_epoch);
+							// printf("new_epoch: %d\n", new_epoch);
 							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
 							
 							// If new_epoch is, in genome coordinates, not within local_radius of
