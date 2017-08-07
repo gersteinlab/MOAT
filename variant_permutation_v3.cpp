@@ -201,9 +201,9 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 	
 	// Unpack region
 	string region_chr = region[0];
-	// string region_start = region[1];
+	string region_start = region[1];
 	string region_end = region[2];
-	// int region_start_num = atoi(region_start.c_str());
+	int region_start_num = atoi(region_start.c_str());
 	int region_end_num = atoi(region_end.c_str());
 	
 	unsigned int right_pointer = left_pointer;
