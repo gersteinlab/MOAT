@@ -1462,10 +1462,6 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 				// }
-				
-				// Store the var_array indices of the variants that we're working with
-				// Used to join with extra columns in output step
-				vector<unsigned int> temp_id_array;
 			
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
 					int rand_range_start = atoi(ann_array[j][1].c_str());
@@ -1484,6 +1480,10 @@ int main (int argc, char* argv[]) {
 				
 					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
+					
+					// Store the var_array indices of the variants that we're working with
+					// Used to join with extra columns in output step
+					vector<unsigned int> temp_id_array;
 					
 					// Add to id_array
 					for (unsigned int k = range.first; k < range.second; k++) {
