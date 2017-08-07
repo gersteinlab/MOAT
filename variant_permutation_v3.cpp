@@ -220,7 +220,7 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 		
 		// Intersection test
 		if (!(isGreaterIntervals(intervals[i], region))) {
-			if (region_chr == val_chr && region_start_num <= val_end_num && region_end_num >= val_start_num) {
+			if (region_chr == val_chr && region_start_num <= val_end_num && region_end_num > val_start_num) {
 				right_pointer++;
 			} else {
 				left_pointer++;
@@ -229,14 +229,14 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 		} else { // Verdun
 		
 			// DEBUG
-			printf("val_chr: %s\n", val_chr.c_str());
-			printf("val_start: %d\n", val_start_num);
-			printf("val_end: %d\n", val_end_num);
-			printf("reg_chr: %s\n", region_chr.c_str());
-			printf("reg_start: %d\n", region_start_num);
-			printf("reg_end: %d\n", region_end_num);
-			printf("left: %d\n", (int)left_pointer);
-			printf("right: %d\n", (int)right_pointer);
+// 			printf("val_chr: %s\n", val_chr.c_str());
+// 			printf("val_start: %d\n", val_start_num);
+// 			printf("val_end: %d\n", val_end_num);
+// 			printf("reg_chr: %s\n", region_chr.c_str());
+// 			printf("reg_start: %d\n", region_start_num);
+// 			printf("reg_end: %d\n", region_end_num);
+// 			printf("left: %d\n", (int)left_pointer);
+// 			printf("right: %d\n", (int)right_pointer);
 		
 			break;
 		}
