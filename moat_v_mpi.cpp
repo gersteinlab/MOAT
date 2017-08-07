@@ -724,6 +724,9 @@ int main (int argc, char* argv[]) {
 	
 			/* Begin dividing work for MPI processes */
 			
+			// Vector of starting indices
+			vector<unsigned int> chr_starters (25,UINT_MAX);
+			
 			// Iterate through the chromosomes
 			unsigned int chr_ann_pointer = 0;
 			unsigned int chr_var_pointer = 0;
@@ -738,6 +741,9 @@ int main (int argc, char* argv[]) {
 				
 				for (unsigned int k = chr_var_pointer; k < var_array.size(); k++) {
 					if (chr2int(var_array[k][0]) == j) {
+						if (chr_starters[j-1] == UINT_MAX) {
+							chr_starters[j-1] = k;
+						}
 						chr_var_array.push_back(var_array[k]);
 					} else if (chr2int(var_array[k][0]) > j) {
 						break;
@@ -1072,8 +1078,8 @@ int main (int argc, char* argv[]) {
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
 						
-						for (unsigned int k = 3; k < var_array[permuted_var_id[j]].size(); k++) {
-							vec.push_back(var_array[permuted_var_id[j]][k]);
+						for (unsigned int k = 3; k < var_array[chr_starters[int2chr(this_chr)-1]+permuted_var_id[j]].size(); k++) {
+							vec.push_back(var_array[chr_starters[int2chr(this_chr)-1]+permuted_var_id[j]][k]);
 						}
 // 						vec.push_back(string(ref_str));
 // 						vec.push_back(string(alt_str));
