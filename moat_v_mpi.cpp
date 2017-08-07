@@ -1078,8 +1078,8 @@ int main (int argc, char* argv[]) {
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
 						
-						for (unsigned int k = 3; k < var_array[chr_starters[int2chr(this_chr)-1]+permuted_var_id[j]].size(); k++) {
-							vec.push_back(var_array[chr_starters[int2chr(this_chr)-1]+permuted_var_id[j]][k]);
+						for (unsigned int k = 3; k < var_array[chr_starters[chr2int(this_chr)-1]+permuted_var_id[j]].size(); k++) {
+							vec.push_back(var_array[chr_starters[chr2int(this_chr)-1]+permuted_var_id[j]][k]);
 						}
 // 						vec.push_back(string(ref_str));
 // 						vec.push_back(string(alt_str));
