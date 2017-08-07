@@ -1101,7 +1101,19 @@ int main (int argc, char* argv[]) {
 			FILE *outfile_ptr = fopen(outfile.c_str(), "w");
 			
 			for (unsigned int k = 0; k < permuted_set.size(); k++) {
-				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+			
+				string outline = "";
+				for (unsigned int l = 0; l < permuted_set[k].size(); l++) {
+					outline += permuted_set[k][l];
+					if (l < permuted_set[k].size()-1) {
+						outline += "\t";
+					} else {
+						outline += "\n";
+					}
+				}
+				
+				fprintf(outfile_ptr, "%s", outline.c_str());
+				// fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
 			}
 			fclose(outfile_ptr);
 			
