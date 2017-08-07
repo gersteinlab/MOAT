@@ -222,7 +222,7 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 		printf("val_chr: %s\n", val_chr.c_str());
 		printf("val_start: %d\n", val_start_num);
 		printf("val_end: %d\n", val_end_num);
-		printf("reg_chr: %s\n", reg_chr.c_str());
+		printf("reg_chr: %s\n", region_chr.c_str());
 		printf("reg_end: %d\n", region_end_num);
 		
 		// Intersection test
