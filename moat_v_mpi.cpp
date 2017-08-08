@@ -1398,6 +1398,9 @@ int main (int argc, char* argv[]) {
 			
 				// Turn into the expected data structures (vectors)
 				string chr = int2chr(chr_num);
+				
+				// DEBUG
+				printf("Breakpoint Alpha\n");
 			
 				vector<vector<string> > var_array;
 			
@@ -1439,6 +1442,9 @@ int main (int argc, char* argv[]) {
 					ann_array.push_back(vec);
 				}
 				
+				// DEBUG
+				printf("Breakpoint Beta\n");
+				
 				string chr_nt = "";
 			
 				// if (trimer) {
@@ -1469,6 +1475,9 @@ int main (int argc, char* argv[]) {
 						return 1;
 					}
 				// }
+				
+				// DEBUG
+				printf("Breakpoint Ceti\n");
 			
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
 					int rand_range_start = atoi(ann_array[j][1].c_str());
@@ -1607,6 +1616,9 @@ int main (int argc, char* argv[]) {
 // 					printf("Size check 1: GTC: %d\n", (int)local_nt["GTC"].size());
 // 					MPI_Abort(MPI_COMM_WORLD, 1);
 // 					return 1;
+
+				// DEBUG
+				printf("Breakpoint Delta\n");
 				
 					// Variant processing loop
 					for (unsigned int k = range.first; k < range.second; k++) {
@@ -1691,6 +1703,9 @@ int main (int argc, char* argv[]) {
 						}
 						
 						// END 3MER CODE
+						
+						// DEBUG
+						printf("Breakpoint Epsilon\n");
 						
 						vector<string> vec;
 						vec.push_back(var_array[k][0]);
@@ -1795,6 +1810,9 @@ int main (int argc, char* argv[]) {
 				MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
 				MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
 			}
+			
+			// DEBUG
+			printf("Breakpoint Gamma\n");
 		
 			// Sending time
 			// Send chr and end coordinates of the permuted variants
