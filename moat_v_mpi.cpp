@@ -542,7 +542,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		// DEBUG
-		printf("Breakpoint 1\n");
+		// printf("Breakpoint 1\n");
 	
 		// Sort the arrays
 		sort(var_array.begin(), var_array.end(), cmpIntervals);
@@ -685,7 +685,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		// DEBUG
-		printf("Breakpoint 2\n");
+		// printf("Breakpoint 2\n");
 	
 		// DEBUG - check ann_array values after prohibited region subtraction
 // 		FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
@@ -826,7 +826,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			printf("Breakpoint 1\n");
+			// printf("Breakpoint 1\n");
 			
 			// NEW CODE
 			// Do wg signal step on the previously created permutation
@@ -1038,7 +1038,7 @@ int main (int argc, char* argv[]) {
 			vector<vector<string> > permuted_set;
 			
 			// DEBUG
-			printf("Breakpoint 2\n");
+			// printf("Breakpoint 2\n");
 			
 			// Count how many processes we've heard back from
 			counter = 0;
@@ -1095,7 +1095,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			printf("Breakpoint 3\n");
+			// printf("Breakpoint 3\n");
 			
 			// For DEBUG purposes, disable the sort function
 			sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
@@ -1128,7 +1128,7 @@ int main (int argc, char* argv[]) {
 			fclose(outfile_ptr);
 			
 			// DEBUG
-			printf("Breakpoint 4\n");
+			// printf("Breakpoint 4\n");
 		}
 		
 		/* Signal child processes to end */
@@ -1327,7 +1327,7 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// DEBUG
-		printf("Breakpoint 5\n");
+		// printf("Breakpoint 5\n");
 			
 	} else { // Child process, do a subdivision of the work
 	
@@ -1400,7 +1400,7 @@ int main (int argc, char* argv[]) {
 				string chr = int2chr(chr_num);
 				
 				// DEBUG
-				printf("Breakpoint Alpha\n");
+				// printf("Breakpoint Alpha\n");
 			
 				vector<vector<string> > var_array;
 			
@@ -1443,7 +1443,7 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-				printf("Breakpoint Beta\n");
+				// printf("Breakpoint Beta\n");
 				
 				string chr_nt = "";
 			
@@ -1477,7 +1477,7 @@ int main (int argc, char* argv[]) {
 				// }
 				
 				// DEBUG
-				printf("Breakpoint Ceti\n");
+				// printf("Breakpoint Ceti\n");
 			
 				for (unsigned int j = 0; j < ann_array.size(); j++) {
 					int rand_range_start = atoi(ann_array[j][1].c_str());
@@ -1618,7 +1618,7 @@ int main (int argc, char* argv[]) {
 // 					return 1;
 
 				// DEBUG
-				printf("Breakpoint Delta\n");
+				// printf("Breakpoint Delta\n");
 				
 					// Variant processing loop
 					for (unsigned int k = range.first; k < range.second; k++) {
@@ -1705,7 +1705,7 @@ int main (int argc, char* argv[]) {
 						// END 3MER CODE
 						
 						// DEBUG
-						printf("Breakpoint Epsilon\n");
+						// printf("Breakpoint Epsilon\n");
 						
 						vector<string> vec;
 						vec.push_back(var_array[k][0]);
@@ -1812,7 +1812,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			printf("Breakpoint Gamma\n");
+			// printf("Breakpoint Gamma\n");
 		
 			// Sending time
 			// Send chr and end coordinates of the permuted variants
@@ -1820,7 +1820,7 @@ int main (int argc, char* argv[]) {
 			MPI_Send(&permuted_var_coor_size, 1, MPI_INT, 0, 6, MPI_COMM_WORLD);
 			
 			// DEBUG
-			printf("permuted_var_coor_size: %d\n", permuted_var_coor_size);
+			// printf("permuted_var_coor_size: %d\n", permuted_var_coor_size);
 			
 			// Proceed if nonzero size
 			if (permuted_var_coor_size > 0) {
@@ -1837,18 +1837,18 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-				printf("permuted_var_coor[0]: %d\n", permuted_var_coor[0]);
-				printf("permuted_var_coor[1]: %d\n", permuted_var_coor[1]);
-				printf("permuted_var_id[0]: %d\n", permuted_var_id[0]);
-				printf("permuted_var_id[1]: %d\n", permuted_var_id[1]);
-				printf("permuted_var_id[2]: %d\n", permuted_var_id[2]);
+// 				printf("permuted_var_coor[0]: %d\n", permuted_var_coor[0]);
+// 				printf("permuted_var_coor[1]: %d\n", permuted_var_coor[1]);
+// 				printf("permuted_var_id[0]: %d\n", permuted_var_id[0]);
+// 				printf("permuted_var_id[1]: %d\n", permuted_var_id[1]);
+// 				printf("permuted_var_id[2]: %d\n", permuted_var_id[2]);
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
 				// MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
 				MPI_Send(permuted_var_id, (permuted_var_coor_size/2), MPI_UNSIGNED, 0, 23, MPI_COMM_WORLD);
 				
 				// DEBUG
-				printf("Breakpoint Gamma Quadrant\n");
+				// printf("Breakpoint Gamma Quadrant\n");
 			
 				free(permuted_var_coor);
 				// free(permuted_var_alleles);
@@ -1859,12 +1859,12 @@ int main (int argc, char* argv[]) {
 			// END CHILD CODE
 			
 			// DEBUG
-			printf("Breakpoint Hydra\n");
+			// printf("Breakpoint Hydra\n");
 		}
 	}
 
 	// DEBUG
-	printf("Breakpoint 3\n");
+	// printf("Breakpoint 3\n");
 	
 	// Verdun
 	MPI_Finalize();
