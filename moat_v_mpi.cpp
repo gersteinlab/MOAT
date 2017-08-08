@@ -1499,12 +1499,12 @@ int main (int argc, char* argv[]) {
 					
 					// Store the var_array indices of the variants that we're working with
 					// Used to join with extra columns in output step
-					vector<unsigned int> temp_id_array;
+					// vector<unsigned int> temp_id_array;
 					
 					// Add to id_array
-					for (unsigned int k = range.first; k < range.second; k++) {
-						temp_id_array.push_back(k);
-					}
+// 					for (unsigned int k = range.first; k < range.second; k++) {
+// 						temp_id_array.push_back(k);
+// 					}
 				
 					int var_subset_count = range.second - range.first;
 					if (var_subset_count == 0) {
@@ -1800,7 +1800,7 @@ int main (int argc, char* argv[]) {
 						}
 		
 						permuted_set.push_back(vec);
-						id_array.push_back(temp_id_array[k]);
+						id_array.push_back(k);
 					}
 				}
 				free(chr_ann_coor);
