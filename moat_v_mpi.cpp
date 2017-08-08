@@ -1819,6 +1819,9 @@ int main (int argc, char* argv[]) {
 			int permuted_var_coor_size = 2*permuted_set.size();
 			MPI_Send(&permuted_var_coor_size, 1, MPI_INT, 0, 6, MPI_COMM_WORLD);
 			
+			// DEBUG
+			printf("permuted_var_coor_size: %d\n", permuted_var_coor_size);
+			
 			// Proceed if nonzero size
 			if (permuted_var_coor_size > 0) {
 				int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
@@ -1832,6 +1835,11 @@ int main (int argc, char* argv[]) {
 					// permuted_var_alleles[2*i+1] = permuted_set[i][4][0];
 					permuted_var_id[i] = id_array[i];
 				}
+				
+				// DEBUG
+				printf("permuted_var_coor[0]: %d\n", permuted_var_coor[0]);
+				printf("permuted_var_coor[1]: %d\n", permuted_var_coor[1]);
+				printf("permuted_var_id[0]: %d\n", permuted_var_id[0]);
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
 				// MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
@@ -1844,6 +1852,9 @@ int main (int argc, char* argv[]) {
 			
 			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			// END CHILD CODE
+			
+			// DEBUG
+			printf("Breakpoint Hydra\n");
 		}
 	}
 
