@@ -18,8 +18,8 @@ using namespace std;
 
 #define STRSIZE 1000
 // #define NUMTHREADSBASE 32
-// #define NUMTHREADSBASE 21
-#define NUMTHREADSBASE 15
+#define NUMTHREADSBASE 21
+// #define NUMTHREADSBASE 15
 
 // Refactorization of the code that turns a chromosome string into an integer
 __host__ int chr2int (string chr_str) {
