@@ -1675,12 +1675,13 @@ int main (int argc, char* argv[]) {
 							// If no positions are available, end program with an error and suggest
 							// a larger bin size
 							if (pos.size()-1 == 0) {
-								char errstring[STRSIZE];
-								sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
-												ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-								fprintf(stderr, errstring);
-								MPI_Abort(MPI_COMM_WORLD, 1);
-								return 1;
+								continue;
+// 								char errstring[STRSIZE];
+// 								sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
+// 												ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+// 								fprintf(stderr, errstring);
+// 								MPI_Abort(MPI_COMM_WORLD, 1);
+// 								return 1;
 							}
 		
 							// vector<int> pos2;
@@ -1688,6 +1689,10 @@ int main (int argc, char* argv[]) {
 								if (pos[l] != atoi(cur_var[2].c_str())-1) {
 									pos2.push_back(pos[l]);
 								}
+							}
+							
+							if (pos2.size() == 0) {
+								continue;
 							}
 						
 							// DEBUG
