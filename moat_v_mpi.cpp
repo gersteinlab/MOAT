@@ -1840,10 +1840,15 @@ int main (int argc, char* argv[]) {
 				printf("permuted_var_coor[0]: %d\n", permuted_var_coor[0]);
 				printf("permuted_var_coor[1]: %d\n", permuted_var_coor[1]);
 				printf("permuted_var_id[0]: %d\n", permuted_var_id[0]);
+				printf("permuted_var_id[1]: %d\n", permuted_var_id[1);
+				printf("permuted_var_id[2]: %d\n", permuted_var_id[2]);
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
 				// MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
 				MPI_Send(permuted_var_id, (permuted_var_coor_size/2), MPI_UNSIGNED, 0, 23, MPI_COMM_WORLD);
+				
+				// DEBUG
+				printf("Breakpoint Gamma Quadrant\n");
 			
 				free(permuted_var_coor);
 				// free(permuted_var_alleles);
