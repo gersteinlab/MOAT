@@ -712,7 +712,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		// DEBUG
-		// printf("Breakpoint 1\n");
+		printf("Breakpoint 1\n");
 	
 		// Sort the arrays
 		sort(var_array.begin(), var_array.end(), cmpIntervals);
@@ -936,7 +936,7 @@ int main (int argc, char* argv[]) {
 		}
 	
 		// DEBUG - check the covariate vector
-		// printf("Breakpoint 1\n");
+		printf("Breakpoint 1\n");
 	// 	for (unsigned int i = 0; i < covar_features.size(); i++) {
 	// 		for (unsigned int j = 0; j < covar_features[i].size(); j++) {
 	// 			printf("%f\n", covar_features[i][j]);
@@ -1063,7 +1063,7 @@ int main (int argc, char* argv[]) {
 		// indicates the closest centroid to each vector in "covar_features"
 	
 		// DEBUG
-		// printf("Breakpoint 2\n");
+		printf("Breakpoint 2\n");
 		// return 0;
 // 		string centroids_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/centroids.txt";
 // 		FILE *centroids_ptr = fopen(centroids_file.c_str(), "w");
@@ -1460,7 +1460,7 @@ int main (int argc, char* argv[]) {
 		while (permutation_flag) {
 		
 			// DEBUG
-			// printf("Breakpoint Sigma\n");
+			printf("Breakpoint Sigma\n");
 		
 			// The output vector
 			vector<vector<string> > permuted_set;
@@ -1482,7 +1482,7 @@ int main (int argc, char* argv[]) {
 			while (flag == 0) {
 				
 				// DEBUG
-				// printf("Breakpoint Kamikawa\n");
+				printf("Breakpoint Kamikawa\n");
 				
 				// Receive cluster bins
 				int cluster_bin_vecsize;
@@ -1627,7 +1627,7 @@ int main (int argc, char* argv[]) {
 					variant_pointer = range.first;
 			
 					// DEBUG
-					// printf("Breakpoint 3\n");
+					printf("Breakpoint 3\n");
 					// printf("%d,%d\n", range.first, range.second);
 			
 					// int var_subset_count = range.second - range.first + 1;
@@ -2020,7 +2020,7 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// DEBUG
-			// printf("Breakpoint Zeta\n");
+			printf("Breakpoint Zeta\n");
 			
 			// Sending time
 			// Send chr and end coordinates of the permuted variants
@@ -2053,7 +2053,7 @@ int main (int argc, char* argv[]) {
 			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			
 			// DEBUG
-			// printf("Breakpoint Tau\n");
+			printf("Breakpoint Tau\n");
 			
 			permuted_set.clear();
 			
@@ -2064,7 +2064,7 @@ int main (int argc, char* argv[]) {
 	// End of parallel portion
 	
 	// DEBUG
-	// printf("Breakpoint 3\n");
+	printf("Breakpoint 3\n");
 	
 	// Verdun
 	MPI_Finalize();
