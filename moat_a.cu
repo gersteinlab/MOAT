@@ -17,8 +17,8 @@
 using namespace std;
 
 #define STRSIZE 1000
-#define NUMTHREADSBASE 70
-// #define NUMTHREADSBASE 55
+// #define NUMTHREADSBASE 70
+#define NUMTHREADSBASE 55
 // #define NUMTHREADSBASE 32
 // #define NUMTHREADSBASE 21
 // #define NUMTHREADSBASE 15
@@ -1243,7 +1243,7 @@ int main (int argc, char* argv[]) {
 // 	*test_int_cpu = 246;
 // 	cudaMemcpy(test_int_gpu, test_int_cpu, sizeof(int), cudaMemcpyHostToDevice);
 
-	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 83886080);
+	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 503316480);
 	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMalloc((void**)&gpu_var_chr, var_arr_length*sizeof(int));
