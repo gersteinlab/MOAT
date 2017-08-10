@@ -581,7 +581,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	
 	// Which thread am I?
 	int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	int total_threads = NUMTHREADSBASE*NUMTHREADSBASE;
+	int total_threads = 3*1024;
 	
 	// DEBUG
 // 	if (tid == 0) {
