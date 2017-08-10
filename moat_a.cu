@@ -17,7 +17,7 @@
 using namespace std;
 
 #define STRSIZE 1000
-#define NUMTHREADSBASE 70
+// #define NUMTHREADSBASE 70
 // #define NUMTHREADSBASE 55
 // #define NUMTHREADSBASE 32
 // #define NUMTHREADSBASE 21
@@ -1326,8 +1326,8 @@ int main (int argc, char* argv[]) {
 	GPUerrchk(cudaPeekAtLastError());
 	
 	// Try out 16x16 and see how that goes
-	int num_blocks = NUMTHREADSBASE;
-	int threads_per_block = NUMTHREADSBASE;
+	int num_blocks = 3;
+	int threads_per_block = 1024;
 	
 	// DEBUG
 	// var_signal, gpu_pvalues, gpu_signal_pvalues
