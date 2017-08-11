@@ -581,7 +581,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	
 	// Which thread am I?
 	int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	int total_threads = 6*512;
+	int total_threads = 8*128;
 	
 	// DEBUG
 // 	if (tid == 0) {
@@ -1326,8 +1326,8 @@ int main (int argc, char* argv[]) {
 	GPUerrchk(cudaPeekAtLastError());
 	
 	// Try out 16x16 and see how that goes
-	int num_blocks = 6;
-	int threads_per_block = 512;
+	int num_blocks = 8;
+	int threads_per_block = 128;
 	
 	// DEBUG
 	// var_signal, gpu_pvalues, gpu_signal_pvalues
