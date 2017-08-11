@@ -578,12 +578,12 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		// Malloc free the temp arrays
  		free(upstream_start);
  		free(downstream_start);
- 		free(varcounts);
+ 		// free(varcounts);
  		free(d_state);
  		
- 		if (funseq_opt) {
- 			free(signal_scores);
- 		}
+//  		if (funseq_opt) {
+//  			free(signal_scores);
+//  		}
  		
  		// DEBUG
 //  		printf("GPU pvalue %d: %f\n", i, fraction);
