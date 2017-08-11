@@ -361,15 +361,20 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 	 	unsigned int vpointer2 = v_anchor;
 	 	
 	 	// A collection of intersecting variants counts from the random bins
-	 	int *varcounts = (int *)malloc(n*sizeof(int));
-	 	int varcounts_index = 0;
+// 	 	int *varcounts = (int *)malloc(n*sizeof(int));
+// 	 	int varcounts_index = 0;
+
+		// P-value calculation: how many of the random bins have at least as many
+ 		// variants at k_t?
+ 		int overbins = 0;
 	 	
 	 	// Collection of WG signal score sums for random bins
 	 	// Uses the same index as varcounts
-	 	double *signal_scores;
-	 	if (funseq_opt) {
-	 		signal_scores = (double *)malloc(n*sizeof(double));
-	 	}
+	 	// double *signal_scores;
+	 	// if (funseq_opt) {
+	 		// signal_scores = (double *)malloc(n*sizeof(double));
+	 	// }
+	 	int signal_overbins = 0;
 	 	
 	 	// Backwards search!
 	 	unsigned int j = (n/2);
@@ -435,14 +440,21 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 				}
 			}
 			
-			// this_variants has been settled, save for output
-			varcounts[varcounts_index] = this_variants;
-			
-			if (funseq_opt) {
-				signal_scores[varcounts_index] = this_signal_sum;
+			// this_variants has been settled
+			if (this_variants >= int_variants) {
+				overbins++;
 			}
 			
-			varcounts_index++;
+			// varcounts[varcounts_index] = this_variants;
+			
+			if (funseq_opt) {
+				if (this_signal_sum >= signal_sum) {
+					signal_overbins++;
+				}
+				// signal_scores[varcounts_index] = this_signal_sum;
+			}
+			
+			// varcounts_index++;
 		} while (j > 0);
 		
 		// Downstream bins: a more straight forward search :)
@@ -509,14 +521,21 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 				}
  			}
  			
- 			// this_variants has been settled, save for output
- 			varcounts[varcounts_index] = this_variants;
- 			
- 			if (funseq_opt) {
-				signal_scores[varcounts_index] = this_signal_sum;
+ 			// this_variants has been settled
+ 			if (this_variants >= int_variants) {
+				overbins++;
 			}
  			
- 			varcounts_index++;
+ 			// varcounts[varcounts_index] = this_variants;
+ 			
+ 			if (funseq_opt) {
+ 				if (this_signal_sum >= signal_sum) {
+					signal_overbins++;
+				}
+				// signal_scores[varcounts_index] = this_signal_sum;
+			}
+ 			
+ 			// varcounts_index++;
  		}
  		
  		// DEBUG
@@ -526,12 +545,12 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		
  		// P-value calculation: how many of the random bins have at least as many
  		// variants at k_t?
- 		int overbins = 0;
- 		for (unsigned int j = 0; j < n; j++) {
- 			if (varcounts[j] >= int_variants) {
- 				overbins++;
- 			}
- 		}
+//  		int overbins = 0;
+//  		for (unsigned int j = 0; j < n; j++) {
+//  			if (varcounts[j] >= int_variants) {
+//  				overbins++;
+//  			}
+//  		}
  		
  		double fraction = (double)overbins/(double)n;
  		gpu_pvalues[i] = fraction;
@@ -541,16 +560,16 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  		
  		// wg signal code wrapup
  		if (funseq_opt) {
-			int signal_overbins = 0;
-			for (unsigned int j = 0; j < n; j++) {
-			
-				// DEBUG
- 				// printf("Signal score %d: %f\n", j, signal_scores[j]);
-			
-				if (signal_scores[j] >= signal_sum) {
-					signal_overbins++;
-				}
-			}
+// 			int signal_overbins = 0;
+// 			for (unsigned int j = 0; j < n; j++) {
+// 			
+// 				// DEBUG
+//  				// printf("Signal score %d: %f\n", j, signal_scores[j]);
+// 			
+// 				if (signal_scores[j] >= signal_sum) {
+// 					signal_overbins++;
+// 				}
+// 			}
 		
 			double pfrac = (double)signal_overbins/(double)n;
 			gpu_signal_pvalues[i] = pfrac;
