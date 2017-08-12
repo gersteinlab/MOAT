@@ -1134,14 +1134,37 @@ int main (int argc, char* argv[]) {
 		numclust = cluster_assign+1;
 	}
 	
+	// DEBUG: hardcode the values
+	ann_array.clear();
+	vector<string> temp;
+	temp.push_back("chr1");
+	temp.push_back("100001");
+	temp.push_back("200001");
+	ann_array.push_back(temp);
+	temp.clear();
+	temp.push_back("chr1");
+	temp.push_back("200001");
+	temp.push_back("300001");
+	ann_array.push_back(temp);
+	member.clear();
+	member.push_back(0);
+	member.push_back(0);
+	numclust = 1;
+	var_array.clear();
+	temp.clear();
+	temp.push_back("chr1");
+	temp.push_back("100000");
+	temp.push_back("100001");
+	var_array.push_back(temp);
+	
 	// DEBUG
-	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
-	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
-	for (unsigned int i = 0; i < member.size(); i++) {
-		fprintf(cluster_ptr, "%s\t%s\t%s\t%d\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str(), member[i]);
-	}
-	fclose(cluster_ptr);
-	return 0;
+// 	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
+// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+// 	for (unsigned int i = 0; i < member.size(); i++) {
+// 		fprintf(cluster_ptr, "%s\t%s\t%s\t%d\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str(), member[i]);
+// 	}
+// 	fclose(cluster_ptr);
+// 	return 0;
 	
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
