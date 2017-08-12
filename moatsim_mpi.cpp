@@ -1642,9 +1642,9 @@ int main (int argc, char* argv[]) {
 					vector<string> rand_range = cluster_bins[l];
 					
 					// DEBUG
-// 					printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
-// 					printf("cluster start: %s\n", cluster_bins[l][1].c_str());
-// 					printf("cluster end: %s\n", cluster_bins[l][2].c_str());
+					printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
+					printf("cluster start: %s\n", cluster_bins[l][1].c_str());
+					printf("cluster end: %s\n", cluster_bins[l][2].c_str());
 			
 					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
@@ -1713,8 +1713,8 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-// 				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
-// 				printf("Epoch nt: %d\n", epoch_nt);
+				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+				printf("Epoch nt: %d\n", epoch_nt);
 				
 				// BEGIN 3MER CODE
 			
@@ -1878,7 +1878,7 @@ int main (int argc, char* argv[]) {
 				
 						// DEBUG
 						// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-						// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
 						
@@ -1929,7 +1929,7 @@ int main (int argc, char* argv[]) {
 						}
 					
 						// DEBUG
-						// printf("Number of available positions: %d\n", (int)pos2.size());
+						printf("Number of available positions: %d\n", (int)pos2.size());
 // 						for (unsigned int z = 0; z < pos2.size(); z++) {
 // 							printf("Pos %d: %d\n", z, pos2[z]);
 // 						}
