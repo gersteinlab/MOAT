@@ -138,7 +138,7 @@ bool isGreaterIntervals (vector<string> a, vector<string> b) {
 	if (a_chr_int != b_chr_int) {
 		return (a_chr_int > b_chr_int);
 	} else {
-		return (a_start > b_end);
+		return (a_end > b_end);
 	}
 }
 
