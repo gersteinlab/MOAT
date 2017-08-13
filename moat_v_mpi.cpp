@@ -705,27 +705,27 @@ int main (int argc, char* argv[]) {
 		// int next_child = 1;
 		
 		// DEBUG: hardcode the values
-	ann_array.clear();
-	vector<string> temp;
-	temp.push_back("chr1");
-	temp.push_back("100001");
-	temp.push_back("150001");
-	ann_array.push_back(temp);
-	temp.clear();
-	temp.push_back("chr1");
-	temp.push_back("150001");
-	temp.push_back("250001");
-	ann_array.push_back(temp);
-	// member.clear();
-	// member.push_back(0);
-	// member.push_back(0);
-	// numclust = 1;
-	var_array.clear();
-	temp.clear();
-	temp.push_back("chr1");
-	temp.push_back("150001");
-	temp.push_back("150002");
-	var_array.push_back(temp);
+// 	ann_array.clear();
+// 	vector<string> temp;
+// 	temp.push_back("chr1");
+// 	temp.push_back("100001");
+// 	temp.push_back("150001");
+// 	ann_array.push_back(temp);
+// 	temp.clear();
+// 	temp.push_back("chr1");
+// 	temp.push_back("150001");
+// 	temp.push_back("250001");
+// 	ann_array.push_back(temp);
+// 	// member.clear();
+// 	// member.push_back(0);
+// 	// member.push_back(0);
+// 	// numclust = 1;
+// 	var_array.clear();
+// 	temp.clear();
+// 	temp.push_back("chr1");
+// 	temp.push_back("150001");
+// 	temp.push_back("150002");
+// 	var_array.push_back(temp);
 		
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
