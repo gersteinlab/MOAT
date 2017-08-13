@@ -1135,27 +1135,27 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG: hardcode the values
-	ann_array.clear();
-	vector<string> temp;
-	temp.push_back("chr1");
-	temp.push_back("100001");
-	temp.push_back("150001");
-	ann_array.push_back(temp);
-	temp.clear();
-	temp.push_back("chr1");
-	temp.push_back("150001");
-	temp.push_back("250001");
-	ann_array.push_back(temp);
-	member.clear();
-	member.push_back(0);
-	member.push_back(0);
-	numclust = 1;
-	var_array.clear();
-	temp.clear();
-	temp.push_back("chr1");
-	temp.push_back("150000");
-	temp.push_back("150001");
-	var_array.push_back(temp);
+// 	ann_array.clear();
+// 	vector<string> temp;
+// 	temp.push_back("chr1");
+// 	temp.push_back("100001");
+// 	temp.push_back("150001");
+// 	ann_array.push_back(temp);
+// 	temp.clear();
+// 	temp.push_back("chr1");
+// 	temp.push_back("150001");
+// 	temp.push_back("250001");
+// 	ann_array.push_back(temp);
+// 	member.clear();
+// 	member.push_back(0);
+// 	member.push_back(0);
+// 	numclust = 1;
+// 	var_array.clear();
+// 	temp.clear();
+// 	temp.push_back("chr1");
+// 	temp.push_back("150000");
+// 	temp.push_back("150001");
+// 	var_array.push_back(temp);
 	
 	// DEBUG
 // 	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
@@ -1642,16 +1642,16 @@ int main (int argc, char* argv[]) {
 					vector<string> rand_range = cluster_bins[l];
 					
 					// DEBUG
-					printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
-					printf("cluster start: %s\n", cluster_bins[l][1].c_str());
-					printf("cluster end: %s\n", cluster_bins[l][2].c_str());
+// 					printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
+// 					printf("cluster start: %s\n", cluster_bins[l][1].c_str());
+// 					printf("cluster end: %s\n", cluster_bins[l][2].c_str());
 			
 					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
 			
 					// DEBUG
 					// printf("Breakpoint 3\n");
-					printf("%d,%d\n", range.first, range.second);
+					// printf("%d,%d\n", range.first, range.second);
 			
 					// int var_subset_count = range.second - range.first + 1;
 	// 				if (var_subset_count == 0) {
@@ -1713,8 +1713,8 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
-				printf("Epoch nt: %d\n", epoch_nt);
+// 				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+// 				printf("Epoch nt: %d\n", epoch_nt);
 				
 				// BEGIN 3MER CODE
 			
@@ -1889,8 +1889,8 @@ int main (int argc, char* argv[]) {
 						}
 				
 						// DEBUG
-						printf("DEBUG: %c,%c,%c\n", cur_nt1, cur_nt2, cur_nt3);
-						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+// 						printf("DEBUG: %c,%c,%c\n", cur_nt1, cur_nt2, cur_nt3);
+// 						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
 						
@@ -1941,7 +1941,7 @@ int main (int argc, char* argv[]) {
 						}
 					
 						// DEBUG
-						printf("Number of available positions: %d\n", (int)pos2.size());
+						// printf("Number of available positions: %d\n", (int)pos2.size());
 // 						for (unsigned int z = 0; z < pos2.size(); z++) {
 // 							printf("Pos %d: %d\n", z, pos2[z]);
 // 						}
