@@ -1144,7 +1144,7 @@ int main (int argc, char* argv[]) {
 	temp.clear();
 	temp.push_back("chr1");
 	temp.push_back("200001");
-	temp.push_back("300001");
+	temp.push_back("250001");
 	ann_array.push_back(temp);
 	member.clear();
 	member.push_back(0);
@@ -1153,8 +1153,8 @@ int main (int argc, char* argv[]) {
 	var_array.clear();
 	temp.clear();
 	temp.push_back("chr1");
-	temp.push_back("300000");
-	temp.push_back("300001");
+	temp.push_back("250000");
+	temp.push_back("250001");
 	var_array.push_back(temp);
 	
 	// DEBUG
