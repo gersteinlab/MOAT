@@ -100,10 +100,10 @@ bool isGreaterIntervals (vector<string> a, vector<string> b) {
 	
 	string a_chr = a[0];
 	int a_start = atoi(a[1].c_str());
-	// int a_end = atoi(a[2].c_str());
+	int a_end = atoi(a[2].c_str());
 	
 	string b_chr = b[0];
-	// int b_start = atoi(b[1].c_str());
+	int b_start = atoi(b[1].c_str());
 	int b_end = atoi(b[2].c_str());
 	
 	int a_chr_int;
