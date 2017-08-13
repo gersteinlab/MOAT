@@ -1153,8 +1153,8 @@ int main (int argc, char* argv[]) {
 	var_array.clear();
 	temp.clear();
 	temp.push_back("chr1");
-	temp.push_back("100001");
-	temp.push_back("100002");
+	temp.push_back("249999");
+	temp.push_back("250000");
 	var_array.push_back(temp);
 	
 	// DEBUG
