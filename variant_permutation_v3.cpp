@@ -220,7 +220,7 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 		
 		// Intersection test
 		if (!(isGreaterIntervals(intervals[i], region))) {
-			if (region_chr == val_chr && region_start_num < val_end_num && region_end_num >= val_start_num) {
+			if (region_chr == val_chr && region_start_num < val_end_num && region_end_num >= val_end_num) {
 				right_pointer++;
 			} else {
 				left_pointer++;
