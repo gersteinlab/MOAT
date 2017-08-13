@@ -1139,11 +1139,11 @@ int main (int argc, char* argv[]) {
 	vector<string> temp;
 	temp.push_back("chr1");
 	temp.push_back("100001");
-	temp.push_back("200001");
+	temp.push_back("150001");
 	ann_array.push_back(temp);
 	temp.clear();
 	temp.push_back("chr1");
-	temp.push_back("200001");
+	temp.push_back("150001");
 	temp.push_back("250001");
 	ann_array.push_back(temp);
 	member.clear();
@@ -1153,8 +1153,8 @@ int main (int argc, char* argv[]) {
 	var_array.clear();
 	temp.clear();
 	temp.push_back("chr1");
-	temp.push_back("200000");
-	temp.push_back("200001");
+	temp.push_back("150000");
+	temp.push_back("150001");
 	var_array.push_back(temp);
 	
 	// DEBUG
