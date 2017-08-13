@@ -99,11 +99,11 @@ bool cmpIntervals (vector<string> a, vector<string> b) {
 bool isGreaterIntervals (vector<string> a, vector<string> b) {
 	
 	string a_chr = a[0];
-	int a_start = atoi(a[1].c_str());
+	// int a_start = atoi(a[1].c_str());
 	int a_end = atoi(a[2].c_str());
 	
 	string b_chr = b[0];
-	int b_start = atoi(b[1].c_str());
+	// int b_start = atoi(b[1].c_str());
 	int b_end = atoi(b[2].c_str());
 	
 	int a_chr_int;
@@ -213,9 +213,9 @@ pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > c
 	for (unsigned int i = left_pointer; i < intervals.size(); i++) {
 		// Unpack interval
 		string val_chr = intervals[i][0];
-		string val_start = intervals[i][1];
+		// string val_start = intervals[i][1];
 		string val_end = intervals[i][2];
-		int val_start_num = atoi(val_start.c_str());
+		// int val_start_num = atoi(val_start.c_str());
 		int val_end_num = atoi(val_end.c_str());
 		
 		// Intersection test
