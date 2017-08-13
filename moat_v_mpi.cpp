@@ -704,6 +704,29 @@ int main (int argc, char* argv[]) {
 		// Has corresponding increment method that ensures the circular list property
 		// int next_child = 1;
 		
+		// DEBUG: hardcode the values
+	ann_array.clear();
+	vector<string> temp;
+	temp.push_back("chr1");
+	temp.push_back("100001");
+	temp.push_back("150001");
+	ann_array.push_back(temp);
+	temp.clear();
+	temp.push_back("chr1");
+	temp.push_back("150001");
+	temp.push_back("250001");
+	ann_array.push_back(temp);
+	member.clear();
+	member.push_back(0);
+	member.push_back(0);
+	numclust = 1;
+	var_array.clear();
+	temp.clear();
+	temp.push_back("chr1");
+	temp.push_back("150000");
+	temp.push_back("150001");
+	var_array.push_back(temp);
+		
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		
@@ -1494,7 +1517,7 @@ int main (int argc, char* argv[]) {
 					sprintf(rand_range_end_cstr, "%d", rand_range_end);
 					rand_range.push_back(string(rand_range_end_cstr));
 				
-					pair<unsigned int,unsigned int> range = intersecting_variantsV(var_array, rand_range, variant_pointer);
+					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
 					
 					// Store the var_array indices of the variants that we're working with
