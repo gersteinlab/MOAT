@@ -1646,12 +1646,12 @@ int main (int argc, char* argv[]) {
 					printf("cluster start: %s\n", cluster_bins[l][1].c_str());
 					printf("cluster end: %s\n", cluster_bins[l][2].c_str());
 			
-					pair<unsigned int,unsigned int> range = intersecting_variantsV(var_array, rand_range, variant_pointer);
+					pair<unsigned int,unsigned int> range = intersecting_variants(var_array, rand_range, variant_pointer);
 					variant_pointer = range.first;
 			
 					// DEBUG
 					// printf("Breakpoint 3\n");
-					// printf("%d,%d\n", range.first, range.second);
+					printf("%d,%d\n", range.first, range.second);
 			
 					// int var_subset_count = range.second - range.first + 1;
 	// 				if (var_subset_count == 0) {
