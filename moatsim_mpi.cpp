@@ -1138,13 +1138,13 @@ int main (int argc, char* argv[]) {
 	ann_array.clear();
 	vector<string> temp;
 	temp.push_back("chr1");
-	temp.push_back("1");
 	temp.push_back("100001");
+	temp.push_back("200001");
 	ann_array.push_back(temp);
 	temp.clear();
 	temp.push_back("chr1");
-	temp.push_back("100001");
-	temp.push_back("150001");
+	temp.push_back("200001");
+	temp.push_back("250001");
 	ann_array.push_back(temp);
 	member.clear();
 	member.push_back(0);
@@ -1153,8 +1153,8 @@ int main (int argc, char* argv[]) {
 	var_array.clear();
 	temp.clear();
 	temp.push_back("chr1");
-	temp.push_back("149999");
-	temp.push_back("150000");
+	temp.push_back("200000");
+	temp.push_back("200001");
 	var_array.push_back(temp);
 	
 	// DEBUG
@@ -1775,11 +1775,11 @@ int main (int argc, char* argv[]) {
 						int lower_bound;
 						int upper_bound;
 						if (trimer == 3) {
-							lower_bound = 1;
-							upper_bound = hg19_coor[cur_chr];
-						} else if (trimer == 5) {
 							lower_bound = 2;
 							upper_bound = hg19_coor[cur_chr]-1;
+						} else if (trimer == 5) {
+							lower_bound = 3;
+							upper_bound = hg19_coor[cur_chr]-2;
 						}
 			
 						for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
