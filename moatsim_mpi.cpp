@@ -1153,8 +1153,8 @@ int main (int argc, char* argv[]) {
 	var_array.clear();
 	temp.clear();
 	temp.push_back("chr1");
-	temp.push_back("250000");
-	temp.push_back("250001");
+	temp.push_back("100000");
+	temp.push_back("100001");
 	var_array.push_back(temp);
 	
 	// DEBUG
@@ -1848,8 +1848,20 @@ int main (int argc, char* argv[]) {
 					vector<string> coor;
 				
 					if (trimer) {
+					
+						// Check that we're not indexing out of bounds
+						if (obs_var_pos[k].first < 2 || obs_var_pos[k].first > epoch_nt-1) {
+							continue;
+						}
+					
 						char cur_nt0, cur_nt4;
 						if (trimer == 5) {
+						
+							// Check that we're not indexing out of bounds
+							if (obs_var_pos[k].first < 3 || obs_var_pos[k].first > epoch_nt-2) {
+								continue;
+							}
+						
 							cur_nt0 = toupper(concat_nt[obs_var_pos[k].first-3]);
 							cur_nt4 = toupper(concat_nt[obs_var_pos[k].first+1]);
 						}
