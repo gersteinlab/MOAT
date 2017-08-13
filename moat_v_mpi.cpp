@@ -704,7 +704,7 @@ int main (int argc, char* argv[]) {
 		// Has corresponding increment method that ensures the circular list property
 		// int next_child = 1;
 		
-		// DEBUG: hardcode the values
+		// DEBUG: hardcode the values 2
 // 	ann_array.clear();
 // 	vector<string> temp;
 // 	temp.push_back("chr1");
