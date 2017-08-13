@@ -723,8 +723,8 @@ int main (int argc, char* argv[]) {
 	var_array.clear();
 	temp.clear();
 	temp.push_back("chr1");
-	temp.push_back("150000");
 	temp.push_back("150001");
+	temp.push_back("150002");
 	var_array.push_back(temp);
 		
 		// First, give the trimer boolean flag to all children
