@@ -1358,7 +1358,7 @@ int main (int argc, char* argv[]) {
 		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
 	}
 	
-	cudaMalloc(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
 	
 	// DEBUG
 	// var_signal, gpu_pvalues, gpu_signal_pvalues
