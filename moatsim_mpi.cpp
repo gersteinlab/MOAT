@@ -520,52 +520,32 @@ int main (int argc, char* argv[]) {
 		// Covariate signal files in bigWig format
 		vector<string> covar_files;
 	
-		if (argc < 12) {
-			fprintf(stderr, "Usage: moatsim_mpi [number of clusters] [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+		if (argc < 10) {
+			fprintf(stderr, "Usage: moatsim_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window width] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
 		
-			numclust = atoi(argv[1]);
-			local_radius = atoi(argv[2]);
-		
-			if (argv[3][0] == 'y') {
-				same_chr = true;
-			} else if (argv[3][0] == 'n') {
-				same_chr = false;
-			} else {
-				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[3][0]);
-				MPI_Abort(MPI_COMM_WORLD, 1);
-				return 1;
-			}
-
-		
-			if (argv[4][0] == '5') {
-				trimer = 5;
-			} else if (argv[4][0] == '3') {
-				trimer = 3;
-			} else if (argv[4][0] == '0') {
+			if (argv[1][0] == 'y') {
+				trimer = 1;
+			} else if (argv[1][0] == 'n') {
 				trimer = 0;
 			} else {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[4][0]);
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
-			num_permutations = atoi(argv[5]);
-			window_radius = atoi(argv[6]);
-			min_width = atoi(argv[7]);
-			prohibited_file = string(argv[8]);
-			fasta_dir = string(argv[9]);
-			vfile = string(argv[10]);
-			outdir = string(argv[11]);
+			num_permutations = atoi(argv[2]);
+			window_radius = atoi(argv[3]);
+			min_width = atoi(argv[4]);
+			prohibited_file = string(argv[5]);
+			fasta_dir = string(argv[6]);
+			vfile = string(argv[7]);
+			outdir = string(argv[8]);
 		
-			for (int i = 12; i < argc; i++) {
+			for (int i = 9; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
-			}
-			
-			if (local_radius != -1) {
-				same_chr = false; // Lock this down to improve running time and memory usage
 			}
 		}
 	
@@ -636,7 +616,7 @@ int main (int argc, char* argv[]) {
 		vector<vector<double> > covar_features;
 	
 		// Number of clusters to create: numclust
-		// unsigned int numclust = 100;
+		unsigned int numclust = 30;
 	
 		// Bring variant file data into memory
 		// Save all columns
@@ -1176,9 +1156,6 @@ int main (int argc, char* argv[]) {
 	
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		
-		// Now transmit the local radius number
-		MPI_Bcast(&local_radius, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	
 		// Second, give the FASTA directory location to all children (tag = 10)
 		int strlen = fasta_dir.size() + 1;
