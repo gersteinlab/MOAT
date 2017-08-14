@@ -1,7 +1,7 @@
 CUDA := $(shell echo `command -v nvcc`)
 MPI := $(shell echo `command -v mpic++`)
 
-all: run_moat moat_a_cpu moat_a_gpu moat_v_serial moat_v_parallel moatsim moatsim_parallel
+all: run_moat moat_a_cpu moat_a_gpu moat_v_serial moat_v_parallel moatsim moatsim_parallel moat_a_v2
 
 run_moat: run_moat.cpp
 	g++ -Wall -o run_moat run_moat.cpp
