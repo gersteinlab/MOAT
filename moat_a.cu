@@ -1365,7 +1365,7 @@ int main (int argc, char* argv[]) {
 	cudaMalloc((void**)&upstream_start, num_threads*sizeof(int *));
 	cudaMalloc((void**)&downstream_start, num_threads*sizeof(int *));
 	
-	for (int i = 0; < num_threads; i++) {
+	for (int i = 0; i < num_threads; i++) {
 		cudaMalloc((void**)&upstream_start_b[i], (n/2)*sizeof(int));
 		cudaMalloc((void**)&downstream_start_b[i], (n/2)*sizeof(int));
 	}
