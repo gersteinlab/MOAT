@@ -99,7 +99,7 @@ __device__ void BottomUpSort(int* target_array, int n) {
 	free(temp_array);
 }
 
-__device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double* gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch, curandState **d_state) {
+__device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double* gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch, curandState **d_state, int **upstream_start, int **downstream_start) {
 
 	// DEBUG
 	// int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -292,8 +292,8 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		// Random number drawn from [0, dmax - dmin - (annotation's length)]
 		// Save only the start coordinate, the chr and end can be derived JIT
 		int range = dmax - dmin - (this_ann_end - this_ann_start + 1);
-		int *upstream_start = (int *)malloc((n/2)*sizeof(int));
-		int *downstream_start = (int *)malloc((n/2)*sizeof(int));
+// 		int *upstream_start = (int *)malloc((n/2)*sizeof(int));
+// 		int *downstream_start = (int *)malloc((n/2)*sizeof(int));
 		
 		// Upstream bin selection
 		// Configure where the start of this range is
@@ -314,7 +314,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			// DEBUG
 			// printf("this_rand_start: %d\n", rand_start);
 			
-			upstream_start[j] = rand_start;
+			upstream_start[tid][j] = rand_start;
 		}
 		
 		// Downstream bin selection
@@ -330,7 +330,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			
 			// DEBUG
 			// printf("this_rand_start: %d\n", rand_start);
-			downstream_start[j] = rand_start;
+			downstream_start[tid][j] = rand_start;
 		}
 		
 		// DEBUG: Check upstream and downstream random bins
@@ -344,8 +344,8 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		// Find the intersecting variants for the random bins
 		
 		// Sort the upstream and downstream random bins
-		BottomUpSort(upstream_start, (n/2));
-		BottomUpSort(downstream_start, (n/2));
+		BottomUpSort(upstream_start[tid], (n/2));
+		BottomUpSort(downstream_start[tid], (n/2));
 		// gpuIntervalMergeSortByEnd(upstream_chr, upstream_start, upstream_end, upstream_chr_sorted, upstream_start_sorted, upstream_end_sorted, 0, (n/2)-1);
 		// gpuIntervalMergeSortByStart(downstream_chr, downstream_start, downstream_end, downstream_chr_sorted, downstream_start_sorted, downstream_end_sorted, 0, (n/2)-1);
 		
@@ -392,7 +392,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
  			
  			// Unpack the current annotation
  			int upstream_ann_chr = this_ann_chr;
- 			int upstream_ann_start = upstream_start[j];
+ 			int upstream_ann_start = upstream_start[tid][j];
  			int upstream_ann_end = upstream_ann_start + (this_ann_end - this_ann_start);
  			
  			// Unpack the current variant
@@ -473,7 +473,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 			
 			// Unpack the current annotation
 			int downstream_ann_chr = this_ann_chr;
- 			int downstream_ann_start = downstream_start[j];
+ 			int downstream_ann_start = downstream_start[tid][j];
  			int downstream_ann_end = downstream_ann_start + (this_ann_end - this_ann_start);
  			
  			// Unpack the current variant
@@ -576,8 +576,8 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		}
  		
  		// Malloc free the temp arrays
- 		free(upstream_start);
- 		free(downstream_start);
+ 		// free(upstream_start);
+ 		// free(downstream_start);
  		// free(varcounts);
  		// free(d_state);
  		
@@ -591,7 +591,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 	}
 }
 
-__global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_ann_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double *gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch, curandState **d_state) {
+__global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_ann_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double *gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch, curandState **d_state, int **upstream_start, int **downstream_start) {
 // __global__ void apportionWork() {
 
 	// DEBUG
@@ -632,7 +632,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 // 			return;
 // 		}
 		
-		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state);
+		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start);
 	} else {
 		start = tid;
 		end = tid;
@@ -641,7 +641,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 		// printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
 		
 		if (tid < length) {
-			intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state);
+			intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start);
 		}
 	}
 }
@@ -1360,6 +1360,19 @@ int main (int argc, char* argv[]) {
 	
 	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
 	
+	int **upstream_start, **downstream_start, **upstream_start_b, **downstream_start;
+	
+	cudaMalloc((void**)&upstream_start, num_threads*sizeof(int *));
+	cudaMalloc((void**)&downstream_start, num_threads*sizeof(int *));
+	
+	for (int i = 0; < num_threads; i++) {
+		cudaMalloc((void**)&upstream_start_b[i], (n/2)*sizeof(int));
+		cudaMalloc((void**)&downstream_start_b[i], (n/2)*sizeof(int));
+	}
+	
+	cudaMemcpy(upstream_start, upstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	cudaMemcpy(downstream_start, downstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	
 	// DEBUG
 	// var_signal, gpu_pvalues, gpu_signal_pvalues
 // 	printf("This is debug print 1\n");
@@ -1382,7 +1395,7 @@ int main (int argc, char* argv[]) {
 //  		cudaDeviceSetLimit(cudaLimitMallocHeapSize, new_heap_size);
 // 	}
 	
-	apportionWork<<<num_blocks, threads_per_block>>>(gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_ann_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state);
+	apportionWork<<<num_blocks, threads_per_block>>>(gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_ann_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start);
 	GPUerrchk(cudaPeekAtLastError());
 	// apportionWork<<<1,1>>>();
 	
