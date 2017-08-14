@@ -1183,7 +1183,7 @@ int main (int argc, char* argv[]) {
 // 		int package_str_length = (int)package_str.size();
 		
 		// Transmit variant data
-		for (int i = 2; i < mpi_size; i++) {
+		for (int i = 1; i < mpi_size; i++) {
 			MPI_Send(var_coor, 2*var_array_size, MPI_INT, i, 12, MPI_COMM_WORLD);
 			// MPI_Send(var_alleles, 2*var_array_size, MPI_CHAR, i, 20, MPI_COMM_WORLD);
 			// MPI_Send(var_id, package_str_length, MPI_CHAR, i, 22, MPI_COMM_WORLD);
@@ -1252,7 +1252,7 @@ int main (int argc, char* argv[]) {
 			// Begin receiving data and produce output
 			// First flip the send/receive roles
 			int counter = 0;
-			while (counter < mpi_size-2) {
+			while (counter < mpi_size-1) {
 				int available_flag;
 				MPI_Recv(&available_flag, 1, MPI_INT, MPI_ANY_SOURCE, 9, MPI_COMM_WORLD, &status);
 				int next_child = status.MPI_SOURCE;
@@ -1263,7 +1263,7 @@ int main (int argc, char* argv[]) {
 			
 			// Count how many processes we've heard back from
 			counter = 0;
-			while (counter < mpi_size-2) {
+			while (counter < mpi_size-1) {
 				int permuted_var_coor_size;
 				MPI_Recv(&permuted_var_coor_size, 1, MPI_INT, MPI_ANY_SOURCE, 6, MPI_COMM_WORLD, &status);
 				int source = status.MPI_SOURCE;
@@ -1367,12 +1367,6 @@ int main (int argc, char* argv[]) {
 // 			MPI_Send(&permutation_flag, 1, MPI_INT, j, 8, MPI_COMM_WORLD);
 // 		}
 		
-		/* Also stop the reference genome feeder */
-		int *stopping_array = (int *)malloc(2*sizeof(int));
-		stopping_array[0] = 0;
-		stopping_array[1] = 0;
-		MPI_Send(stopping_array, 3, MPI_INT, 1, 15, MPI_COMM_WORLD);
-		
 		// Wrap up by removing the temporary files created along the way
 		string rmcom = "rm " + regions_presig;
 		system(rmcom.c_str());
@@ -1388,10 +1382,6 @@ int main (int argc, char* argv[]) {
 		// Receive the trimer boolean flag
 		int trimer;
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		
-		// Receive local radius
-		int local_radius;
-		MPI_Bcast(&local_radius, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		
 		// Receive directory with wg FASTA files
 		char fasta_dir_cstr[STRSIZE];
