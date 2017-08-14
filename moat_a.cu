@@ -1360,7 +1360,7 @@ int main (int argc, char* argv[]) {
 	
 	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
 	
-	int **upstream_start, **downstream_start, **upstream_start_b, **downstream_start;
+	int **upstream_start, **downstream_start, **upstream_start_b, **downstream_start_b;
 	
 	cudaMalloc((void**)&upstream_start, num_threads*sizeof(int *));
 	cudaMalloc((void**)&downstream_start, num_threads*sizeof(int *));
