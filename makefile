@@ -6,8 +6,8 @@ all: run_moat moat_a_cpu moat_a_gpu moat_v_serial moat_v_parallel moatsim moatsi
 run_moat: run_moat.cpp
 	g++ -Wall -o run_moat run_moat.cpp
 
-# moat_a_cpu: moat_a.cpp variant_permutation_v3.h variant_permutation_v3.cpp
-# 	g++ -Wall -o moat_a_cpu moat_a.cpp variant_permutation_v3.cpp
+moat_a_cpu: moat_a.cpp variant_permutation_v3.h variant_permutation_v3.cpp
+	g++ -Wall -o moat_a_cpu moat_a.cpp variant_permutation_v3.cpp
 
 moat_v_serial: moat_v_pval moat_v.cpp variant_permutation_v3.h variant_permutation_v3.cpp
 	g++ -Wall -o moat_v_serial moat_v.cpp variant_permutation_v3.cpp
