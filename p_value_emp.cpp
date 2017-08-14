@@ -9,11 +9,13 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
+#include <stdexcept>
 #include "variant_permutation_v3.h"
 
 using namespace std;
 
 #define STRSIZE 256
+#define BIGSTRSIZE 10240
 
 // Refactorization of the code that turns a chromosome string into an integer
 int chr2int (string chr_str) {
@@ -182,8 +184,17 @@ int main (int argc, char* argv[]) {
 	// Format: tab(chr, start, end, name, p-value)
 	string outfile;
 	
-	if (argc != 6) {
-		printf("Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file]. Exiting.\n");
+	// WG signal mode to use
+	// 'o': Evaluate wg signal on (o)bserved variants only
+	// 'p': Evaluate wg signal on permuted variants as well, output the p-value significance
+	// 'n': Do not use wg signal computation
+	char funseq_opt;
+	
+	// WG signal file to use. Must be bigWig format.
+	string signal_file;
+	
+	if (argc != 7 && argc != 8) {
+		fprintf(stderr, "Usage: p_value_emp [variant file] [annotation file] [prohibited regions file] [permutation variants' directory] [output file] [wg signal option (o/p/n)] [wg signal file (optional)]. Exiting.\n");
 		return 1;
 	} else {
 		vfile = string(argv[1]);
@@ -191,39 +202,81 @@ int main (int argc, char* argv[]) {
 		prohibited_file = string(argv[3]);
 		permutation_dir = string(argv[4]);
 		outfile = string(argv[5]);
+		funseq_opt = argv[6][0];
+		
+		if (argc == 8) {
+			signal_file = string(argv[7]);
+		}
 	}
 	
 	// Verify files, and import data to memory
 	struct stat vbuf;
 	if (stat(vfile.c_str(), &vbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (vbuf.st_size == 0) {
-		printf("Error: Variant file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Variant file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
 	struct stat abuf;
 	if (stat(afile.c_str(), &abuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", afile.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", afile.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (abuf.st_size == 0) {
-		printf("Error: Annotation file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Annotation file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
 	struct stat pbuf;
 	if (stat(prohibited_file.c_str(), &pbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (pbuf.st_size == 0) {
-		printf("Error: Prohibited regions file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Prohibited regions file cannot be empty. Exiting.\n");
+		return 1;
+	}
+	
+	// Verify that "funseq_opt" is valid
+	if (funseq_opt != 'o' && funseq_opt != 'p' && funseq_opt != 'n') {
+		fprintf(stderr, "Error: Funseq option was set to \'%c\', which is invalid. ", funseq_opt);
+		fprintf(stderr, "Must be either \'o\' or \'p\' or \'n\'. Exiting.\n");
+		return 1;
+	}
+	
+	// Check bigWigAverageOverBed and Funseq data file in static mode
+	if (funseq_opt != 'n') {
+		// Verify that bigWigAverageOverBed is in the same directory as this program
+		struct stat avgbuf;
+		char avgoverbed_cstr[] = "./bigWigAverageOverBed";
+		if (stat(avgoverbed_cstr, &avgbuf)) {
+			fprintf(stderr, "Error: bigWigAverageOverBed is not in the same directory as \"moat\". Exiting.\n");
+			return 1;
+		}
+		
+		// Verify wg signal file
+		struct stat databuf;
+		if (stat(prohibited_file.c_str(), &databuf)) { // Report the error and exit
+			fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+			return 1;
+		}
+		// Check that the file is not empty
+		if (databuf.st_size == 0) {
+			fprintf(stderr, "Error: WG signal file cannot be empty. Exiting.\n");
+			return 1;
+		}
+	}
+	
+	// Incompatible options
+	if (funseq_opt != 'n' && signal_file.empty()) {
+		fprintf(stderr, "Error: Requested use of wg signal scores without specifying ");
+		fprintf(stderr, "wg signal file. Exiting.\n");
 		return 1;
 	}
 	
@@ -339,7 +392,7 @@ int main (int argc, char* argv[]) {
 		return 1;
 	}
 	
-		// Collect the output values, will end with same size as ann_array
+	// Collect the output values, will end with same size as ann_array
 	vector<double> pvalues;
 	
 	// Sort the arrays
@@ -454,6 +507,222 @@ int main (int argc, char* argv[]) {
 		pvalues.push_back(fraction);
 	}
 	
+	// Also do wg signal calculation, if requested
+	// Legacy code assumes Funseq, hence the variable names
+	vector<double> funseq_scores;
+	vector<int> fs_overcount (ann_array.size(), 0);
+	if (funseq_opt != 'n') {
+		
+		// Retrieve current working directory for temporary output
+		string funseq_outdir = exec("pwd");
+		funseq_outdir.erase(funseq_outdir.find_last_not_of(" \n\r\t")+1);
+		funseq_outdir += "/tmp";
+		
+		// Verify that temporary output directory exists, or create it if it doesn't
+		string command = "mkdir -p " + funseq_outdir;
+		system(command.c_str());
+			
+		// Produce an input file for bigWigAverageOverBed in the temporary folder
+		string avg_infile = funseq_outdir + "/" + "avg_infile.txt";
+		string avg_outfile = funseq_outdir + "/" + "avg_outfile.txt";
+		int regnum = 1;
+		FILE *avg_infile_ptr = fopen(avg_infile.c_str(), "w");
+		for (unsigned int i = 0; i < var_array.size(); i++) {
+			char regnum_cstr[STRSIZE];
+			sprintf(regnum_cstr, "%d", regnum);
+			string regnum_str = "reg" + string(regnum_cstr);
+			fprintf(avg_infile_ptr, "%s\t%s\t%s\t%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str(), regnum_str.c_str());
+			regnum++;
+		}
+		fclose(avg_infile_ptr);
+		
+		// The actual command
+		// Assumes bigWigAverageOverBed is in same directory
+		command = "./bigWigAverageOverBed " + signal_file + " " + avg_infile + " " + avg_outfile;
+		system(command.c_str());
+		
+		// Next command depends on OS
+		command = "uname";
+		char buf[STRSIZE];
+		string os = "";
+		FILE* pipe = popen(command.c_str(), "r");
+		if (!pipe) throw runtime_error("Could not determine operating system. Exiting.\n");
+		try {
+			while (!feof(pipe)) {
+				if (fgets(buf, STRSIZE, pipe) != NULL) {
+					os += buf;
+				}
+			}
+		} catch (...) {
+			pclose(pipe);
+			throw;
+		}
+		pclose(pipe);
+		
+		// DEBUG
+		// printf("%s\n", os.c_str());
+		if (os == "Darwin\n") { // OS = Mac OS X
+			command = "sed -i .bak 's/^reg//g' " + avg_outfile;
+		} else { // Assume Linux, or rather, that this command is compatible
+			command = "sed -i 's/^reg//g' " + avg_outfile;
+		}
+		system(command.c_str());
+		
+		string avg_outfile_sorted = funseq_outdir + "/" + "avg_outfile_sorted.txt";
+		
+		command = "sort -n -k 1,1 " + avg_outfile + " > " + avg_outfile_sorted;
+		system(command.c_str());
+		
+		// Collect sum of Funseq scores per annotation
+		vector<vector<string> > funseq_output;
+		
+		// Index to track where we are in the var_array
+		unsigned int v_index = 0;
+		
+		// Read the output into memory
+		FILE *avg_outfile_ptr = fopen(avg_outfile_sorted.c_str(), "r");
+		char linebuf_cstr[STRSIZE];
+		while (fgets(linebuf_cstr, STRSIZE-1, avg_outfile_ptr) != NULL) {
+			
+			string linebuf = string(linebuf_cstr);
+			int col_index = 0;
+			while (col_index < 5) {
+				unsigned int pos = linebuf.find_first_of("\t");
+				linebuf = linebuf.substr(pos+1);
+				col_index++;
+			}
+			
+			// Now linebuf has the value we're looking for. Put it in the funseq_scores vector.
+// 			double funseq_score;
+// 			sscanf(linebuf.c_str(), "%lf", &funseq_score);
+			
+			vector<string> temp;
+			temp.push_back(var_array[v_index][0]);
+			temp.push_back(var_array[v_index][1]);
+			temp.push_back(var_array[v_index][2]);
+			temp.push_back(linebuf);
+			funseq_output.push_back(temp);
+			v_index++;
+		}
+		if (!(feof(avg_outfile_ptr)) && ferror(avg_outfile_ptr)) { // This is an error
+			char preamble[STRSIZE];
+			sprintf(preamble, "There was an error reading from %s", avg_outfile_sorted.c_str());
+			perror(preamble);
+			return 1;
+		}
+		fclose(avg_outfile_ptr);
+		
+		// Clean up Funseq temporary folder
+		string rm_com = "rm -rf " + funseq_outdir;
+		system(rm_com.c_str());
+		
+		// Sort
+		sort(funseq_output.begin(), funseq_output.end(), cmpIntervals);
+		
+		// Gather up and sum the Funseq values over each annotation
+		unsigned int funseq_var_pointer = 0;
+		for (unsigned int i = 0; i < ann_array.size(); i++) {
+			pair<unsigned int,unsigned int> range = intersecting_variants(funseq_output, ann_array[i], funseq_var_pointer);
+			funseq_var_pointer = range.first;
+			double funseq_sum = 0.0;
+			
+			for (unsigned int j = range.first; j < range.second; j++) {
+				double score = atof(funseq_output[j][3].c_str());
+				funseq_sum += score;
+			}
+			funseq_scores.push_back(funseq_sum);
+		}
+		
+		// Additional steps for using permutation Funseq scores
+		if (funseq_opt == 'p') {
+			for (int i = 1; i <= num_permutations; i++) {
+			
+				// DEBUG
+				// printf("Permutation: %d\n", i);
+			
+				// Collect sum of Funseq scores per annotation
+				vector<double> perm_funseq_scores;
+				vector<vector<string> > perm_funseq_output;
+				
+				char i_str[STRSIZE];
+				sprintf(i_str, "%d", i);
+			
+				// Read in "Output.bed"
+				// int first = 1;
+				char linebuf3[BIGSTRSIZE];
+				string pfunseq_output_file = permutation_dir + "/permutation_" + string(i_str) + ".txt";
+				FILE *pffile_ptr = fopen(pfunseq_output_file.c_str(), "r");
+				while (fgets(linebuf3, BIGSTRSIZE, pffile_ptr) != NULL) {
+				
+// 					if (first) {
+// 						first = 0;
+// 						continue;
+// 					}
+		
+					string line = string(linebuf3);
+				
+					vector<string> vec;
+					for (int i = 0; i < 6; i++) {
+						size_t ws_index = line.find_first_of("\t\n");
+						string in = line.substr(0, ws_index);
+						vec.push_back(in);
+						line = line.substr(ws_index+1);
+					}
+			
+					// If this is not a standard chromosome, then remove this row
+					if (chr2int(vec[0]) == 0) {
+						continue;
+					}
+			
+					perm_funseq_output.push_back(vec);
+				}
+				// Check feof of vfile
+				if (feof(pffile_ptr)) { // We're good
+					fclose(pffile_ptr);
+				} else { // It's an error
+					char errstring[STRSIZE];
+					sprintf(errstring, "Error reading from %s", pfunseq_output_file.c_str());
+					perror(errstring);
+					return 1;
+				}
+				
+				// DEBUG
+				// printf("Input step done\n");
+			
+				// Sort
+				sort(perm_funseq_output.begin(), perm_funseq_output.end(), cmpIntervals);
+			
+				// Gather up and sum the Funseq values over each annotation
+				unsigned int pfunseq_var_pointer = 0;
+				for (unsigned int j = 0; j < ann_array.size(); j++) {
+					pair<unsigned int,unsigned int> range = intersecting_variants(perm_funseq_output, ann_array[j], pfunseq_var_pointer);
+					pfunseq_var_pointer = range.first;
+					double funseq_sum = 0.0;
+				
+					for (unsigned int k = range.first; k < range.second; k++) {
+						funseq_sum += atof(perm_funseq_output[k][5].c_str());
+					}
+				
+					perm_funseq_scores.push_back(funseq_sum);
+				}
+				
+				// DEBUG
+				// printf("Funseq score sum done\n");
+				
+				// Now update fs_overcount
+				for (unsigned int j = 0; j < ann_array.size(); j++) {
+				
+					// DEBUG
+					// printf("Permutation %d, annotation %d: %e, %e\n", i, j, perm_funseq_scores[j], funseq_scores[j]);
+				
+					if (perm_funseq_scores[j] >= funseq_scores[j]) {
+						fs_overcount[j]++;
+					}
+				}
+			}
+		}
+	}
+	
 	// Output generation
 	FILE *outfile_ptr = fopen(outfile.c_str(), "w");
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
@@ -465,7 +734,17 @@ int main (int argc, char* argv[]) {
 		string cur_ann_name = ann_array[i][3];
 		
 		// Print the output line
-		fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i]);
+		if (funseq_opt == 'p') {
+			
+			// Now do final p-value calculation
+			double fraction = (double)fs_overcount[i]/(double)num_permutations;
+		
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%e\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], funseq_scores[i], fraction);
+		} else if (funseq_opt == 'o') {
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\t%e\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i], funseq_scores[i]);
+		} else {
+			fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%f\n", cur_ann_chr.c_str(), cur_ann_start.c_str(), cur_ann_end.c_str(), cur_ann_name.c_str(), pvalues[i]);
+		}
 	}
 	fclose(outfile_ptr);
 	

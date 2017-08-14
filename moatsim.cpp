@@ -303,6 +303,9 @@ int main (int argc, char* argv[]) {
 	
 	/* User-supplied arguments */
 	
+	// Is the trinucleotide preservation option enabled?
+	bool trimer;
+	
 	// Number of permuted variant datasets to create
 	int num_permutations;
 	
@@ -330,19 +333,29 @@ int main (int argc, char* argv[]) {
 	// Covariate signal files in bigWig format
 	vector<string> covar_files;
 	
-	if (argc < 9) {
-		printf("Usage: mutation_burden_emp_v10 [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+	if (argc < 10) {
+		fprintf(stderr, "Usage: moatsim [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 		return 1;
 	} else {
-		num_permutations = atoi(argv[1]);
-		window_radius = atoi(argv[2]);
-		min_width = atoi(argv[3]);
-		prohibited_file = string(argv[4]);
-		fasta_dir = string(argv[5]);
-		vfile = string(argv[6]);
-		outdir = string(argv[7]);
+	
+		if (argv[1][0] == 'y') {
+			trimer = true;
+		} else if (argv[1][0] == 'n') {
+			trimer = false;
+		} else {
+			fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
+			return 1;
+		}
+	
+		num_permutations = atoi(argv[2]);
+		window_radius = atoi(argv[3]);
+		min_width = atoi(argv[4]);
+		prohibited_file = string(argv[5]);
+		fasta_dir = string(argv[6]);
+		vfile = string(argv[7]);
+		outdir = string(argv[8]);
 		
-		for (int i = 8; i < argc; i++) {
+		for (int i = 9; i < argc; i++) {
 			covar_files.push_back(string(argv[i]));
 		}
 	}
@@ -350,37 +363,37 @@ int main (int argc, char* argv[]) {
 	// Verify files, and import data to memory
 	struct stat vbuf;
 	if (stat(vfile.c_str(), &vbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (vbuf.st_size == 0) {
-		printf("Error: Variant file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Variant file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
 	struct stat pbuf;
 	if (stat(prohibited_file.c_str(), &pbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
 		return 1;
 	}
 	// Check that the file is not empty
 	if (pbuf.st_size == 0) {
-		printf("Error: Prohibited regions file cannot be empty. Exiting.\n");
+		fprintf(stderr, "Error: Prohibited regions file cannot be empty. Exiting.\n");
 		return 1;
 	}
 	
 	// Check that the FASTA directory is a valid path
 	struct stat fbuf;
 	if (stat(fasta_dir.c_str(), &fbuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
 		return 1;
 	}
 	
 	// Check that the outdir is a valid path
 	struct stat obuf;
 	if (stat(outdir.c_str(), &obuf)) { // Report the error and exit
-		printf("Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
+		fprintf(stderr, "Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
 		return 1;
 	}
 	
@@ -388,7 +401,7 @@ int main (int argc, char* argv[]) {
 	struct stat avgbuf;
 	char avgoverbed_cstr[] = "./bigWigAverageOverBed";
 	if (stat(avgoverbed_cstr, &avgbuf)) {
-		printf("Error: bigWigAverageOverBed is not in the same directory. Exiting.\n");
+		fprintf(stderr, "Error: bigWigAverageOverBed is not in the same directory. Exiting.\n");
 		return 1;
 	}
 	
@@ -1033,84 +1046,92 @@ int main (int argc, char* argv[]) {
 				continue;
 			}
 			
-			// Reset epoch_nt
-			epoch_nt = 0;
+			// BEGIN 3MER CODE
 			
-			// Read in reference
-			for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-				// FASTA import here
-// 				if (last_chr != cluster_bins[l][0]) {
-// 			
-// 					string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
-// 					fasta_ptr = fopen(filename.c_str(), "r");
-// 			
-// 					int first = 1;
-// 					last_chr = cluster_bins[l][0];
-// 					chr_nt = "";
-// 					char linebuf_cstr[STRSIZE];
-// 					while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-// 						string linebuf = string(linebuf_cstr);
-// 						linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-// 						if (first) {
-// 							first = 0;
-// 							continue;
-// 						}
-// 						chr_nt += linebuf;
-// 					}
-// 					// Check feof of fasta_ptr
-// 					if (feof(fasta_ptr)) { // We're good
-// 						fclose(fasta_ptr);
-// 					} else { // It's an error
-// 						char errstring[STRSIZE];
-// 						sprintf(errstring, "Error reading from %s", filename.c_str());
-// 						perror(errstring);
-// 						return 1;
-// 					}
-// 				}
+			if (trimer) {
+			
+				// Reset epoch_nt
+				epoch_nt = 0;
+			
+				// Read in reference
+				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 				
-				int rand_range_start = atoi(cluster_bins[l][1].c_str());
-				int rand_range_end = atoi(cluster_bins[l][2].c_str());
-				
-				// Begin indexing
+					// FASTA import here
+					if (last_chr != cluster_bins[l][0]) {
 			
-				// Save the nt
-				string cur_chr = cluster_bins[l][0];
-				concat_nt += chr_nt[chr2int(cur_chr)-1].substr(rand_range_start, rand_range_end - rand_range_start);
+						string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
+						fasta_ptr = fopen(filename.c_str(), "r");
 			
-				for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
-			
-					// Don't read in characters if it will read off either end
-					if (k == 1 || k == hg19_coor[cur_chr]) {
-						continue;
+						int first = 1;
+						last_chr = cluster_bins[l][0];
+						chr_nt = "";
+						char linebuf_cstr[STRSIZE];
+						while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+							string linebuf = string(linebuf_cstr);
+							linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+							if (first) {
+								first = 0;
+								continue;
+							}
+							chr_nt += linebuf;
+						}
+						// Check feof of fasta_ptr
+						if (feof(fasta_ptr)) { // We're good
+							fclose(fasta_ptr);
+						} else { // It's an error
+							char errstring[STRSIZE];
+							sprintf(errstring, "Error reading from %s", filename.c_str());
+							perror(errstring);
+							return 1;
+						}
 					}
 				
-					char nt1 = toupper(chr_nt[chr2int(cur_chr)-1][k-2]); // 0-based index
-					char nt2 = toupper(chr_nt[chr2int(cur_chr)-1][k-1]); // 0-based index
-					char nt3 = toupper(chr_nt[chr2int(cur_chr)-1][k]); // 0-based index
+					int rand_range_start = atoi(cluster_bins[l][1].c_str());
+					int rand_range_end = atoi(cluster_bins[l][2].c_str());
 				
-					// Verify there are no invalid characters
-					if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
-						char errstring[STRSIZE];
-						sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
-						printf(errstring);
-						return 1;
+					// Begin indexing
+			
+					// Save the nt
+					concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
+			
+					string cur_chr = cluster_bins[l][0];
+					for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
+			
+						// Don't read in characters if it will read off either end
+						if (k == 1 || k == hg19_coor[cur_chr]) {
+							continue;
+						}
+				
+						char nt1 = toupper(chr_nt[k-2]); // 0-based index
+						char nt2 = toupper(chr_nt[k-1]); // 0-based index
+						char nt3 = toupper(chr_nt[k]); // 0-based index
+				
+						// Verify there are no invalid characters
+						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
+							char errstring[STRSIZE];
+							sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
+							fprintf(stderr, errstring);
+							return 1;
+						}
+				
+						stringstream ss;
+						string cur_nt;
+						ss << nt1;
+						ss << nt2;
+						ss << nt3;
+						ss >> cur_nt;
+				
+						int this_epoch = k - rand_range_start;
+						this_epoch += epoch_nt;
+						local_nt[cur_nt].push_back(this_epoch);
 					}
-				
-					stringstream ss;
-					string cur_nt;
-					ss << nt1;
-					ss << nt2;
-					ss << nt3;
-					ss >> cur_nt;
-				
-					int this_epoch = k - rand_range_start;
-					this_epoch += epoch_nt;
-					local_nt[cur_nt].push_back(this_epoch);
+			
+					// End indexing
+					epoch_nt += (rand_range_end - rand_range_start);
 				}
-			
-				// End indexing
-				epoch_nt += (rand_range_end - rand_range_start);
 			}
+			
+			// END 3MER CODE
 			
 			// Variant processing loop
 			for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
@@ -1121,44 +1142,48 @@ int main (int argc, char* argv[]) {
 			
 				// string cur_nt = obs_var_pos[k].second;
 				
-				char cur_nt1 = toupper(concat_nt[obs_var_pos[k].first-2]);
-				char cur_nt2 = toupper(concat_nt[obs_var_pos[k].first-1]); // 0-based index
-				char cur_nt3 = toupper(concat_nt[obs_var_pos[k].first]);
+				int new_epoch;
 				
-				stringstream ss;
-				string cur_nt;
-				ss << cur_nt1;
-				ss << cur_nt2;
-				ss << cur_nt3;
-				ss >> cur_nt;
+				if (trimer) {
+					char cur_nt1 = toupper(concat_nt[obs_var_pos[k].first-2]);
+					char cur_nt2 = toupper(concat_nt[obs_var_pos[k].first-1]); // 0-based index
+					char cur_nt3 = toupper(concat_nt[obs_var_pos[k].first]);
 				
-				// If there is an N in this string, we skip this variant
-				if (cur_nt.find_first_of('N') != string::npos) {
-					continue;
-				}
+					stringstream ss;
+					string cur_nt;
+					ss << cur_nt1;
+					ss << cur_nt2;
+					ss << cur_nt3;
+					ss >> cur_nt;
 				
-				// DEBUG
-				// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-				// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
-				
-				vector<int> pos = local_nt[cur_nt];
-				
-				// If no positions are available, skip
-				if (pos.size()-1 == 0) {
-					continue;
-				}
-				
-				vector<int> pos2;
-				for (unsigned int l = 0; l < pos.size(); l++) {
-					if (pos[l] != obs_var_pos[k].first) {
-						pos2.push_back(pos[l]);
+					// If there is an N in this string, we skip this variant
+					if (cur_nt.find_first_of('N') != string::npos) {
+						continue;
 					}
-				}
-				// Pick new position
-				int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 				
-				int new_epoch = pos2[new_index];
-				// int new_end;
+					// DEBUG
+					// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
+					// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+				
+					vector<int> pos = local_nt[cur_nt];
+				
+					// If no positions are available, skip
+					if (pos.size()-1 == 0) {
+						continue;
+					}
+				
+					vector<int> pos2;
+					for (unsigned int l = 0; l < pos.size(); l++) {
+						if (pos[l] != obs_var_pos[k].first) {
+							pos2.push_back(pos[l]);
+						}
+					}
+					// Pick new position
+					int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+					new_epoch = pos2[new_index];
+				} else {
+					new_epoch = (rand() % epoch_nt) + 1; // Selection in interval [1,epoch_nt]
+				}
 				
 				string cluster_chr;
 				

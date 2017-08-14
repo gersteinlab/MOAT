@@ -5,22 +5,38 @@
 #include <sys/stat.h>
 #include <limits.h>
 #include <unistd.h>
+#include <vector>
+#include <errno.h>
 
 using namespace std;
 
 #define STRSIZE 256
 
-/* This code serves as the front end for users. The user passes all their arguments
+/*
+ * This code serves as the front end for users. The user passes all their arguments
  * here, regardless of which version of MOAT they want to run, and this code will
  * set everything up with the appropriate executable on the back end.
+ *
  * Type checking performed here
  * Arguments can be in any order
- * Synopsis: run_moat --algo=[a/v] --parallel=[y/n] -n=NUM_PERMUTATIONS 
- * [--dmin=MIN_DIST_FOR_RANDOM_BINS] [--dmax=MAX_DIST_FOR_RANDOM_BINS]
- * [--width=WG_BIN_WIDTH] [--min_width=MIN_WG_BIN_WIDTH] [--fasta=WG_FASTA_DIR] 
- * --blacklist-file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE
- * --out=[OUTPUT_FILE (if using MOAT-a)/OUTPUT_DIRECTORY (if using MOAT-v)]
- * [--ncpu=NUMBER_OF_PARALLEL_CPU_CORES]
+ * [] indicates a list of valid user options
+ * CAPITAL_LETTERS indicates a user-supplied number or file
+ *
+ * Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS 
+ * --dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS
+ * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE
+ * --out=OUTPUT_FILE
+ *
+ * Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS 
+ * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR
+ * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY 
+ * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --funseq_mode=[n/so/do/sp/dp]
+ *
+ * Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS 
+ * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR 
+ * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY
+ * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --covar_file=COVARIATE_FILE_1 
+ * [--covar_file=COVARIATE_FILE_2 ...]
  */
 int main (int argc, char* argv[]) {
 
@@ -75,15 +91,63 @@ int main (int argc, char* argv[]) {
 	// Alternatively, one can use --ncpu=MAX to get the max number of available CPU cores
 	int ncpu = INT_MIN;
 	
-	if (argc != 10 && argc != 11) {
-		printf("Usage: run_moat --algo=[a/v] --parallel=[y/n] -n=NUM_PERMUTATIONS ");
- 		printf("[--dmin=MIN_DIST_FOR_RANDOM_BINS] [--dmax=MAX_DIST_FOR_RANDOM_BINS] ");
- 		printf("[--width=WG_BIN_WIDTH] [--min_width=MIN_WG_BIN_WIDTH] [--fasta=WG_FASTA_DIR] ");
- 		printf("--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE [--afile=ANNOTATION_FILE] ");
- 		printf("--out=[OUTPUT_FILE (if using MOAT-a)/OUTPUT_DIRECTORY (if using MOAT-v)] ");
- 		printf("[--ncpu=NUMBER_OF_PARALLEL_CPU_CORES] Exiting.\n");
+	// Covariate files to use for clustering whole genome bins in MOATsim
+	// Must have at least one of these
+	vector<string> covar_files;
+	
+	// Is the trinucleotide preservation option enabled? (y/n)
+	char trimer;
+	
+	// Character that indicates wg signal mode (stored as a string)
+	string wg_signal_mode;
+	
+	// Whole genome signal track file
+	string wg_signal_file;
+	
+	// String constants for comparisons in argument handling
+	char h_string[] = "-h";
+	char help_string[] = "--help";
+	
+	char v_string[] = "-v";
+	char version_string[] = "--version";
+	char vers_string[] = "1.0";
+	
+	if (argc == 2 && (strcmp(argv[1], h_string) == 0 || strcmp(argv[1], help_string) == 0)) {
+		fprintf(stderr, "*** run_moat ***\n");
+		fprintf(stderr, "This code serves as the front end for users. The user passes all their arguments\n");
+		fprintf(stderr, "here, regardless of which version of MOAT they want to run, and this code will\n");
+		fprintf(stderr, "set everything up with the appropriate executable on the back end.\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Arguments can be in any order\n");
+		fprintf(stderr, "[] indicates a list of valid user options\n");
+		fprintf(stderr, "CAPITAL_LETTERS indicates a user-supplied number or file\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
+		fprintf(stderr, "--dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS\n");
+		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE\n");
+		fprintf(stderr, "--out=OUTPUT_FILE --wg_signal_mode=[o/p/n] [--wg_signal_file=WHOLE_GENOME_SIGNAL_FILE]\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
+		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR\n");
+		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY \n");
+		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --wg_signal_mode=[y/n]\n");
+		fprintf(stderr, "[--wg_signal_file=WHOLE_GENOME_SIGNAL_FILE]\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS \n");
+		fprintf(stderr, "--width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR \n");
+		fprintf(stderr, "--blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY\n");
+		fprintf(stderr, "--ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --covar_file=COVARIATE_FILE_1 \n");
+		fprintf(stderr, "[--covar_file=COVARIATE_FILE_2 ...]\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Details on each of MOAT\'s algorithms are included in the accompanying README.txt.\n");
 		return 1;
-	}
+	} else if (argc == 2 && (strcmp(argv[1], v_string) == 0 || strcmp(argv[1], version_string) == 0)) {
+		fprintf(stderr, "%s\n", vers_string);
+		return 1;
+	} else if (argc < 10) {
+		fprintf(stderr, "Incorrect number of arguments. Use -h or --help for usage information.\n");
+		return 1;
+	} 
 	
 	// Process the input
 	// Split into name and value, and store
@@ -91,7 +155,7 @@ int main (int argc, char* argv[]) {
 		string arg = string(argv[i]);
 		size_t pos_equals = arg.find('=');
 		if (pos_equals == string::npos) {
-			printf("Error: Argument missing value: %s. Exiting.\n", arg.c_str());
+			fprintf(stderr, "Error: Argument missing value: %s. Use -h or --help for usage information. Exiting.\n", arg.c_str());
 			return 1;
 		}
 		string name = arg.substr(0, pos_equals);
@@ -127,8 +191,16 @@ int main (int argc, char* argv[]) {
 			} else {
 				ncpu = atoi(value.c_str());
 			}
+		} else if (name == "--covar_file") {
+			covar_files.push_back(value);
+		} else if (name == "--3mer") {
+			trimer = value[0];
+		} else if (name == "--wg_signal_mode") {
+			wg_signal_mode = value;
+		} else if (name == "--wg_signal_file") {
+			wg_signal_file = value;
 		} else { // User put in an invalid argument
-			printf("Error: Invalid argument name: %s. Exiting.\n", name.c_str());
+			fprintf(stderr, "Error: Invalid argument name: %s. Use -h or --help for usage information. Exiting.\n", name.c_str());
 			return 1;
 		}
 	}
@@ -140,51 +212,68 @@ int main (int argc, char* argv[]) {
 			string parallel_program = "./moat_a_gpu";
 			struct stat buf;
 			if (stat(parallel_program.c_str(), &buf)) { // Report the error and exit
-				printf("Error: No parallel MOAT-a available. Exiting.\n");
+				fprintf(stderr, "Error: No parallel MOAT-a available. Exiting.\n");
 				return 1;
 			}
 		} else if (parallel != 'n') { // Invalid value for parallel flag
-			printf("Error: Invalid value for \"--parallel\": %c. Exiting.\n", parallel);
+			fprintf(stderr, "Error: Invalid value for \"--parallel\": %c. Use -h or --help for usage information. Exiting.\n", parallel);
 			return 1;
 		}
 			
 		// Verify all relevant variables are defined
 		if (num_permutations == INT_MIN) {
-			printf("Error: n is not defined. Exiting.\n");
+			fprintf(stderr, "Error: n is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (num_permutations <= 0) { // Out of range
-			printf("Error: n must be at least 1. Exiting.\n");
+			fprintf(stderr, "Error: n must be at least 1. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (dmin == INT_MIN) {
-			printf("Error: dmin is not defined. Exiting.\n");
+			fprintf(stderr, "Error: dmin is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (dmin < 0) { // Out of range
-			printf("Error: dmin cannot be negative. Exiting.\n");
+			fprintf(stderr, "Error: dmin cannot be negative. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (dmax == INT_MIN) {
-			printf("Error: dmax is not defined. Exiting.\n");
+			fprintf(stderr, "Error: dmax is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (dmax < 0) { // Out of range
-			printf("Error: dmax cannot be negative. Exiting.\n");
+			fprintf(stderr, "Error: dmax cannot be negative. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (prohibited_file.empty()) {
-			printf("Error: Blacklist file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Blacklist file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (vfile.empty()) {
-			printf("Error: Variant file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Variant file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (afile.empty()) {
-			printf("Error: Annotation file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Annotation file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (out.empty()) {
-			printf("Error: Output file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Output file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
+		}
+		
+		// Check for defined and correct wg signal mode
+		if (wg_signal_mode.empty()) {
+			fprintf(stderr, "Error: Wg signal mode is not defined. Exiting.\n");
+			return 1;
+		}
+		if (wg_signal_mode[0] != 'o' && wg_signal_mode[0] != 'p' && wg_signal_mode[0] != 'n') {
+			fprintf(stderr, "Error: Wg signal mode was set to \'%c\', which is invalid. ", wg_signal_mode[0]);
+			fprintf(stderr, "Must be either \'o\' or \'p\' or \'n\'. Use -h or --help for usage information. Exiting.\n");
+			return 1;
+		}
+		if (wg_signal_mode[0] == 'y') {
+			if (wg_signal_file.empty()) {
+				fprintf(stderr, "Error: Wg signal file is not defined. Use -h or --help for usage information. Exiting.\n");
+				return 1;
+			}
 		}
 		
 		char num_permutations_cstr[STRSIZE];
@@ -204,17 +293,30 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// execl(exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), (char *)0);
-		string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out;
+		string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out + " " + wg_signal_mode[0];
+		if (wg_signal_mode[0] != 'n') {
+			command += " ";
+			command += wg_signal_file;
+		}
 		return system(command.c_str());
 	
-	} else if (algo == 'v') { // MOAT-v
+	} else if (algo == 'v' || algo == 's') { // MOAT-v/MOATsim
 		
 		// Check parallel compatibility
 		if (parallel == 'y') {
-			string parallel_program = "./moat_v_parallel";
+			string parallel_program;
+			if (algo == 'v') {
+				parallel_program = "./moat_v_parallel";
+			} else if (algo == 's') {
+				parallel_program = "./moatsim_parallel";
+			}
 			struct stat buf;
 			if (stat(parallel_program.c_str(), &buf)) { // Report the error and exit
-				printf("Error: No parallel MOAT-v available. Exiting.\n");
+				if (algo == 'v') {
+					fprintf(stderr, "Error: No parallel MOAT-v available. Exiting.\n");
+				} else if (algo == 's') {
+					fprintf(stderr, "Error: No parallel MOATsim available. Exiting.\n");
+				}
 				return 1;
 			}
 			
@@ -222,52 +324,101 @@ int main (int argc, char* argv[]) {
 			if (ncpu == INT_MIN) {
 				ncpu = sysconf( _SC_NPROCESSORS_ONLN );
 			} else if (ncpu < 2) {
-				printf("Error: Cannot use less than two CPU cores in parallel MOAT-v. Exiting.\n");
+				if (algo == 'v') {
+					fprintf(stderr, "Error: Cannot use less than two CPU cores in parallel MOAT-v. Exiting.\n");
+				} else if (algo == 's') {
+					fprintf(stderr, "Error: Cannot use less than two CPU cores in parallel MOATsim. Exiting.\n");
+				}
 				return 1;
 			}
 			
 		} else if (parallel != 'n') { // Invalid value for parallel flag
-			printf("Error: Invalid value for \"--parallel\": %c. Exiting.\n", parallel);
+			fprintf(stderr, "Error: Invalid value for \"--parallel\": %c. Use -h or --help for usage information. Exiting.\n", parallel);
 			return 1;
 		}
 		
 		// Verify all relevant variables are defined
 		if (num_permutations == INT_MIN) {
-			printf("Error: n is not defined. Exiting.\n");
+			fprintf(stderr, "Error: n is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (num_permutations <= 0) { // Out of range
-			printf("Error: n must be at least 1. Exiting.\n");
+			fprintf(stderr, "Error: n must be at least 1. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (width == INT_MIN) {
-			printf("Error: width is not defined. Exiting.\n");
+			fprintf(stderr, "Error: width is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (width <= 0) { // Out of range
-			printf("Error: width must be positive. Exiting.\n");
+			fprintf(stderr, "Error: width must be positive. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (min_width == INT_MIN) {
-			printf("Error: min_width is not defined. Exiting.\n");
+			fprintf(stderr, "Error: min_width is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		} else if (min_width <= 0) { // Out of range
-			printf("Error: min_width must be positive. Exiting.\n");
+			fprintf(stderr, "Error: min_width must be positive. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (fasta_dir.empty()) {
-			printf("WG FASTA directory is not defined. Exiting.\n");
+			fprintf(stderr, "WG FASTA directory is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (prohibited_file.empty()) {
-			printf("Error: Blacklist file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Blacklist file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (vfile.empty()) {
-			printf("Error: Variant file is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Variant file is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
 		}
 		if (out.empty()) {
-			printf("Error: Output directory is not defined. Exiting.\n");
+			fprintf(stderr, "Error: Output directory is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
+		}
+		
+		// Trimer check
+		if (!trimer) {
+			fprintf(stderr, "Error: 3mer preservation option is not defined. Use -h or --help for usage information. Exiting.\n");
+			return 1;
+		} else if (trimer != 'y' && trimer != 'n') {
+			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n", trimer);
+			return 1;
+		}
+		string trimer_str;
+		trimer_str.push_back(trimer);
+		
+		// MOATsim check for required covariate files
+		if (algo == 's') {
+			if (covar_files.size() < 1) {
+				fprintf(stderr, "Error: Must have at least one covariate signal file for MOATsim. Use -h or --help for usage information. Exiting.\n");
+				return 1;
+			}
+			for (unsigned int i = 0; i < covar_files.size(); i++) {
+				struct stat cbuf;
+				if (stat(covar_files[i].c_str(), &cbuf)) { // Report the error and exit
+					fprintf(stderr, "Error trying to stat %s: %s\n", covar_files[i].c_str(), strerror(errno));
+					return 1;
+				}
+			}
+		}
+		
+		// MOAT-v check for defined and correct wg signal mode
+		if (algo == 'v') {
+			if (wg_signal_mode.empty()) {
+				fprintf(stderr, "Error: Wg signal mode is not defined. Exiting.\n");
+				return 1;
+			}
+			if (wg_signal_mode[0] != 'y' && wg_signal_mode[0] != 'n') {
+				fprintf(stderr, "Error: Wg signal mode was set to \'%c\', which is invalid. ", wg_signal_mode[0]);
+				fprintf(stderr, "Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n");
+				return 1;
+			}
+			if (wg_signal_mode[0] == 'y') {
+				if (wg_signal_file.empty()) {
+					fprintf(stderr, "Error: Wg signal file is not defined. Use -h or --help for usage information. Exiting.\n");
+					return 1;
+				}
+			}
 		}
 		
 		char num_permutations_cstr[STRSIZE];
@@ -285,17 +436,39 @@ int main (int argc, char* argv[]) {
 			char ncpu_cstr[STRSIZE];
 			sprintf(ncpu_cstr, "%d", ncpu);
 		
-			exe = "mpirun -n " + string(ncpu_cstr) + " ./moat_v_parallel";
+			if (algo == 'v') {
+				exe = "mpirun -n " + string(ncpu_cstr) + " ./moat_v_parallel";
+			} else if (algo == 's') {
+				exe = "mpirun -n " + string(ncpu_cstr) + " ./moatsim_parallel";
+			}
 		} else if (parallel == 'n') {
-			exe = "./moat_v_serial";
+			if (algo == 'v') {
+				exe = "./moat_v_serial";
+			} else if (algo == 's') {
+				exe = "./moatsim";
+			}
 		}
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
-		string command = exe + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+		string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+		if (algo == 's') {
+			for (unsigned int i = 0; i < covar_files.size(); i++) {
+				command += " ";
+				command += covar_files[i];
+			}
+		} else { // algo == 'v'
+			// + " " + string(wg_signal_mode[0]) + " " + wg_signal_file
+			command += " ";
+			command += wg_signal_mode[0];
+			if (wg_signal_mode[0] == 'y') {
+				command += " ";
+				command += wg_signal_file;
+			}
+		}
 		return system(command.c_str());
 		
 	} else { // Algo has an invalid value
-		printf("Error: Invalid value for \"--algo\": %c. Exiting.\n", algo);
+		fprintf(stderr, "Error: Invalid value for \"--algo\": %c. Use -h or --help for usage information. Exiting.\n", algo);
 		return 1;
 	}
 	return 0;

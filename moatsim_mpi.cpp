@@ -18,7 +18,7 @@
 
 using namespace std;
 
-#define STRSIZE 256
+#define STRSIZE 512
 
 // The notable difference with the v2 is that this code places random bins anywhere
 // in the genome
@@ -258,6 +258,138 @@ double euclidean(vector<double> &a, vector<double> &b) {
 	return sqrt(sum);
 }
 
+// Helper function that translates epoch coordinates into genome coordinates
+// Parameters:
+// epoch: The epoch coordinate to translate
+// sum_nt: The vector of cumulative nt sums across clusters from 0 to i
+// cluster_bins: The genome coordinates of the bins in this cluster
+// Return value: String vector of genome coordinates (chr, start, stop)
+vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string> > &cluster_bins) {
+	
+	unsigned int pivot;
+	unsigned int step;
+
+	// Special cases
+	if (sum_nt.size() == 1) {
+		// Return the only one
+		vector<string> retval;
+		retval.push_back(cluster_bins[0][0]);
+		
+		char start_cstr[STRSIZE];
+		sprintf(start_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch-1);
+		retval.push_back(string(start_cstr));
+
+		char end_cstr[STRSIZE];
+		sprintf(end_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch);
+		retval.push_back(string(end_cstr));
+		
+// 		retval.push_back(cluster_bins[0][1]);
+// 		retval.push_back(cluster_bins[0][2]);
+		return retval;
+	} else if (sum_nt.size() == 2) {
+		pivot = 0;
+		step = 1;
+	} else { // Size 3 and up
+		// Pick middle of the sum_nt to initialize
+		pivot = sum_nt.size()/2;
+		step = pivot;
+	}
+	
+	while (1) {
+		int left = sum_nt[pivot];
+		int right = sum_nt[pivot+1];
+		
+		if (step > 1) {
+			step = step/2;
+		}
+	
+		if (epoch < left) { // Below pivot case
+			if (pivot == 0) {
+				vector<string> retval;
+				retval.push_back(cluster_bins[0][0]);
+				
+				char start_cstr[STRSIZE];
+				sprintf(start_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch-1);
+				retval.push_back(string(start_cstr));
+	
+				char end_cstr[STRSIZE];
+				sprintf(end_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch);
+				retval.push_back(string(end_cstr));
+				
+// 				retval.push_back(cluster_bins[0][1]);
+// 				retval.push_back(cluster_bins[0][2]);
+				return retval;
+			}
+			pivot -= step;
+		} else if (epoch >= right) { // Above pivot case
+			pivot += step;
+		} else { // This is it
+			vector<string> retval;
+			retval.push_back(cluster_bins[pivot+1][0]);
+			int end = atoi(cluster_bins[pivot+1][1].c_str()) + (epoch - sum_nt[pivot]);
+			
+			char start_cstr[STRSIZE];
+			sprintf(start_cstr, "%d", end-1);
+			retval.push_back(string(start_cstr));
+	
+			char end_cstr[STRSIZE];
+			sprintf(end_cstr, "%d", end);
+			retval.push_back(string(end_cstr));
+			
+// 			retval.push_back(cluster_bins[pivot+1][1]);
+// 			retval.push_back(cluster_bins[pivot+1][2]);
+			return retval;
+		}
+	}
+}
+
+// Helper function to determine if an epoch coordinate is within the bounds of
+// the open_bins
+bool within_bounds (int epoch, vector<pair<int,int> > &open_bins) {
+
+	unsigned int pivot;
+	unsigned int step;
+	
+	pivot = open_bins.size()/2;
+	step = pivot;
+	
+	while (1) {
+		int left = open_bins[pivot].first;
+		int right = open_bins[pivot].second;
+		
+		if (step > 1) {
+			step = step/2;
+		}
+		
+		if (epoch < left) { // Below pivot case
+			if (pivot == 0 || epoch > open_bins[pivot-1].second) {
+				return false;
+			}
+			pivot -= step;
+		} else if (epoch > right) { // Above pivot case
+			if (pivot == open_bins.size()-1 || epoch < open_bins[pivot+1].first) {
+				return false;
+			}
+			pivot += step;
+		} else { // This is it
+			return true;
+		}
+	}
+
+// 	for (unsigned int i = 0; i < open_bins.size(); i++) {
+// 		while (epoch >= open_bins[i].first) {
+// 			if (epoch <= open_bins[i].second) {
+// 				return true;
+// 			}
+// 		}
+// 		return false;
+// 	}
+// 	return false;
+}
+
+// Helper function that translates genome coordinates into epoch coordinates
+// genome2epoch
+
 // Get the next FASTA file in the sequence
 // void newFastaFilehandle (FILE *fasta_ptr, string chr) {
 // 	if (fasta_ptr != NULL) {
@@ -346,6 +478,20 @@ int main (int argc, char* argv[]) {
 	if (mpi_rank == 0) { // Parent process
 	
 		/* User-supplied arguments */
+		
+		// Number of clusters to use
+		unsigned int numclust;
+		
+		// Local context radius: How many nucleotides away are we allowed to move the
+		// variant?
+		// -1 to ignore this option
+		int local_radius;
+		
+		// Restrict permutation to the same chromosome
+		bool same_chr;
+		
+		// Is the 3mer/5mer preservation option enabled? (0/3/5)
+		int trimer;
 	
 		// Number of permuted variant datasets to create
 		int num_permutations;
@@ -374,47 +520,78 @@ int main (int argc, char* argv[]) {
 		// Covariate signal files in bigWig format
 		vector<string> covar_files;
 	
-		if (argc < 9) {
-			printf("Usage: mutation_burden_emp_v10 [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+		if (argc < 12) {
+			fprintf(stderr, "Usage: moatsim_mpi [number of clusters] [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
-			num_permutations = atoi(argv[1]);
-			window_radius = atoi(argv[2]);
-			min_width = atoi(argv[3]);
-			prohibited_file = string(argv[4]);
-			fasta_dir = string(argv[5]);
-			vfile = string(argv[6]);
-			outdir = string(argv[7]);
 		
-			for (int i = 8; i < argc; i++) {
+			numclust = atoi(argv[1]);
+			local_radius = atoi(argv[2]);
+		
+			if (argv[3][0] == 'y') {
+				same_chr = true;
+			} else if (argv[3][0] == 'n') {
+				same_chr = false;
+			} else {
+				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[3][0]);
+				MPI_Abort(MPI_COMM_WORLD, 1);
+				return 1;
+			}
+
+		
+			if (argv[4][0] == '5') {
+				trimer = 5;
+			} else if (argv[4][0] == '3') {
+				trimer = 3;
+			} else if (argv[4][0] == '0') {
+				trimer = 0;
+			} else {
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[4][0]);
+				MPI_Abort(MPI_COMM_WORLD, 1);
+				return 1;
+			}
+			
+			num_permutations = atoi(argv[5]);
+			window_radius = atoi(argv[6]);
+			min_width = atoi(argv[7]);
+			prohibited_file = string(argv[8]);
+			fasta_dir = string(argv[9]);
+			vfile = string(argv[10]);
+			outdir = string(argv[11]);
+		
+			for (int i = 12; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
+			}
+			
+			if (local_radius != -1) {
+				same_chr = false; // Lock this down to improve running time and memory usage
 			}
 		}
 	
 		// Verify files, and import data to memory
 		struct stat vbuf;
 		if (stat(vfile.c_str(), &vbuf)) { // Report the error and exit
-			printf("Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
+			fprintf(stderr, "Error trying to stat %s: %s\n", vfile.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 		// Check that the file is not empty
 		if (vbuf.st_size == 0) {
-			printf("Error: Variant file cannot be empty. Exiting.\n");
+			fprintf(stderr, "Error: Variant file cannot be empty. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
 		struct stat pbuf;
 		if (stat(prohibited_file.c_str(), &pbuf)) { // Report the error and exit
-			printf("Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
+			fprintf(stderr, "Error trying to stat %s: %s\n", prohibited_file.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 		// Check that the file is not empty
 		if (pbuf.st_size == 0) {
-			printf("Error: Prohibited regions file cannot be empty. Exiting.\n");
+			fprintf(stderr, "Error: Prohibited regions file cannot be empty. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
@@ -422,7 +599,7 @@ int main (int argc, char* argv[]) {
 		// Check that the FASTA directory is a valid path
 		struct stat fbuf;
 		if (stat(fasta_dir.c_str(), &fbuf)) { // Report the error and exit
-			printf("Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
+			fprintf(stderr, "Error trying to stat %s: %s\n", fasta_dir.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
@@ -430,7 +607,7 @@ int main (int argc, char* argv[]) {
 		// Check that the outdir is a valid path
 		struct stat obuf;
 		if (stat(outdir.c_str(), &obuf)) { // Report the error and exit
-			printf("Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
+			fprintf(stderr, "Error trying to stat %s: %s\n", outdir.c_str(), strerror(errno));
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
@@ -439,13 +616,13 @@ int main (int argc, char* argv[]) {
 		struct stat avgbuf;
 		char avgoverbed_cstr[] = "./bigWigAverageOverBed";
 		if (stat(avgoverbed_cstr, &avgbuf)) {
-			printf("Error: bigWigAverageOverBed is not in the same directory. Exiting.\n");
+			fprintf(stderr, "Error: bigWigAverageOverBed is not in the same directory. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
 	
 		/* Data structures for the starting data */
-		// Variant array, contains variants of the format vector(chr, start, end)
+		// Variant array, contains variants of the format vector(chr, start, end, ref, alt)
 		vector<vector<string> > var_array;
 	
 		// Annotation array, contains annotations of the format vector(chr, start, end)
@@ -459,10 +636,10 @@ int main (int argc, char* argv[]) {
 		vector<vector<double> > covar_features;
 	
 		// Number of clusters to create: numclust
-		unsigned int numclust = 100;
+		// unsigned int numclust = 100;
 	
 		// Bring variant file data into memory
-		// Save the first 3 columns, ignore the rest if there are any
+		// Save all columns
 		char linebuf[STRSIZE];
 		FILE *vfile_ptr = fopen(vfile.c_str(), "r");
 		while (fgets(linebuf, STRSIZE, vfile_ptr) != NULL) {
@@ -471,13 +648,16 @@ int main (int argc, char* argv[]) {
 			// DEBUG
 			// printf("%s\n", line.c_str());
 		
-			// Extract chromosome, start, and end from line (first 3 columns)
+			// Extract chromosome, start, end, ref, alt, and any extra columns from line
 			vector<string> vec;
-			for (int i = 0; i < 3; i++) {
-				size_t ws_index = line.find_first_of("\t\n");
+			size_t ws_index = 0;
+			while (ws_index != string::npos) {
+				ws_index = line.find_first_of("\t\n");
 				string in = line.substr(0, ws_index);
 				vec.push_back(in);
-				line = line.substr(ws_index+1);
+				if (ws_index != string::npos) {
+					line = line.substr(ws_index+1);
+				}
 			}
 		
 			// If this is not a standard chromosome, then remove this row
@@ -663,15 +843,15 @@ int main (int argc, char* argv[]) {
 	
 		// DEBUG - check the genome bins
 		// printf("%s\t%s\t%s\n", ann_array[0][0].c_str(), ann_array[0][1].c_str(), ann_array[0][2].c_str());
-	// 	string debug_file = "/net/gerstein/ll426/code/moat-test/test-bin-code/debug.txt";
-	// 	FILE *debug_ptr = fopen(debug_file.c_str(), "w");
-	// 	for (unsigned int i = 0; i < ann_array.size(); i++) {
-	// 		// printf("%d\n", i);
-	// 		fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
-	// 	}
-	// 	fclose(debug_ptr);
-		// Early termination
-		// return 0;
+// 		string debug_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-6/bins.txt";
+// 		FILE *debug_ptr = fopen(debug_file.c_str(), "w");
+// 		for (unsigned int i = 0; i < ann_array.size(); i++) {
+// 			// printf("%d\n", i);
+// 			fprintf(debug_ptr, "%s\t%s\t%s\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str());
+// 		}
+// 		fclose(debug_ptr);
+// 		// Early termination
+// 		return 0;
 	
 		/* Begin building covariate signal profiles of the genome bins */
 		// First step is to produce a file of genome bins
@@ -893,25 +1073,25 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 		// printf("Breakpoint 2\n");
 		// return 0;
-	// 	string centroids_file = "/net/gerstein/ll426/code/moat/centroids.txt";
-	// 	FILE *centroids_ptr = fopen(centroids_file.c_str(), "w");
-	// 	for (unsigned int i = 0; i < centroids.size(); i++) {
-	// 		if (empty[i]) {
-	// 			continue;
-	// 		}
-	// 		for (unsigned int j = 0; j < centroids[i].size(); j++) {
-	// 			fprintf(centroids_ptr, "%f\n", centroids[i][j]);
-	// 		}
-	// 	}
-	// 	fclose(centroids_ptr);
-	// 	
-	// 	string cluster_file = "/net/gerstein/ll426/code/moat/clusters.txt";
-	// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
-	// 	for (unsigned int i = 0; i < member.size(); i++) {
-	// 		fprintf(cluster_ptr, "%d\n", member[i]);
-	// 	}
-	// 	fclose(cluster_ptr);
-	// 	return 0;
+// 		string centroids_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/centroids.txt";
+// 		FILE *centroids_ptr = fopen(centroids_file.c_str(), "w");
+// 		for (unsigned int i = 0; i < centroids.size(); i++) {
+// 			if (empty[i]) {
+// 				continue;
+// 			}
+// 			for (unsigned int j = 0; j < centroids[i].size(); j++) {
+// 				fprintf(centroids_ptr, "%f\n", centroids[i][j]);
+// 			}
+// 		}
+// 		fclose(centroids_ptr);
+// 		
+// 		string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
+// 		FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+// 		for (unsigned int i = 0; i < member.size(); i++) {
+// 			fprintf(cluster_ptr, "%d\n", member[i]);
+// 		}
+// 		fclose(cluster_ptr);
+// 		return 0;
 	
 		// DEBUG - check ann_array values after prohibited region subtraction
 	// 	FILE *testfile_ptr = fopen("test-bin-code/testfile.txt", "w");
@@ -920,24 +1100,122 @@ int main (int argc, char* argv[]) {
 	// 	}
 	// 	fclose(testfile_ptr);
 	// 	return 0;
+	
+	if (same_chr) {
+		// Split up the clusters by chromosome
+		unsigned int cluster_assign = 0;
+		vector<unsigned int> member_prime (covar_features.size(),0);
+		map<unsigned int,int> empty_prime;
+		for (unsigned int j = 0; j < numclust; j++) {
+
+			if (empty[j]) {
+				continue;
+			}
+		
+			vector<vector<string> > cluster_bins;
+			vector<unsigned int> indices;
+		
+			// Gather up bins in this cluster
+			for (unsigned int k = 0; k < ann_array.size(); k++) {
+				if (member[k] == j) {
+					cluster_bins.push_back(ann_array[k]);
+					indices.push_back(k);
+				}
+			}
+		
+			bool is_empty = true;
+			for (int i = 1; i <= 25; i++) {
+				string chr = int2chr(i);
+				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
+					if (cluster_bins[k][0] == chr) {
+						member_prime[indices[k]] = cluster_assign;
+						is_empty = false;
+					}
+				}
+				if (!is_empty) {
+					cluster_assign++;
+				}
+			}			
+		}
+		member = member_prime;
+		empty = empty_prime;
+		numclust = cluster_assign+1;
+	}
+	
+	// DEBUG: hardcode the values
+// 	ann_array.clear();
+// 	vector<string> temp;
+// 	temp.push_back("chr1");
+// 	temp.push_back("100001");
+// 	temp.push_back("150001");
+// 	ann_array.push_back(temp);
+// 	temp.clear();
+// 	temp.push_back("chr1");
+// 	temp.push_back("150001");
+// 	temp.push_back("250001");
+// 	ann_array.push_back(temp);
+// 	member.clear();
+// 	member.push_back(0);
+// 	member.push_back(0);
+// 	numclust = 1;
+// 	var_array.clear();
+// 	temp.clear();
+// 	temp.push_back("chr1");
+// 	temp.push_back("150000");
+// 	temp.push_back("150001");
+// 	var_array.push_back(temp);
+	
+	// DEBUG
+// 	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
+// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+// 	for (unsigned int i = 0; i < member.size(); i++) {
+// 		fprintf(cluster_ptr, "%s\t%s\t%s\t%d\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str(), member[i]);
+// 	}
+// 	fclose(cluster_ptr);
+// 	return 0;
+	
+		// First, give the trimer boolean flag to all children
+		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		
+		// Now transmit the local radius number
+		MPI_Bcast(&local_radius, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	
+		// Second, give the FASTA directory location to all children (tag = 10)
+		int strlen = fasta_dir.size() + 1;
+		char *fasta_dir_cstr = (char *)malloc((strlen)*sizeof(char));
+		strcpy(fasta_dir_cstr, fasta_dir.c_str());
+		MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(fasta_dir_cstr, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
 		
 		// Now send the variant data
 		int var_array_size = var_array.size();
 		
 		// Package the variant data for the child
 		int *var_coor = (int *)malloc(2*var_array_size*sizeof(int));
+		// char *var_alleles = (char *)malloc(2*var_array_size*sizeof(char));
+		// int *package_str = (int *)malloc(var_array_size*sizeof(int));
 		for (int k = 0; k < var_array_size; k++) {
 			var_coor[2*k] = chr2int(var_array[k][0]);
 			var_coor[2*k+1] = atoi(var_array[k][2].c_str());
+// 			var_alleles[2*k] = var_array[k][3][0];
+// 			var_alleles[2*k+1] = var_array[k][4][0];
+			// package_str[k] = 0;
 		}
+		
+// 		const char *var_id = package_str.c_str();
+// 		int package_str_length = (int)package_str.size();
 		
 		// Transmit variant data
 		for (int i = 2; i < mpi_size; i++) {
 			MPI_Send(var_coor, 2*var_array_size, MPI_INT, i, 12, MPI_COMM_WORLD);
+			// MPI_Send(var_alleles, 2*var_array_size, MPI_CHAR, i, 20, MPI_COMM_WORLD);
+			// MPI_Send(var_id, package_str_length, MPI_CHAR, i, 22, MPI_COMM_WORLD);
 		}
 		
 		// Free dynamic memory allocations
 		free(var_coor);
+		// free(var_alleles);
+		// free((char *)var_id);
 	
 		/* Permutate variant locations */
 		srand(0);
@@ -946,9 +1224,7 @@ int main (int argc, char* argv[]) {
 		
 			/* Signal child processes to begin */
 			int permutation_flag = 1;
-			for (int j = 1; j < mpi_size; j++) {
-				MPI_Send(&permutation_flag, 1, MPI_INT, j, 8, MPI_COMM_WORLD);
-			}
+			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		
 			vector<vector<string> > permuted_set;
 		
@@ -1017,7 +1293,12 @@ int main (int argc, char* argv[]) {
 				
 				if (permuted_var_coor_size > 0) {
 					int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
+					// char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
 					MPI_Recv(permuted_var_coor, permuted_var_coor_size, MPI_INT, source, 7, MPI_COMM_WORLD, &status);
+					// MPI_Recv(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, source, 21, MPI_COMM_WORLD, &status);
+					
+					unsigned int *permuted_var_id = (unsigned int *)malloc((permuted_var_coor_size/2)*sizeof(unsigned int));
+					MPI_Recv(permuted_var_id, (permuted_var_coor_size/2), MPI_UNSIGNED, source, 23, MPI_COMM_WORLD, &status);
 				
 					for (int j = 0; j < permuted_var_coor_size/2; j++) {
 						string this_chr = int2chr(permuted_var_coor[2*j]);
@@ -1027,15 +1308,36 @@ int main (int argc, char* argv[]) {
 					
 						char end_str[STRSIZE];
 						sprintf(end_str, "%d", permuted_var_coor[2*j+1]);
+						
+// 						string ref = string(1,permuted_var_alleles[2*j]);
+// 						string alt = string(1,permuted_var_alleles[2*j+1]);
+// 						
+// 						string id = var_array[permuted_var_id[j]][5];
 					
 						vector<string> vec;
 						vec.push_back(this_chr);
 						vec.push_back(string(start_str));
 						vec.push_back(string(end_str));
+						
+						// DEBUG
+						// printf("Rejoin ID: %d\n", permuted_var_id[j]);
+						
+						for (unsigned int k = 3; k < var_array[permuted_var_id[j]].size(); k++) {
+							vec.push_back(var_array[permuted_var_id[j]][k]);
+							
+							// DEBUG
+							// printf("Rejoin attr: %s\n", var_array[permuted_var_id[j]][k].c_str());
+						}
+						
+// 						vec.push_back(ref);
+// 						vec.push_back(alt);
+// 						vec.push_back(id);
 						permuted_set.push_back(vec);
 					}
 
 					free(permuted_var_coor);
+					// free(permuted_var_alleles);
+					free(permuted_var_id);
 				}
 				counter++;
 			}
@@ -1064,17 +1366,29 @@ int main (int argc, char* argv[]) {
 		
 				// DEBUG
 				// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
-	
-				fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+				
+				string outline = "";
+				for (unsigned int l = 0; l < permuted_set[k].size(); l++) {
+					outline += permuted_set[k][l];
+					if (l < permuted_set[k].size()-1) {
+						outline += "\t";
+					} else {
+						outline += "\n";
+					}
+				}
+				
+				fprintf(outfile_ptr, "%s", outline.c_str());
+				// fprintf(outfile_ptr, "%s\t%s\t%s\t%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str(), permuted_set[k][3].c_str(), permuted_set[k][4].c_str(), permuted_set[k][5].c_str());
 			}
 			fclose(outfile_ptr);
 		}
 		
 		/* Signal child processes to end */
 		int permutation_flag = 0;
-		for (int j = 2; j < mpi_size; j++) {
-			MPI_Send(&permutation_flag, 1, MPI_INT, j, 8, MPI_COMM_WORLD);
-		}
+		MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
+// 		for (int j = 1; j < mpi_size; j++) {
+// 			MPI_Send(&permutation_flag, 1, MPI_INT, j, 8, MPI_COMM_WORLD);
+// 		}
 		
 		/* Also stop the reference genome feeder */
 		int *stopping_array = (int *)malloc(2*sizeof(int));
@@ -1090,15 +1404,24 @@ int main (int argc, char* argv[]) {
 		rmcom = "rm " + regions_postsig_sorted;
 		system(rmcom.c_str());
 		
-	} else if (mpi_rank == 1) { // This is the reference genome feeder
-	
+	} else { // Child process
+		
+		srand(0+mpi_rank);
+		
+		// Receive the trimer boolean flag
+		int trimer;
+		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		
+		// Receive local radius
+		int local_radius;
+		MPI_Bcast(&local_radius, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		
 		// Receive directory with wg FASTA files
-		char strbuf[STRSIZE];
+		char fasta_dir_cstr[STRSIZE];
 		int strlen;
-		MPI_Probe(0, 10, MPI_COMM_WORLD, &status);
-		MPI_Get_count(&status, MPI_CHAR, &strlen);
-		MPI_Recv(strbuf, strlen, MPI_CHAR, 0, 10, MPI_COMM_WORLD, &status);
-		string fasta_dir = string(strbuf);
+		MPI_Bcast(&strlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(fasta_dir_cstr, strlen, MPI_CHAR, 0, MPI_COMM_WORLD);
+		string fasta_dir = string(fasta_dir_cstr);
 		
 		/* Import the entire reference genome into the parent */
 		FILE *fasta_ptr = NULL;
@@ -1165,6 +1488,17 @@ int main (int argc, char* argv[]) {
 		int *var_coor = (int *)malloc(varcount*sizeof(int));
 		MPI_Recv(var_coor, varcount, MPI_INT, 0, 12, MPI_COMM_WORLD, &status);
 		
+// 		char *var_alleles = (char *)malloc(varcount*sizeof(char));
+// 		MPI_Recv(var_alleles, varcount, MPI_CHAR, 0, 20, MPI_COMM_WORLD, &status);
+		
+// 		int id_size;
+// 		MPI_Probe(0, 22, MPI_COMM_WORLD, &status);
+// 		MPI_Get_count(&status, MPI_INT, &id_size);
+// 		char *var_id = (char *)malloc(id_size*sizeof(char));
+// 		MPI_Recv(var_id, id_size, MPI_CHAR, 0, 22, MPI_COMM_WORLD, &status);
+		
+		// string var_id_package = string(var_id);
+		
 		// Translate into expected data structure
 		vector<vector<string> > var_array;
 		for (int i = 0; i < varcount/2; i++) {
@@ -1182,9 +1516,25 @@ int main (int argc, char* argv[]) {
 			sprintf(cur_var_end_cstr, "%d", cur_var_end_num);
 			temp.push_back(string(cur_var_end_cstr));
 			
+// 			string ref = string(1,var_alleles[2*i]);
+// 			string alt = string(1,var_alleles[2*i+1]);
+// 			temp.push_back(ref);
+// 			temp.push_back(alt);
+			
+// 			unsigned int pos = var_id_package.find_first_of("\t");
+// 			if (pos != string::npos) {
+// 				string id = var_id_package.substr(0,pos);
+// 				temp.push_back(id);
+// 				var_id_package = var_id_package.substr(pos+1);
+// 			} else {
+// 				temp.push_back(var_id_package);
+// 			}
+			
 			var_array.push_back(temp);
 		}
 		free(var_coor);
+		// free(var_alleles);
+		// free(var_id);
 		
 		// DEBUG
 // 		for (unsigned int i = 0; i < var_array.size(); i++) {
@@ -1198,7 +1548,7 @@ int main (int argc, char* argv[]) {
 		// 1 = permutations to do, 0 = all permutations done
 		// Until all permutations done, loop
 		int permutation_flag;
-		MPI_Recv(&permutation_flag, 1, MPI_INT, 0, 8, MPI_COMM_WORLD, &status);
+		MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		while (permutation_flag) {
 		
 			// DEBUG
@@ -1206,6 +1556,10 @@ int main (int argc, char* argv[]) {
 		
 			// The output vector
 			vector<vector<string> > permuted_set;
+			
+			// Vector of var_array indices for sample IDs
+			vector<unsigned int> id_array;
+			vector<unsigned int> id_array_2;
 		
 			// Broadcast that I'm available to work
 			int available_flag = 1;
@@ -1270,38 +1624,84 @@ int main (int argc, char* argv[]) {
 				// Epoch coordinates are 1-based
 				// Also includes the trinucleotide context, so we only need to make one pass
 				// on the reference genome
-				vector<pair<int,string> > obs_var_pos;
+				vector<pair<int,vector<string> > > obs_var_pos;
 			
 				// This keeps track of the number of nucleotides in previously observed
 				// cluster bins so that we can calculate accurate epoch coordinates
 				int epoch_nt = 0;
 				
 				unsigned int variant_pointer = 0;
-			
-				// Gather up the locations of all confidently mapped trinucleotides (capital letters)
-				// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
+				
 				map<string,vector<int> > local_nt;
 			
-				vector<char> base; // No treble
-				base.push_back('A');
-				base.push_back('G');
-				base.push_back('C');
-				base.push_back('T');
+				if (trimer == 3) {
+					// Gather up the locations of all confidently mapped trinucleotides (capital letters)
+					// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
+					// map<string,vector<int> > local_nt;
 			
-				for (int z = 0; z < 4; z++) {
-					for (int y = 0; y < 4; y++) {
-						for (int x = 0; x < 4; x++) {
-							stringstream ss;
-							string cur_nt;
-							ss << base[z];
-							ss << base[y];
-							ss << base[x];
-							ss >> cur_nt;
-							vector<int> temp;
-							local_nt[cur_nt] = temp;
+					vector<char> base; // No treble
+					base.push_back('A');
+					base.push_back('G');
+					base.push_back('C');
+					base.push_back('T');
+			
+					for (int z = 0; z < 4; z++) {
+						for (int y = 0; y < 4; y++) {
+							for (int x = 0; x < 4; x++) {
+								stringstream ss;
+								string cur_nt;
+								ss << base[z];
+								ss << base[y];
+								ss << base[x];
+								ss >> cur_nt;
+								vector<int> temp;
+								local_nt[cur_nt] = temp;
+							}
+						}
+					}
+				} else if (trimer == 5) {
+					// Gather up the locations of all confidently mapped pentanucleotides (capital letters)
+					// Coordinates are for the third letter in the pentanucleotide (where the actual mutation is located)
+					// map<string,vector<int> > local_nt;
+			
+					vector<char> base; // No treble
+					base.push_back('A');
+					base.push_back('G');
+					base.push_back('C');
+					base.push_back('T');
+			
+					for (int z = 0; z < 4; z++) {
+						for (int y = 0; y < 4; y++) {
+							for (int x = 0; x < 4; x++) {
+								for (int a = 0; a < 4; a++) {
+									for (int b = 0; b < 4; b++) {
+										stringstream ss;
+										string cur_nt;
+										ss << base[z];
+										ss << base[y];
+										ss << base[x];
+										ss << base[a];
+										ss << base[b];
+										ss >> cur_nt;
+										vector<int> temp;
+										local_nt[cur_nt] = temp;
+									}
+								}
+							}
 						}
 					}
 				}
+				
+				// Store the var_array indices of the variants that we're working with
+				// Used to join with extra columns in output step
+				vector<unsigned int> temp_id_array;
+				
+				// Cumulative sum vector of epoch nucleotides
+				// Each entry i contains the number of nucleotides seen in clusters [0:i] (0-based indexing)
+				vector<int> sum_nt;
+				
+				// DEBUG
+				// bool tocont = false;
 			
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 				
@@ -1344,131 +1744,182 @@ int main (int argc, char* argv[]) {
 	// 				if (var_subset_count == 0) {
 	// 					continue;
 	// 				}
-				
+					
 					// Populate obs_var_pos
 					for (unsigned int m = range.first; m < range.second; m++) {
 						int cur_var_end = atoi(var_array[m][2].c_str());
 						int this_epoch = cur_var_end - rand_range_start;
 						this_epoch += epoch_nt;
 					
-						stringstream ss;
-						string cur_nt;
-						ss << chr_nt[cur_var_end-2];
-						ss << chr_nt[cur_var_end-1];
-						ss << chr_nt[cur_var_end];
-						ss >> cur_nt;
-						// string placeholder = "";
+// 						stringstream ss;
+// 						string cur_nt;
+// 						ss << chr_nt[cur_var_end-2];
+// 						ss << chr_nt[cur_var_end-1];
+// 						ss << chr_nt[cur_var_end];
+// 						ss >> cur_nt;
+						
+						vector<string> placeholder;
+						placeholder.push_back(var_array[m][0]);
+						placeholder.push_back(var_array[m][1]);
+						placeholder.push_back(var_array[m][2]);
 					
-						pair<int,string> variant (this_epoch, cur_nt);
+						pair<int,vector<string> > variant (this_epoch, placeholder);
 						obs_var_pos.push_back(variant);
-					}
-					
-					if (obs_var_pos.size() == 0) {
-// 						MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
-// 						MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
-						continue;
-					}
-					
-					string cur_chr = cluster_bins[l][0];
-					for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
-			
-						// Don't read in characters if it will read off either end
-						if (k == 1 || k == hg19_coor[cur_chr]) {
-							continue;
-						}
 						
-						// Request reference from rank 1
-// 						int *request = (int *)malloc(2*sizeof(int));
-// 						request[0] = chr2int(cur_chr);
-// 						request[1] = k; // 1-based index
-// 						MPI_Send(request, 2, MPI_INT, 1, 15, MPI_COMM_WORLD);
-// 						char *incoming = (char *)malloc(3*sizeof(char));
-// 						MPI_Recv(incoming, 3, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
-				
-						char nt1 = toupper(chr_nt[k-2]); // 0-based index
-						char nt2 = toupper(chr_nt[k-1]); // 0-based index
-						char nt3 = toupper(chr_nt[k]); // 0-based index
+						// Add to id_array
+						temp_id_array.push_back(m);
 						
-// 						free(request);
-// 						free(incoming);
-				
-						// Verify there are no invalid characters
-						if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
-							char errstring[STRSIZE];
-							sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
-							printf(errstring);
-							MPI_Abort(MPI_COMM_WORLD, 1);
-							return 1;
-						}
-				
-						stringstream ss;
-						string cur_nt;
-						ss << nt1;
-						ss << nt2;
-						ss << nt3;
-						ss >> cur_nt;
-				
-						int this_epoch = k - rand_range_start;
-						this_epoch += epoch_nt;
-						local_nt[cur_nt].push_back(this_epoch);
+						// DEBUG
+// 						if (var_array[m][0] == "chr19" && var_array[m][1] == "53244651" && var_array[m][2] == "53244652") {
+// 							tocont = true;
+// 						}
 					}
 					
 					epoch_nt += (rand_range_end - rand_range_start);
+					sum_nt.push_back(epoch_nt);
 				}
 				
 				// DEBUG
 				// printf("Number of observed variants: %d\n", (int)obs_var_pos.size());
+// 				if (!tocont) {
+// 					MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
+// 					MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
+// 					continue;
+// 				}
+			
+				if (obs_var_pos.size() == 0) {
+					MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
+					MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
+					continue;
+				}
+				
+				for (unsigned int o = 0; o < temp_id_array.size(); o++) {
+					id_array.push_back(temp_id_array[o]);
+					// DEBUG
+					// printf("Temp ID: %d\n", temp_id_array[o]);
+				}
 				
 				// DEBUG
-				// printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+// 				printf("Intersecting variants: %d\n", (int)obs_var_pos.size());
+// 				printf("Epoch nt: %d\n", epoch_nt);
+				
+				// BEGIN 3MER CODE
 			
-				// Reset epoch_nt
-				// epoch_nt = 0;
+				if (trimer == 3 || trimer == 5) {
+					// Reset epoch_nt
+					epoch_nt = 0;
 			
-				// Read in reference
-// 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-// // 			
-// // 						string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
-// // 						fasta_ptr = fopen(filename.c_str(), "r");
-// // 			
-// // 						int first = 1;
-// // 						last_chr = cluster_bins[l][0];
-// // 						chr_nt = "";
-// // 						char linebuf_cstr[STRSIZE];
-// // 						while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
-// // 							string linebuf = string(linebuf_cstr);
-// // 							linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
-// // 							if (first) {
-// // 								first = 0;
-// // 								continue;
-// // 							}
-// // 							chr_nt += linebuf;
-// // 						}
-// // 						// Check feof of fasta_ptr
-// // 						if (feof(fasta_ptr)) { // We're good
-// // 							fclose(fasta_ptr);
-// // 						} else { // It's an error
-// // 							char errstring[STRSIZE];
-// // 							sprintf(errstring, "Error reading from %s", filename.c_str());
-// // 							perror(errstring);
-// // 							MPI_Abort(MPI_COMM_WORLD, 1);
-// // 							return 1;
-// // 						}
-// // 					}
-// 					
-// 					int rand_range_start = atoi(cluster_bins[l][1].c_str());
-// 					int rand_range_end = atoi(cluster_bins[l][2].c_str());
-// 				
-// 					// Begin indexing
-// 			
-// 					// Save the nt
-// 					// concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
-// 			
-// 					
-// 			
-// 					// End indexing
-// 					epoch_nt += (rand_range_end - rand_range_start);
-// 				}
+					// Read in reference
+					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+					
+						// DEBUG
+// 						printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
+// 						printf("cluster start: %s\n", cluster_bins[l][1].c_str());
+// 						printf("cluster end: %s\n", cluster_bins[l][2].c_str());
+					
+						// FASTA import here
+						if (last_chr != cluster_bins[l][0]) {
+			
+							string filename = fasta_dir + "/" + cluster_bins[l][0] + ".fa";
+							fasta_ptr = fopen(filename.c_str(), "r");
+			
+							int first = 1;
+							last_chr = cluster_bins[l][0];
+							chr_nt = "";
+							char linebuf_cstr[STRSIZE];
+							while (fgets(linebuf_cstr, STRSIZE, fasta_ptr) != NULL) {
+								string linebuf = string(linebuf_cstr);
+								linebuf.erase(linebuf.find_last_not_of(" \n\r\t")+1);
+								if (first) {
+									first = 0;
+									continue;
+								}
+								chr_nt += linebuf;
+							}
+							// Check feof of fasta_ptr
+							if (feof(fasta_ptr)) { // We're good
+								fclose(fasta_ptr);
+							} else { // It's an error
+								char errstring[STRSIZE];
+								sprintf(errstring, "Error reading from %s", filename.c_str());
+								perror(errstring);
+								MPI_Abort(MPI_COMM_WORLD, 1);
+								return 1;
+							}
+						}
+				
+						int rand_range_start = atoi(cluster_bins[l][1].c_str());
+						int rand_range_end = atoi(cluster_bins[l][2].c_str());
+				
+						// Begin indexing
+			
+						// Save the nt
+						concat_nt += chr_nt.substr(rand_range_start, rand_range_end - rand_range_start);
+						
+						string cur_chr = cluster_bins[l][0];
+						
+						// Set limits for indexing
+						int lower_bound;
+						int upper_bound;
+						if (trimer == 3) {
+							lower_bound = 2;
+							upper_bound = hg19_coor[cur_chr]-1;
+						} else if (trimer == 5) {
+							lower_bound = 3;
+							upper_bound = hg19_coor[cur_chr]-2;
+						}
+			
+						for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
+			
+							// Don't read in characters if it will read off either end
+							if (k <= lower_bound || k >= upper_bound) {
+								continue;
+							}
+				
+							char nt0, nt4;
+							if (trimer == 5) {
+								nt0 = toupper(chr_nt[k-3]); // 0-based index
+								nt4 = toupper(chr_nt[k+1]); // 0-based index
+							}
+							char nt1 = toupper(chr_nt[k-2]); // 0-based index
+							char nt2 = toupper(chr_nt[k-1]); // 0-based index
+							char nt3 = toupper(chr_nt[k]); // 0-based index
+				
+							// Verify there are no invalid characters
+							if (nt2 != 'A' && nt2 != 'C' && nt2 != 'G' && nt2 != 'T' && nt2 != 'N') {
+								char errstring[STRSIZE];
+								sprintf(errstring, "Error: Invalid character detected in FASTA file: %c. Must be one of [AGCTN].\n", nt2);
+								fprintf(stderr, errstring);
+								MPI_Abort(MPI_COMM_WORLD, 1);
+								return 1;
+							}
+				
+							stringstream ss;
+							string cur_nt;
+							if (trimer == 5) {
+								ss << nt0;
+							}
+							ss << nt1;
+							ss << nt2;
+							ss << nt3;
+							if (trimer == 5) {
+								ss << nt4;
+							}
+							ss >> cur_nt;
+				
+							int this_epoch = k - rand_range_start;
+							this_epoch += epoch_nt;
+							local_nt[cur_nt].push_back(this_epoch);
+						}
+			
+						// End indexing
+						epoch_nt += (rand_range_end - rand_range_start);
+					}
+				}
+				
+				// END 3MER/5MER CODE
+				
+				// vector<unsigned int> id_array_2;
 			
 				// Variant processing loop
 				for (unsigned int k = 0; k < obs_var_pos.size(); k++) {
@@ -1476,111 +1927,215 @@ int main (int argc, char* argv[]) {
 					// DEBUG
 					// printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-					// printf("Variant processing loop: iter: %d; clust: %d; perm: %d\n", (int)k, (int)j, i);
+					// printf("Variant processing loop: iter: %d\n", (int)k);
 			
-					string cur_nt = obs_var_pos[k].second;
+					// string cur_nt = obs_var_pos[k].second;
 					
-					// Need to translate epoch coordinates into genome coordinates here
-// 					int epoch = obs_var_pos[k].first;
+					int new_epoch;
+					vector<string> coor;
+				
+					if (trimer) {
+					
+						// Check that we're not indexing out of bounds
+						if (obs_var_pos[k].first < 2 || obs_var_pos[k].first > epoch_nt-1) {
+							continue;
+						}
+					
+						char cur_nt0, cur_nt4;
+						if (trimer == 5) {
+						
+							// Check that we're not indexing out of bounds
+							if (obs_var_pos[k].first < 3 || obs_var_pos[k].first > epoch_nt-2) {
+								continue;
+							}
+						
+							cur_nt0 = toupper(concat_nt[obs_var_pos[k].first-3]);
+							cur_nt4 = toupper(concat_nt[obs_var_pos[k].first+1]);
+						}
+						char cur_nt1 = toupper(concat_nt[obs_var_pos[k].first-2]);
+						char cur_nt2 = toupper(concat_nt[obs_var_pos[k].first-1]); // 0-based index
+						char cur_nt3 = toupper(concat_nt[obs_var_pos[k].first]);
+				
+						stringstream ss;
+						string cur_nt;
+						if (trimer == 5) {
+							ss << cur_nt0;
+						}
+						ss << cur_nt1;
+						ss << cur_nt2;
+						ss << cur_nt3;
+						if (trimer == 5) {
+							ss << cur_nt4;
+						}
+						ss >> cur_nt;
+				
+						// If there is an N in this string, we skip this variant
+						if (cur_nt.find_first_of('N') != string::npos) {
+							// to_erase.push_back(k);
+							continue;
+						}
+				
+						// DEBUG
+// 						printf("DEBUG: %c,%c,%c\n", cur_nt1, cur_nt2, cur_nt3);
+// 						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+				
+						vector<int> pos = local_nt[cur_nt];
+						
+						// Begin cluster bin filtering
+						// Record the pairs of epoch coordinates we allow
+						vector<pair<int,int> > open_bins;
+						if (local_radius != -1) {
+							// Genome coordinates of the current variant
+							vector<string> g_coor = epoch2genome(obs_var_pos[k].first, sum_nt, cluster_bins);
+							for (unsigned int l = 0; l < cluster_bins.size(); l++) {
+								string cluster_chr = cluster_bins[l][0];
+								int cluster_start = atoi(cluster_bins[l][1].c_str());
+								int cluster_end = atoi(cluster_bins[l][2].c_str());
+							
+								int start_dist = abs(cluster_start - atoi(g_coor[2].c_str()));
+								int end_dist = abs(cluster_end - atoi(g_coor[2].c_str()));
+							
+								if (g_coor[0] == cluster_chr && min(start_dist,end_dist) < local_radius) {
+									unsigned int lower_bound;
+									if (l == 0) {
+										lower_bound = 0;
+									} else {
+										lower_bound = sum_nt[l-1];
+									}
+									pair<int,int> bounds (lower_bound+1, sum_nt[l]);
+									open_bins.push_back(bounds);
+								}
+							}
+						}
+				
+						// If no positions are available, skip
+						if (pos.size()-1 == 0) {
+							// to_erase.push_back(k);
+							continue;
+						}
+				
+						vector<int> pos2;
+						for (unsigned int l = 0; l < pos.size(); l++) {
+							if (local_radius != -1) {
+								if (pos[l] != obs_var_pos[k].first && within_bounds(pos[l],open_bins)) {
+									pos2.push_back(pos[l]);
+								}
+							} else {
+								if (pos[l] != obs_var_pos[k].first) {
+									pos2.push_back(pos[l]);
+								}
+							}
+						}
+					
+						// DEBUG
+						// printf("Number of available positions: %d\n", (int)pos2.size());
+// 						for (unsigned int z = 0; z < pos2.size(); z++) {
+// 							printf("Pos %d: %d\n", z, pos2[z]);
+// 						}
+						
+						// If no positions are available, skip
+						if (pos2.size() == 0) {
+							// to_erase.push_back(k);
+							continue;
+						}
+					
+						// Pick new position
+						int new_index;
+// 						while (1) {
+						new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
+						new_epoch = pos2[new_index];
+						
+							// coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
+							
+							// DEBUG: check coor
+							// printf("new_epoch: %d\n", new_epoch);
+							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
+							
+							// If new_epoch is, in genome coordinates, not within local_radius of
+							// the original, then rechoose
+// 							if (local_radius == -1) {
+// 								break;
+// 							} else {
+// 								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
+// 									break;
+// 								} else {
+// 									// Erase the one that didn't work
+// 									int temp = pos2[pos2.size()-1];
+// 									pos2[pos2.size()-1] = pos2[new_index];
+// 									pos2[new_index] = temp;
+// 									// printf("BP a\n"); // DEBUG
+// 									pos2.erase(pos2.end()-1);
+// 									// printf("BP b\n"); // DEBUG
+// 									if (pos2.size() == 0) {
+// 										break;
+// 									}
+// 								}
+// 							}
+// 						}
+						// If no positions were left, skip
+// 						if (pos2.size() == 0) {
+// 							continue;
+// 						}
+					} else {
+// 						while (1) {
+							new_epoch = (rand() % epoch_nt) + 1; // Selection in interval [1,epoch_nt]
+							
+// 							coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
+// 							// If new_epoch is, in genome coordinates, not within local_radius of
+// 							// the original, then rechoose
+// 							if (local_radius == -1) {
+// 								break;
+// 							} else {
+// 								if (obs_var_pos[k].second[0] == coor[0] && abs(atoi(obs_var_pos[k].second[2].c_str())-atoi(coor[2].c_str())) <= local_radius) {
+// 									break;
+// 								}
+// 							}
+// 						}
+					}
+				
 // 					string cluster_chr;
-// 					
+// 				
 // 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 // 						cluster_chr = cluster_bins[l][0];
 // 						int cluster_start = atoi(cluster_bins[l][1].c_str());
 // 						int cluster_end = atoi(cluster_bins[l][2].c_str());
 // 						int cluster_size = (cluster_end - cluster_start);
-// 						
-// 						if (epoch > cluster_size) {
-// 							epoch -= cluster_size;
+// 					
+// 						if (new_epoch > cluster_size) {
+// 							new_epoch -= cluster_size;
 // 						} else {
-// 							epoch += cluster_start;
+// 							new_epoch += cluster_start;
 // 							break;
 // 						}
 // 					}
-// 					
-// 					// Request reference from rank 1
-// 					int *request = (int *)malloc(2*sizeof(int));
-// 					request[0] = chr2int(cluster_chr);
-// 					request[1] = epoch; // 1-based index
-// 					MPI_Send(request, 2, MPI_INT, 1, 15, MPI_COMM_WORLD);
-// 					char *incoming = (char *)malloc(3*sizeof(char));
-// 					MPI_Recv(incoming, 3, MPI_CHAR, 1, 16, MPI_COMM_WORLD, &status);
-				
-// 					char cur_nt1 = incoming[0];
-// 					char cur_nt2 = incoming[1]; // 0-based index
-// 					char cur_nt3 = incoming[2];
-// 					
-// 					free(request);
-// 					free(incoming);
-// 				
-// 					stringstream ss;
-// 					string cur_nt;
-// 					ss << cur_nt1;
-// 					ss << cur_nt2;
-// 					ss << cur_nt3;
-// 					ss >> cur_nt;
-				
-					// If there is an N in this string, we skip this variant
-					if (cur_nt.find_first_of('N') != string::npos) {
-						continue;
-					}
-				
-					// DEBUG
-					// printf("DEBUG: %c,%c\n", cur_nt1, cur_nt2);
-					// printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
-				
-					vector<int> pos = local_nt[cur_nt];
-				
-					// If no positions are available, skip
-					if (pos.size()-1 == 0) {
-						continue;
-					}
-				
-					vector<int> pos2;
-					for (unsigned int l = 0; l < pos.size(); l++) {
-						if (pos[l] != obs_var_pos[k].first) {
-							pos2.push_back(pos[l]);
-						}
-					}
-					
-					// DEBUG
-					// printf("Available positions: %d\n", (int)pos2.size());
-					
-					// Pick new position
-					int new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
-				
-					int new_epoch = pos2[new_index];
-					// int new_end;
-				
-					string cluster_chr;
-				
-					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-						cluster_chr = cluster_bins[l][0];
-						int cluster_start = atoi(cluster_bins[l][1].c_str());
-						int cluster_end = atoi(cluster_bins[l][2].c_str());
-						int cluster_size = (cluster_end - cluster_start);
-					
-						if (new_epoch > cluster_size) {
-							new_epoch -= cluster_size;
-						} else {
-							new_epoch += cluster_start;
-							break;
-						}
-					}
+
+					coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 				
 					vector<string> vec;
-					vec.push_back(cluster_chr);
+					vec.push_back(coor[0]);
 				
-					char start_cstr[STRSIZE];
-					sprintf(start_cstr, "%d", new_epoch-1); // 0-based
-					vec.push_back(string(start_cstr));
+// 					char start_cstr[STRSIZE];
+// 					sprintf(start_cstr, "%d", new_epoch-1); // 0-based
+					vec.push_back(coor[1]);
 				
-					char end_cstr[STRSIZE];
-					sprintf(end_cstr, "%d", new_epoch); // 1-based
-					vec.push_back(string(end_cstr));
+// 					char end_cstr[STRSIZE];
+// 					sprintf(end_cstr, "%d", new_epoch); // 1-based
+					vec.push_back(coor[2]);
+					
+// 					string ref = obs_var_pos[k].second[0];
+// 					string alt = obs_var_pos[k].second[1];
+					// string id = obs_var_pos[k].second[2];
+// 					vec.push_back(ref);
+// 					vec.push_back(alt);
+					// vec.push_back(id);
 				
 					permuted_set.push_back(vec);
+					id_array_2.push_back(id_array[k]);
 				}
+				
+				obs_var_pos.clear();
+				local_nt.clear();
+				id_array.clear();
 				
 				MPI_Send(&available_flag, 1, MPI_INT, 0, 9, MPI_COMM_WORLD);
 				MPI_Recv(&flag, 1, MPI_INT, 0, 5, MPI_COMM_WORLD, &status);
@@ -1597,21 +2152,32 @@ int main (int argc, char* argv[]) {
 			// Proceed if nonzero size
 			if (permuted_var_coor_size > 0) {
 				int *permuted_var_coor = (int *)malloc(permuted_var_coor_size*sizeof(int));
+				// char *permuted_var_alleles = (char *)malloc(permuted_var_coor_size*sizeof(char));
+				unsigned int *permuted_var_id = (unsigned int *)malloc((permuted_var_coor_size/2)*sizeof(unsigned int));
 		
 				for (unsigned int i = 0; i < permuted_set.size(); i++) {
 					permuted_var_coor[2*i] = chr2int(permuted_set[i][0]);
 					permuted_var_coor[2*i+1] = atoi(permuted_set[i][2].c_str());
+// 					permuted_var_alleles[2*i] = permuted_set[i][3][0];
+// 					permuted_var_alleles[2*i+1] = permuted_set[i][4][0];
+					permuted_var_id[i] = id_array_2[i];
 				}
 		
 				MPI_Send(permuted_var_coor, permuted_var_coor_size, MPI_INT, 0, 7, MPI_COMM_WORLD);
+				// MPI_Send(permuted_var_alleles, permuted_var_coor_size, MPI_CHAR, 0, 21, MPI_COMM_WORLD);
+				MPI_Send(permuted_var_id, (permuted_var_coor_size/2), MPI_UNSIGNED, 0, 23, MPI_COMM_WORLD);
 			
 				free(permuted_var_coor);
+				// free(permuted_var_alleles);
+				free(permuted_var_id);
 			}
 			
-			MPI_Recv(&permutation_flag, 1, MPI_INT, 0, 8, MPI_COMM_WORLD, &status);
+			MPI_Bcast(&permutation_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			
 			// DEBUG
 			// printf("Breakpoint Tau\n");
+			
+			permuted_set.clear();
 			
 			// END CHILD CODE
 		}
