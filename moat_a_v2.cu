@@ -14,6 +14,9 @@
 #include <thrust/device_vector.h>
 #include <thrust/transform.h>
 #include <thrust/iterator/counting_iterator.h>
+#include <thrust/host_vector.h>
+#include <thrust/sort.h>
+#include <thrust/copy.h>
 
 using namespace std;
 
