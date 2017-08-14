@@ -10,10 +10,32 @@
 #include <errno.h>
 #include <stdexcept>
 #include "variant_permutation_v3.h"
+#include <thrust/random.h>
+#include <thrust/device_vector.h>
+#include <thrust/transform.h>
+#include <thrust/iterator/counting_iterator.h>
 
 using namespace std;
 
 #define STRSIZE 1000
+
+struct prg
+{
+    int a, b;
+
+    __host__ __device__
+    prg(int _a=0, int _b=1) : a(_a), b(_b) {};
+
+    __host__ __device__
+        float operator()(const unsigned int n) const
+        {
+            thrust::default_random_engine rng(0);
+            thrust::uniform_int_distribution<int> dist(a,b);
+            rng.discard(n);
+
+            return dist(rng);
+        }
+};
 
 // Refactorization of the code that turns a chromosome string into an integer
 int chr2int (string chr_str) {
@@ -616,8 +638,20 @@ int main (int argc, char* argv[]) {
 		string rand_range_chr = cur_ann_chr;
 		int rand_range_start = ((cur_ann_start_num + cur_ann_end_num)/2) - dmax;
 		
+		thrust::device_vector<int> rand_start_d(n/2);
+		thrust::host_vector<int> rand_start_h(n/2);
+    thrust::counting_iterator<unsigned int> index_sequence_begin(0);
+
+    thrust::transform(index_sequence_begin,
+            index_sequence_begin + (n/2),
+            rand_start_d.begin(),
+            prg(0,range));
+            
+    thrust::sort(rand_start_d.begin(), rand_start_d.end());
+    thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
+		
 		for (int j = 0; j < n/2; j++) {
-			int rand_start = rand() % range;
+			int rand_start = rand_start_h[j];
 			
 			// Find the bounds of this bin
 			string rand_chr = rand_range_chr;
@@ -643,8 +677,20 @@ int main (int argc, char* argv[]) {
 		rand_range_chr = cur_ann_chr;
 		rand_range_start = ((cur_ann_start_num + cur_ann_end_num)/2) + dmin;
 		
+		// thrust::device_vector<int> rand_start_d(n/2);
+		// thrust::host_vector<int> rand_start_h(n/2);
+    // thrust::counting_iterator<unsigned int> index_sequence_begin(0);
+
+    thrust::transform(index_sequence_begin,
+            index_sequence_begin + (n/2),
+            rand_start_d.begin(),
+            prg(0,range));
+            
+    thrust::sort(rand_start_d.begin(), rand_start_d.end());
+    thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
+		
 		for (int j = 0; j < n/2; j++) {
-			int rand_start = rand() % range;
+			int rand_start = rand_start_h[j];
 			
 			// Find the bounds of this bin
 			string rand_chr = rand_range_chr;
@@ -675,7 +721,7 @@ int main (int argc, char* argv[]) {
 		
 		// Find the intersecting variants for the random bins
 		// Upstream bins: search backwards from the variant at var_array[var_pointer]
-		sort(upstream_random_bins.begin(), upstream_random_bins.end(), cmpIntervals);
+		// sort(upstream_random_bins.begin(), upstream_random_bins.end(), cmpIntervals);
 		unsigned int vpointer2 = var_pointer;
 		
 		// A collection of intersecting variants counts from the random bins
@@ -792,7 +838,7 @@ int main (int argc, char* argv[]) {
 		} while (j > 0);
 		
 		// Downstream bins: a more straight forward search :)
-		sort(downstream_random_bins.begin(), downstream_random_bins.end(), cmpIntervals);
+		// sort(downstream_random_bins.begin(), downstream_random_bins.end(), cmpIntervals);
 		vpointer2 = var_pointer;
 		
 		for (unsigned int j = 0; j < downstream_random_bins.size(); j++) {

@@ -17,6 +17,7 @@ ifndef CUDA
 	@echo "No CUDA-capable GPU available for MOAT-a: Can only use CPU version"
 else
 	nvcc -o moat_a_gpu moat_a.cu variant_permutation_v3.cpp
+	nvcc -o moat_a_v2 moat_a_v2.cu variant_permutation_v3.cpp
 	@echo "CUDA-accelerated MOAT-a is available"
 endif
 
