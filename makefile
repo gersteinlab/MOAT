@@ -21,6 +21,14 @@ else
 	@echo "CUDA-accelerated MOAT-a is available"
 endif
 
+moat_a_v2: moat_a_v2.cu variant_permutation_v3.h variant_permutation_v3.cpp
+ifndef CUDA
+	@echo "No CUDA-capable GPU available for MOAT-a v2: Can only use CPU version"
+else
+	nvcc -o moat_a_v2 moat_a_v2.cu variant_permutation_v3.cpp
+	@echo "CUDA-accelerated MOAT-a v2 is available"
+endif
+
 moat_v_parallel: moat_v_pval moat_v_mpi.cpp variant_permutation_v3.h variant_permutation_v3.cpp
 ifndef MPI
 	@echo "No OpenMPI installation detected: Can only use serial version of MOAT-v"
