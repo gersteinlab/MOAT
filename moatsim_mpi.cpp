@@ -479,17 +479,6 @@ int main (int argc, char* argv[]) {
 	
 		/* User-supplied arguments */
 		
-		// Number of clusters to use
-		unsigned int numclust;
-		
-		// Local context radius: How many nucleotides away are we allowed to move the
-		// variant?
-		// -1 to ignore this option
-		int local_radius;
-		
-		// Restrict permutation to the same chromosome
-		bool same_chr;
-		
 		// Is the 3mer/5mer preservation option enabled? (0/3/5)
 		int trimer;
 	
@@ -520,52 +509,32 @@ int main (int argc, char* argv[]) {
 		// Covariate signal files in bigWig format
 		vector<string> covar_files;
 	
-		if (argc < 12) {
-			fprintf(stderr, "Usage: moatsim_mpi [number of clusters] [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+		if (argc < 10) {
+			fprintf(stderr, "Usage: moatsim_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window width] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
 		
-			numclust = atoi(argv[1]);
-			local_radius = atoi(argv[2]);
-		
-			if (argv[3][0] == 'y') {
-				same_chr = true;
-			} else if (argv[3][0] == 'n') {
-				same_chr = false;
-			} else {
-				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[3][0]);
-				MPI_Abort(MPI_COMM_WORLD, 1);
-				return 1;
-			}
-
-		
-			if (argv[4][0] == '5') {
-				trimer = 5;
-			} else if (argv[4][0] == '3') {
-				trimer = 3;
-			} else if (argv[4][0] == '0') {
+			if (argv[1][0] == 'y') {
+				trimer = 1;
+			} else if (argv[1][0] == 'n') {
 				trimer = 0;
 			} else {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[4][0]);
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
-			num_permutations = atoi(argv[5]);
-			window_radius = atoi(argv[6]);
-			min_width = atoi(argv[7]);
-			prohibited_file = string(argv[8]);
-			fasta_dir = string(argv[9]);
-			vfile = string(argv[10]);
-			outdir = string(argv[11]);
+			num_permutations = atoi(argv[2]);
+			window_radius = atoi(argv[3]);
+			min_width = atoi(argv[4]);
+			prohibited_file = string(argv[5]);
+			fasta_dir = string(argv[6]);
+			vfile = string(argv[7]);
+			outdir = string(argv[8]);
 		
-			for (int i = 12; i < argc; i++) {
+			for (int i = 9; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
-			}
-			
-			if (local_radius != -1) {
-				same_chr = false; // Lock this down to improve running time and memory usage
 			}
 		}
 	
@@ -636,7 +605,7 @@ int main (int argc, char* argv[]) {
 		vector<vector<double> > covar_features;
 	
 		// Number of clusters to create: numclust
-		// unsigned int numclust = 100;
+		unsigned int numclust = 30;
 	
 		// Bring variant file data into memory
 		// Save all columns
@@ -1168,9 +1137,6 @@ int main (int argc, char* argv[]) {
 	
 		// First, give the trimer boolean flag to all children
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		
-		// Now transmit the local radius number
-		MPI_Bcast(&local_radius, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	
 		// Second, give the FASTA directory location to all children (tag = 10)
 		int strlen = fasta_dir.size() + 1;
@@ -1398,10 +1364,6 @@ int main (int argc, char* argv[]) {
 		int trimer;
 		MPI_Bcast(&trimer, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		
-		// Receive local radius
-		int local_radius;
-		MPI_Bcast(&local_radius, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		
 		// Receive directory with wg FASTA files
 		char fasta_dir_cstr[STRSIZE];
 		int strlen;
@@ -1565,7 +1527,7 @@ int main (int argc, char* argv[]) {
 				
 				map<string,vector<int> > local_nt;
 			
-				if (trimer == 3) {
+				if (trimer) {
 					// Gather up the locations of all confidently mapped trinucleotides (capital letters)
 					// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
 					// map<string,vector<int> > local_nt;
@@ -1587,37 +1549,6 @@ int main (int argc, char* argv[]) {
 								ss >> cur_nt;
 								vector<int> temp;
 								local_nt[cur_nt] = temp;
-							}
-						}
-					}
-				} else if (trimer == 5) {
-					// Gather up the locations of all confidently mapped pentanucleotides (capital letters)
-					// Coordinates are for the third letter in the pentanucleotide (where the actual mutation is located)
-					// map<string,vector<int> > local_nt;
-			
-					vector<char> base; // No treble
-					base.push_back('A');
-					base.push_back('G');
-					base.push_back('C');
-					base.push_back('T');
-			
-					for (int z = 0; z < 4; z++) {
-						for (int y = 0; y < 4; y++) {
-							for (int x = 0; x < 4; x++) {
-								for (int a = 0; a < 4; a++) {
-									for (int b = 0; b < 4; b++) {
-										stringstream ss;
-										string cur_nt;
-										ss << base[z];
-										ss << base[y];
-										ss << base[x];
-										ss << base[a];
-										ss << base[b];
-										ss >> cur_nt;
-										vector<int> temp;
-										local_nt[cur_nt] = temp;
-									}
-								}
 							}
 						}
 					}
@@ -1718,7 +1649,7 @@ int main (int argc, char* argv[]) {
 				
 				// BEGIN 3MER CODE
 			
-				if (trimer == 3 || trimer == 5) {
+				if (trimer) {
 					// Reset epoch_nt
 					epoch_nt = 0;
 			
@@ -1774,12 +1705,9 @@ int main (int argc, char* argv[]) {
 						// Set limits for indexing
 						int lower_bound;
 						int upper_bound;
-						if (trimer == 3) {
+						if (trimer) {
 							lower_bound = 2;
 							upper_bound = hg19_coor[cur_chr]-1;
-						} else if (trimer == 5) {
-							lower_bound = 3;
-							upper_bound = hg19_coor[cur_chr]-2;
 						}
 			
 						for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
@@ -1789,11 +1717,6 @@ int main (int argc, char* argv[]) {
 								continue;
 							}
 				
-							char nt0, nt4;
-							if (trimer == 5) {
-								nt0 = toupper(chr_nt[k-3]); // 0-based index
-								nt4 = toupper(chr_nt[k+1]); // 0-based index
-							}
 							char nt1 = toupper(chr_nt[k-2]); // 0-based index
 							char nt2 = toupper(chr_nt[k-1]); // 0-based index
 							char nt3 = toupper(chr_nt[k]); // 0-based index
@@ -1809,15 +1732,9 @@ int main (int argc, char* argv[]) {
 				
 							stringstream ss;
 							string cur_nt;
-							if (trimer == 5) {
-								ss << nt0;
-							}
 							ss << nt1;
 							ss << nt2;
 							ss << nt3;
-							if (trimer == 5) {
-								ss << nt4;
-							}
 							ss >> cur_nt;
 				
 							int this_epoch = k - rand_range_start;
@@ -1854,32 +1771,15 @@ int main (int argc, char* argv[]) {
 							continue;
 						}
 					
-						char cur_nt0, cur_nt4;
-						if (trimer == 5) {
-						
-							// Check that we're not indexing out of bounds
-							if (obs_var_pos[k].first < 3 || obs_var_pos[k].first > epoch_nt-2) {
-								continue;
-							}
-						
-							cur_nt0 = toupper(concat_nt[obs_var_pos[k].first-3]);
-							cur_nt4 = toupper(concat_nt[obs_var_pos[k].first+1]);
-						}
 						char cur_nt1 = toupper(concat_nt[obs_var_pos[k].first-2]);
 						char cur_nt2 = toupper(concat_nt[obs_var_pos[k].first-1]); // 0-based index
 						char cur_nt3 = toupper(concat_nt[obs_var_pos[k].first]);
 				
 						stringstream ss;
 						string cur_nt;
-						if (trimer == 5) {
-							ss << cur_nt0;
-						}
 						ss << cur_nt1;
 						ss << cur_nt2;
 						ss << cur_nt3;
-						if (trimer == 5) {
-							ss << cur_nt4;
-						}
 						ss >> cur_nt;
 				
 						// If there is an N in this string, we skip this variant
@@ -1893,33 +1793,6 @@ int main (int argc, char* argv[]) {
 // 						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
-						
-						// Begin cluster bin filtering
-						// Record the pairs of epoch coordinates we allow
-						vector<pair<int,int> > open_bins;
-						if (local_radius != -1) {
-							// Genome coordinates of the current variant
-							vector<string> g_coor = epoch2genome(obs_var_pos[k].first, sum_nt, cluster_bins);
-							for (unsigned int l = 0; l < cluster_bins.size(); l++) {
-								string cluster_chr = cluster_bins[l][0];
-								int cluster_start = atoi(cluster_bins[l][1].c_str());
-								int cluster_end = atoi(cluster_bins[l][2].c_str());
-							
-								int start_dist = abs(cluster_start - atoi(g_coor[2].c_str()));
-								int end_dist = abs(cluster_end - atoi(g_coor[2].c_str()));
-							
-								if (g_coor[0] == cluster_chr && min(start_dist,end_dist) < local_radius) {
-									unsigned int lower_bound;
-									if (l == 0) {
-										lower_bound = 0;
-									} else {
-										lower_bound = sum_nt[l-1];
-									}
-									pair<int,int> bounds (lower_bound+1, sum_nt[l]);
-									open_bins.push_back(bounds);
-								}
-							}
-						}
 				
 						// If no positions are available, skip
 						if (pos.size()-1 == 0) {
@@ -1929,15 +1802,15 @@ int main (int argc, char* argv[]) {
 				
 						vector<int> pos2;
 						for (unsigned int l = 0; l < pos.size(); l++) {
-							if (local_radius != -1) {
-								if (pos[l] != obs_var_pos[k].first && within_bounds(pos[l],open_bins)) {
-									pos2.push_back(pos[l]);
-								}
-							} else {
+// 							if (local_radius != -1) {
+// 								if (pos[l] != obs_var_pos[k].first && within_bounds(pos[l],open_bins)) {
+// 									pos2.push_back(pos[l]);
+// 								}
+// 							} else {
 								if (pos[l] != obs_var_pos[k].first) {
 									pos2.push_back(pos[l]);
 								}
-							}
+							// }
 						}
 					
 						// DEBUG
