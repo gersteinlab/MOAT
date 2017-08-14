@@ -84,8 +84,8 @@ __device__ void CopyArray(int* source, int* dest, int n) {
 	}
 }
 
-__device__ void BottomUpSort(int* target_array, int n) {
-	int *temp_array = (int *)malloc(n*sizeof(int));
+__device__ void BottomUpSort(int* target_array, int n, int* temp_array) {
+	// int *temp_array = (int *)malloc(n*sizeof(int));
 	for (int width = 1; width < n; width = 2*width) {
 		for (int i = 0; i < n; i = i+2*width) {
 			int left_ptr = i;
@@ -96,10 +96,10 @@ __device__ void BottomUpSort(int* target_array, int n) {
 		// Copy work done in temp_array into target_array for next iteration
 		CopyArray(temp_array, target_array, n);
 	}
-	free(temp_array);
+	// free(temp_array);
 }
 
-__device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double* gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch, curandState **d_state, int **upstream_start, int **downstream_start) {
+__device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double* gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch, curandState **d_state, int **upstream_start, int **downstream_start, int **mergesort_array) {
 
 	// DEBUG
 	// int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -344,8 +344,8 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		// Find the intersecting variants for the random bins
 		
 		// Sort the upstream and downstream random bins
-		BottomUpSort(upstream_start[tid], (n/2));
-		BottomUpSort(downstream_start[tid], (n/2));
+		BottomUpSort(upstream_start[tid], (n/2), mergesort_array[tid]);
+		BottomUpSort(downstream_start[tid], (n/2), mergesort_array[tid]);
 		// gpuIntervalMergeSortByEnd(upstream_chr, upstream_start, upstream_end, upstream_chr_sorted, upstream_start_sorted, upstream_end_sorted, 0, (n/2)-1);
 		// gpuIntervalMergeSortByStart(downstream_chr, downstream_start, downstream_end, downstream_chr_sorted, downstream_start_sorted, downstream_end_sorted, 0, (n/2)-1);
 		
@@ -591,7 +591,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 	}
 }
 
-__global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_ann_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double *gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch, curandState **d_state, int **upstream_start, int **downstream_start) {
+__global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_ann_arr_length, int* gpu_n, int* gpu_dmin, int* gpu_dmax, double *gpu_pvalues, double *gpu_signal_pvalues, int *gpu_wg_switch, curandState **d_state, int **upstream_start, int **downstream_start, int **mergesort_array) {
 // __global__ void apportionWork() {
 
 	// DEBUG
@@ -632,7 +632,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 // 			return;
 // 		}
 		
-		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start);
+		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start, mergesort_array);
 	} else {
 		start = tid;
 		end = tid;
@@ -641,7 +641,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 		// printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
 		
 		if (tid < length) {
-			intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start);
+			intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start, mergesort_array);
 		}
 	}
 }
@@ -1373,6 +1373,16 @@ int main (int argc, char* argv[]) {
 	cudaMemcpy(upstream_start, upstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
 	cudaMemcpy(downstream_start, downstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
 	
+	int **mergesort_array, **mergesort_array_b;
+	
+	cudaMalloc((void**)&mergesort_array, num_threads*sizeof(int *));
+	
+	for (int i = 0; i < num_threads; i++) {
+		cudaMalloc((void**)&mergesort_array_b[i], (n/2)*sizeof(int));
+	}
+	
+	cudaMemcpy(mergesort_array, mergesort_array_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	
 	// DEBUG
 	// var_signal, gpu_pvalues, gpu_signal_pvalues
 // 	printf("This is debug print 1\n");
@@ -1395,7 +1405,7 @@ int main (int argc, char* argv[]) {
 //  		cudaDeviceSetLimit(cudaLimitMallocHeapSize, new_heap_size);
 // 	}
 	
-	apportionWork<<<num_blocks, threads_per_block>>>(gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_ann_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start);
+	apportionWork<<<num_blocks, threads_per_block>>>(gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_ann_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start, mergesort_array);
 	GPUerrchk(cudaPeekAtLastError());
 	// apportionWork<<<1,1>>>();
 	
