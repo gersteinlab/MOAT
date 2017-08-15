@@ -529,7 +529,7 @@ int main (int argc, char* argv[]) {
 		out_wr[out.size()] = '\0'; // don't forget the terminating 0
 		
 		// DEBUG
-		printf("Is it my fault?\n");
+		// printf("Is it my fault?\n");
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
 		// string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
@@ -605,6 +605,12 @@ int main (int argc, char* argv[]) {
 				params = params2;
 			}
 		}
+		
+		// DEBUG
+		for (int k = 0; k < param_size; k++) {
+			printf("%s\n", params[k]);
+		}
+		
 		execv(exe.c_str(), params);
 		// return system(command.c_str());
 		
