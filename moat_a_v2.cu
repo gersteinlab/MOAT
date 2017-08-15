@@ -394,13 +394,13 @@ int main (int argc, char* argv[]) {
 	}
 	ann_array = ann_array_new;
 	
-	// Find those annotation indices that mark the beginning of a new chromosome
+	// Find those variant indices that mark the beginning of a new chromosome
 	vector<unsigned int> chr_markers (25,UINT_MAX);
 	unsigned int first_vpointer = 0;
 	for (int i = 1; i <= 25; i++) {
 		// string chr = int2chr(i);
-		for (unsigned int j = first_vpointer; j < ann_array.size(); j++) {
-			int cur_chr = chr2int(ann_array[j][0]);
+		for (unsigned int j = first_vpointer; j < var_array.size(); j++) {
+			int cur_chr = chr2int(var_array[j][0]);
 			if (i == cur_chr) {
 				chr_markers[i-1] = j;
 				first_vpointer = j;
@@ -550,6 +550,12 @@ int main (int argc, char* argv[]) {
 	
 	// Vector of p-values calculated on wg signal score
 	vector<double> signal_pvalues;
+	
+	thrust::host_vector<int> var_h(var_array.size());
+	for (unsigned int j = 0; j < var_array.size(); j++) {
+		var_h[j] = atoi(var_array[j][2].c_str());
+	}
+	thrust::device_vector<int> var_d = var_h;
 	
 	thrust::device_vector<int> rand_start_d(n/2);
 	// thrust::host_vector<int> rand_start_h(n/2);
@@ -727,14 +733,16 @@ int main (int argc, char* argv[]) {
     	}
     }
     if (end_index == UINT_MAX) {
-    	end_index = ann_array.size();
+    	end_index = var_array.size();
     }
     
-    thrust::host_vector<int> cur_chr_var(end_index - start_index);
-    for (unsigned int j = start_index; j < end_index; j++) {
-    	cur_chr_var[j] = atoi(ann_array[j][2].c_str());
-    }
-    thrust::device_vector<int> var = cur_chr_var;
+//     thrust::host_vector<int> cur_chr_var(end_index - start_index);
+//     for (unsigned int j = start_index; j < end_index; j++) {
+//     	cur_chr_var[j] = atoi(var_array[j][2].c_str());
+//     }
+//     thrust::device_vector<int> var = cur_chr_var;
+		thrust::device_vector<int> cur_chr_var(end_index - start_index);
+		thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var.begin());
     thrust::device_vector<int> bound(end_index - start_index);
     thrust::device_vector<int> less_bool(end_index - start_index);
     thrust::device_vector<int> greater_bool(end_index - start_index);
@@ -746,9 +754,9 @@ int main (int argc, char* argv[]) {
     
     for (int j = 0; j < n/2; j++) {
     	thrust::fill(bound.begin(), bound.end(), rand_start_d[j]);
-    	thrust::transform(var.begin(), var.end(), bound.begin(), less_bool.begin(), gt);
+    	thrust::transform(cur_chr_var.begin(), cur_chr_var.end(), bound.begin(), less_bool.begin(), gt);
     	thrust::fill(bound.begin(), bound.end(), rand_end_d[j]);
-    	thrust::transform(var.begin(), var.end(), bound.begin(), greater_bool.begin(), lte);
+    	thrust::transform(cur_chr_var.begin(), cur_chr_var.end(), bound.begin(), greater_bool.begin(), lte);
     	thrust::transform(less_bool.begin(), less_bool.end(), greater_bool.begin(), int_bool.begin(), land);
     	int this_variants = thrust::reduce(int_bool.begin(), int_bool.end());
     	if (this_variants >= target_variants) {
@@ -815,15 +823,16 @@ int main (int argc, char* argv[]) {
     	}
     }
     if (end_index == UINT_MAX) {
-    	end_index = ann_array.size();
+    	end_index = var_array.size();
     }
     
-    // ~cur_chr_var();
-    thrust::host_vector<int> cur_chr_var2(end_index - start_index);
-    for (unsigned int j = start_index; j < end_index; j++) {
-    	cur_chr_var2[j] = atoi(ann_array[j][2].c_str());
-    }
-    var = cur_chr_var2;
+//     thrust::host_vector<int> cur_chr_var2(end_index - start_index);
+//     for (unsigned int j = start_index; j < end_index; j++) {
+//     	cur_chr_var2[j] = atoi(ann_array[j][2].c_str());
+//     }
+//     var = cur_chr_var2;
+		thrust::device_vector<int> cur_chr_var2(end_index - start_index);
+		thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var2.begin());
     thrust::device_vector<int> bound2(end_index - start_index);
     thrust::device_vector<int> less_bool2(end_index - start_index);
     thrust::device_vector<int> greater_bool2(end_index - start_index);
@@ -831,9 +840,9 @@ int main (int argc, char* argv[]) {
     
     for (int j = 0; j < n/2; j++) {
     	thrust::fill(bound2.begin(), bound2.end(), rand_start_d[j]);
-    	thrust::transform(var.begin(), var.end(), bound2.begin(), less_bool2.begin(), gt);
+    	thrust::transform(cur_chr_var2.begin(), cur_chr_var2.end(), bound2.begin(), less_bool2.begin(), gt);
     	thrust::fill(bound2.begin(), bound2.end(), rand_end_d[j]);
-    	thrust::transform(var.begin(), var.end(), bound2.begin(), greater_bool2.begin(), lte);
+    	thrust::transform(cur_chr_var2.begin(), cur_chr_var2.end(), bound2.begin(), greater_bool2.begin(), lte);
     	thrust::transform(less_bool2.begin(), less_bool2.end(), greater_bool2.begin(), int_bool2.begin(), land);
     	int this_variants = thrust::reduce(int_bool2.begin(), int_bool2.end());
     	if (this_variants >= target_variants) {
