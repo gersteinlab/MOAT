@@ -556,10 +556,11 @@ int main (int argc, char* argv[]) {
 			param_size += covar_files_size;
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
 			for (int i = 0; i < param_size-covar_files_size-1; i++){
+				printf("Loop iter a: %d\n", i); // DEBUG
 				int width = strlen(params[i]) + 1;
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
-				printf("Loop iter: %d\n", i); // DEBUG
+				printf("Loop iter b: %d\n", i); // DEBUG
 			}
 			for (int i = param_size-covar_files_size-1; i < param_size; i++) {
 // 				command += " ";
