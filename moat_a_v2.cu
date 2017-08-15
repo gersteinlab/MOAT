@@ -656,18 +656,18 @@ int main (int argc, char* argv[]) {
     
     thrust::plus<int> op;
     
-    thrust::device_vector<int> rand_start_d2(n/2);
+    // thrust::device_vector<int> rand_start_d2(n/2);
     thrust::device_vector<int> range_start(n/2);
     thrust::fill(range_start.begin(), range_start.end(), rand_range_start);
-    thrust::transform(rand_start_d.begin(), rand_start_d.end(), range_start.begin(), rand_start_d2.begin(), op);
+    thrust::transform(rand_start_d.begin(), rand_start_d.end(), range_start.begin(), rand_start_d.begin(), op);
     
     thrust::device_vector<int> rand_end_d(n/2);
     thrust::host_vector<int> rand_end_h(n/2);
     thrust::device_vector<int> adder(n/2);
     thrust::fill(adder.begin(), adder.end(), (cur_ann_end_num - cur_ann_start_num));
-    thrust::transform(rand_start_d2.begin(), rand_start_d2.end(), adder.begin(), rand_end_d.begin(), op);
+    thrust::transform(rand_start_d.begin(), rand_start_d.end(), adder.begin(), rand_end_d.begin(), op);
     
-    thrust::copy(rand_start_d2.begin(), rand_start_d2.end(), rand_start_h.begin());
+    thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
     thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
 		
 		for (int j = 0; j < n/2; j++) {
@@ -710,10 +710,10 @@ int main (int argc, char* argv[]) {
     thrust::sort(rand_start_d.begin(), rand_start_d.end());
     
     thrust::fill(range_start.begin(), range_start.end(), rand_range_start);
-    thrust::transform(rand_start_d.begin(), rand_start_d.end(), range_start.begin(), rand_start_d2.begin(), op);
+    thrust::transform(rand_start_d.begin(), rand_start_d.end(), range_start.begin(), rand_start_d.begin(), op);
      
-    thrust::transform(rand_start_d2.begin(), rand_start_d2.end(), adder.begin(), rand_end_d.begin(), op);
-    thrust::copy(rand_start_d2.begin(), rand_start_d2.end(), rand_start_h.begin());
+    thrust::transform(rand_start_d.begin(), rand_start_d.end(), adder.begin(), rand_end_d.begin(), op);
+    thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
     thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
 		
 		for (int j = 0; j < n/2; j++) {
