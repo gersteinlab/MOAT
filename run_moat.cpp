@@ -556,27 +556,27 @@ int main (int argc, char* argv[]) {
 			param_size += covar_files_size;
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
 			for (int i = 0; i < param_size-covar_files_size-1; i++){
-				printf("Loop iter a: %d\n", i); // DEBUG
+				// printf("Loop iter a: %d\n", i); // DEBUG
 				int width = strlen(params[i]) + 1;
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
-				printf("Loop iter b: %d\n", i); // DEBUG
+				// printf("Loop iter b: %d\n", i); // DEBUG
 			}
 			for (int i = param_size-covar_files_size-1; i < param_size; i++) {
 // 				command += " ";
 // 				command += covar_files[i];
-				printf("Loop iter 2a: %d\n", i); // DEBUG
+				// printf("Loop iter 2a: %d\n", i); // DEBUG
 				if (i < param_size-1) {
-					char *covar_file_wr = new char[covar_files[i-(param_size-covar_files_size)-1].size() + 1];
-					std::copy(covar_files[i-(param_size-covar_files_size)-1].begin(), covar_files[i-(param_size-covar_files_size)-1].end(), covar_file_wr);
-					covar_file_wr[covar_files[i-(param_size-covar_files_size)-1].size()] = '\0'; // don't forget the terminating 0
+					char *covar_file_wr = new char[covar_files[i-(param_size-covar_files_size-1)].size() + 1];
+					std::copy(covar_files[i-(param_size-covar_files_size-1)].begin(), covar_files[i-(param_size-covar_files_size-1)].end(), covar_file_wr);
+					covar_file_wr[covar_files[i-(param_size-covar_files_size-1)].size()] = '\0'; // don't forget the terminating 0
 					params2[i] = covar_file_wr;
 				} else {
 					params2[i] = (char *)0;
 				}
-				printf("Loop iter 2b: %d\n", i); // DEBUG
+				// printf("Loop iter 2b: %d\n", i); // DEBUG
 			}
-			printf("Breakpoint Alpha\n"); // DEBUG
+			// printf("Breakpoint Alpha\n"); // DEBUG
 			params = params2;
 		} else { // algo == 'v'
 			// + " " + string(wg_signal_mode[0]) + " " + wg_signal_file
