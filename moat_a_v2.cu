@@ -17,6 +17,8 @@
 #include <thrust/host_vector.h>
 #include <thrust/sort.h>
 #include <thrust/copy.h>
+#include <thrust/functional.h>
+#include <thrust/execution_policy.h>
 
 using namespace std;
 
