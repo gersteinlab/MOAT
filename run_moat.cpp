@@ -505,8 +505,18 @@ int main (int argc, char* argv[]) {
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
 		// string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
-		char *params[] = {exe.c_str(), trimer_str, num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0 };
 		int param_size = 10;
+		char **params = (char **)malloc(param_size*sizeof(char *));
+		params[0] = exe.c_str();
+		params[1] = trimer_str;
+		params[2] = num_permutations_cstr;
+		params[3] = width_cstr;
+		params[4] = min_width_cstr;
+		params[5] = prohibited_file.c_str();
+		params[6] = fasta_dir.c_str();
+		params[7] = vfile.c_str();
+		params[8] = out.c_str();
+		params[9] = (char *)0 ;
 		if (algo == 's') {
 			param_size += covar_files.size();
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
