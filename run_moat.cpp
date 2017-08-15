@@ -292,6 +292,34 @@ int main (int argc, char* argv[]) {
 			exe = "./moat_a_cpu";
 		}
 		
+		char *exe_wr = new char[exe.size() + 1];
+		std::copy(exe.begin(), exe.end(), exe_wr);
+		exe_wr[exe.size()] = '\0'; // don't forget the terminating 0
+		
+		char *prohibited_file_wr = new char[prohibited_file.size() + 1];
+		std::copy(prohibited_file.begin(), prohibited_file.end(), prohibited_file_wr);
+		prohibited_file_wr[prohibited_file.size()] = '\0'; // don't forget the terminating 0
+		
+		char *vfile_wr = new char[vfile.size() + 1];
+		std::copy(vfile.begin(), vfile.end(), vfile_wr);
+		vfile_wr[vfile.size()] = '\0'; // don't forget the terminating 0
+		
+		char *afile_wr = new char[afile.size() + 1];
+		std::copy(afile.begin(), afile.end(), afile_wr);
+		afile_wr[afile.size()] = '\0'; // don't forget the terminating 0
+		
+		char *out_wr = new char[out.size() + 1];
+		std::copy(out.begin(), out.end(), out_wr);
+		out_wr[out.size()] = '\0'; // don't forget the terminating 0
+		
+		char *wg_signal_mode_wr = new char[wg_signal_mode.size() + 1];
+		std::copy(wg_signal_mode.begin(), wg_signal_mode.end(), wg_signal_mode_wr);
+		wg_signal_mode_wr[wg_signal_mode.size()] = '\0'; // don't forget the terminating 0
+		
+		char *wg_signal_file_wr = new char[wg_signal_file.size() + 1];
+		std::copy(wg_signal_file.begin(), wg_signal_file.end(), wg_signal_file_wr);
+		wg_signal_file_wr[wg_signal_file.size()] = '\0'; // don't forget the terminating 0
+		
 		// execl(exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), (char *)0);
 		// string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out + " " + wg_signal_mode[0];
 		char **params;
@@ -299,28 +327,28 @@ int main (int argc, char* argv[]) {
 // 			command += " ";
 // 			command += wg_signal_file;
 			params = (char **)malloc(11*sizeof(char *));
-			params[0] = exe.c_str();
+			params[0] = exe_wr;
 			params[1] = num_permutations_cstr;
 			params[2] = dmin_cstr;
 			params[3] = dmax_cstr;
-			params[4] = prohibited_file.c_str();
-			params[5] = vfile.c_str();
-			params[6] = afile.c_str();
-			params[7] = out.c_str();
-			params[8] = wg_signal_mode.c_str();
-			params[9] = wg_signal_file.c_str();
+			params[4] = prohibited_file_wr;
+			params[5] = vfile_wr;
+			params[6] = afile_wr;
+			params[7] = out_wr;
+			params[8] = wg_signal_mode_wr;
+			params[9] = wg_signal_file_wr;
 			params[10] = (char *) 0;
 		} else {
 			params = (char **)malloc(10*sizeof(char *));
-			params[0] = exe.c_str();
+			params[0] = exe_wr;
 			params[1] = num_permutations_cstr;
 			params[2] = dmin_cstr;
 			params[3] = dmax_cstr;
-			params[4] = prohibited_file.c_str();
-			params[5] = vfile.c_str();
-			params[6] = afile.c_str();
-			params[7] = out.c_str();
-			params[8] = wg_signal_mode.c_str();
+			params[4] = prohibited_file_wr;
+			params[5] = vfile_wr;
+			params[6] = afile_wr;
+			params[7] = out_wr;
+			params[8] = wg_signal_mode_wr;
 			params[9] = (char *) 0;
 		}
 		execv(exe.c_str(), params);
