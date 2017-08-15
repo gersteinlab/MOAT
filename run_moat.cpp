@@ -293,12 +293,17 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// execl(exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), (char *)0);
-		string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out + " " + wg_signal_mode[0];
+		// string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out + " " + wg_signal_mode[0];
+		char *params[];
 		if (wg_signal_mode[0] != 'n') {
-			command += " ";
-			command += wg_signal_file;
+// 			command += " ";
+// 			command += wg_signal_file;
+			params = {exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), wg_signal_mode.c_str(), wg_signal_file.c_str(), (char *) 0 };
+		} else {
+			params = {exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), wg_signal_mode.c_str(), (char *) 0 };
 		}
-		return system(command.c_str());
+		execv(exe.c_str(), params);
+		// return system(command.c_str());
 	
 	} else if (algo == 'v' || algo == 's') { // MOAT-v/MOATsim
 		
@@ -450,22 +455,58 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
-		string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+		// string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+		char *params[] = {exe.c_str(), trimer_str, num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0 };
+		int param_size = 10;
 		if (algo == 's') {
-			for (unsigned int i = 0; i < covar_files.size(); i++) {
-				command += " ";
-				command += covar_files[i];
+			param_size += covar_files.size();
+			char **params2 = (char **)malloc(param_size*sizeof(char *));
+			for (int i = 0; i < param_size-covar_files.size(); ++i){
+				int width = strlen(params[i]) + 1;
+				params2[i] = malloc(width*sizeof(char));
+				memcpy(params2[i], params[i], width);
 			}
+			for (unsigned int i = param_size-covar_files.size()-1; i < param_size; i++) {
+// 				command += " ";
+// 				command += covar_files[i];
+				if (i != param_size-1) {
+					params2[i] = covar_files[i-(param_size-covar_files.size())-1].c_str();
+				} else {
+					params2[i] = (char *)0;
+				}
+			}
+			params = params2;
 		} else { // algo == 'v'
 			// + " " + string(wg_signal_mode[0]) + " " + wg_signal_file
-			command += " ";
-			command += wg_signal_mode[0];
+// 			command += " ";
+// 			command += wg_signal_mode[0];
+			param_size++;
+			char **params2 = (char **)malloc(param_size*sizeof(char *));
+			for (int i = 0; i < param_size-1; ++i){
+				int width = strlen(params[i]) + 1;
+				params2[i] = malloc(width*sizeof(char));
+				memcpy(params2[i], params[i], width);
+			}
+			params2[param_size-2] = wg_signal_mode.c_str();
+			params2[param_size-1] = (char *)0;
+			params = params2;
 			if (wg_signal_mode[0] == 'y') {
-				command += " ";
-				command += wg_signal_file;
+// 				command += " ";
+// 				command += wg_signal_file;
+				param_size++;
+				params2 = (char **)malloc(param_size*sizeof(char *));
+				for (int i = 0; i < param_size-1; ++i){
+					int width = strlen(params[i]) + 1;
+					params2[i] = malloc(width*sizeof(char));
+					memcpy(params2[i], params[i], width);
+				}
+				params2[param_size-2] = wg_signal_file.c_str();
+				params2[param_size-1] = (char *)0;
+				params = params2;
 			}
 		}
-		return system(command.c_str());
+		execv(exe.c_str(), params);
+		// return system(command.c_str());
 		
 	} else { // Algo has an invalid value
 		fprintf(stderr, "Error: Invalid value for \"--algo\": %c. Use -h or --help for usage information. Exiting.\n", algo);
