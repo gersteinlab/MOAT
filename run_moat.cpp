@@ -492,7 +492,7 @@ int main (int argc, char* argv[]) {
 			sprintf(ncpu_cstr, "%d", ncpu);
 			
 			// DEBUG
-			printf("nCPU: %d\n", ncpu);
+			// printf("nCPU: %d\n", ncpu);
 		
 			if (algo == 'v') {
 				exe = "mpirun -n " + string(ncpu_cstr) + " ./moat_v_parallel";
@@ -535,7 +535,10 @@ int main (int argc, char* argv[]) {
 		// printf("Is it my fault?\n");
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
-		// string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+		// DEBUG
+		string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+		printf("Command: %s\n", command.c_str());
+		
 		int param_size = 10;
 		char **params = (char **)malloc(param_size*sizeof(char *));
 		params[0] = exe_wr;
