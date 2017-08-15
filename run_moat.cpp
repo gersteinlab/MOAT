@@ -573,6 +573,7 @@ int main (int argc, char* argv[]) {
 			param_size++;
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
 			for (int i = 0; i < param_size-1; ++i){
+				printf("Loop iter: %d\n", i); // DEBUG
 				int width = strlen(params[i]) + 1;
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
