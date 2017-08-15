@@ -548,7 +548,7 @@ int main (int argc, char* argv[]) {
 		if (algo == 's') {
 			param_size += covar_files.size();
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
-			for (int i = 0; i < param_size-(int)covar_files.size(); ++i){
+			for (int i = 0; i < param_size-(int)covar_files.size()-1; ++i){
 				int width = strlen(params[i]) + 1;
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
@@ -572,11 +572,11 @@ int main (int argc, char* argv[]) {
 // 			command += wg_signal_mode[0];
 			param_size++;
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
-			for (int i = 0; i < param_size-1; i++){
+			for (int i = 0; i < param_size-2; i++){
 				int width = strlen(params[i]) + 1;
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
-				printf("Loop iter: %d\n", i); // DEBUG
+				// printf("Loop iter: %d\n", i); // DEBUG
 			}
 			
 			char *wg_signal_mode_wr = new char[wg_signal_mode.size() + 1];
@@ -584,7 +584,7 @@ int main (int argc, char* argv[]) {
 			wg_signal_mode_wr[wg_signal_mode.size()] = '\0'; // don't forget the terminating 0
 			
 			params2[param_size-2] = wg_signal_mode_wr;
-			printf("Breakpoint Alpha\n"); // DEBUG
+			// printf("Breakpoint Alpha\n"); // DEBUG
 			params2[param_size-1] = (char *)0;
 			params = params2;
 			if (wg_signal_mode[0] == 'y') {
@@ -592,7 +592,7 @@ int main (int argc, char* argv[]) {
 // 				command += wg_signal_file;
 				param_size++;
 				params2 = (char **)malloc(param_size*sizeof(char *));
-				for (int i = 0; i < param_size-1; i++){
+				for (int i = 0; i < param_size-2; i++){
 					int width = strlen(params[i]) + 1;
 					params2[i] = (char *)malloc(width*sizeof(char));
 					memcpy(params2[i], params[i], width);
@@ -609,9 +609,9 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// DEBUG
-		for (int k = 0; k < param_size; k++) {
-			printf("%s\n", params[k]);
-		}
+// 		for (int k = 0; k < param_size; k++) {
+// 			printf("%s\n", params[k]);
+// 		}
 		
 		execv(exe.c_str(), params);
 		// return system(command.c_str());
