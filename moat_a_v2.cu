@@ -24,20 +24,6 @@ using namespace std;
 
 #define STRSIZE 1000
 
-// Refactorization of the code that turns a chromosome string into an integer
-int chr2int (string chr_str) {
-	if (chr_str == "chrX") {
-		return 23;
-	} else if (chr_str == "chrY") {
-		return 24;
-	} else if (chr_str == "chrM" || chr_str == "chrMT") {
-		return 25;
-	} else {
-		string chr_part = chr_str.substr(3);
-		return atoi(chr_part.c_str());
-	}
-}
-
 // Reverse the direction of chr2int
 string int2chr (int chr_num) {
 	if (chr_num == 23) {
@@ -746,7 +732,7 @@ int main (int argc, char* argv[]) {
     
     thrust::host_vector<int> cur_chr_var(end_index - start_index);
     for (unsigned int j = start_index; j < end_index; j++) {
-    	cur_chr_var[j] = ann_array[j][2];
+    	cur_chr_var[j] = atoi(ann_array[j][2].c_str());
     }
     thrust::device_vector<int> var = cur_chr_var;
     thrust::device_vector<int> bound(end_index - start_index);
@@ -835,7 +821,7 @@ int main (int argc, char* argv[]) {
     // ~cur_chr_var();
     thrust::host_vector<int> cur_chr_var2(end_index - start_index);
     for (unsigned int j = start_index; j < end_index; j++) {
-    	cur_chr_var2[j] = ann_array[j][2];
+    	cur_chr_var2[j] = atoi(ann_array[j][2].c_str());
     }
     var = cur_chr_var2;
     thrust::device_vector<int> bound2(end_index - start_index);
