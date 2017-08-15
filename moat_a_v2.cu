@@ -702,7 +702,7 @@ int main (int argc, char* argv[]) {
     thrust::transform(index_sequence_begin,
             index_sequence_begin + (n/2),
             rand_start_d.begin(),
-            prg(0,range));
+            prg(0,range-1));
             
     thrust::sort(rand_start_d.begin(), rand_start_d.end());
     
@@ -741,8 +741,8 @@ int main (int argc, char* argv[]) {
 //     	cur_chr_var[j] = atoi(var_array[j][2].c_str());
 //     }
 //     thrust::device_vector<int> var = cur_chr_var;
-		thrust::device_vector<int> cur_chr_var(end_index - start_index);
-		thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var.begin());
+		// thrust::device_vector<int> cur_chr_var(end_index - start_index);
+		// thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var.begin());
     thrust::device_vector<int> bound(end_index - start_index);
     thrust::device_vector<int> less_bool(end_index - start_index);
     thrust::device_vector<int> greater_bool(end_index - start_index);
@@ -754,9 +754,9 @@ int main (int argc, char* argv[]) {
     
     for (int j = 0; j < n/2; j++) {
     	thrust::fill(bound.begin(), bound.end(), rand_start_d[j]);
-    	thrust::transform(cur_chr_var.begin(), cur_chr_var.end(), bound.begin(), less_bool.begin(), gt);
+    	thrust::transform(var_d.begin()+start_index, var_d.begin()+end_index, bound.begin(), less_bool.begin(), gt);
     	thrust::fill(bound.begin(), bound.end(), rand_end_d[j]);
-    	thrust::transform(cur_chr_var.begin(), cur_chr_var.end(), bound.begin(), greater_bool.begin(), lte);
+    	thrust::transform(var_d.begin()+start_index, var_d.begin()+end_index, bound.begin(), greater_bool.begin(), lte);
     	thrust::transform(less_bool.begin(), less_bool.end(), greater_bool.begin(), int_bool.begin(), land);
     	int this_variants = thrust::reduce(int_bool.begin(), int_bool.end());
     	if (this_variants >= target_variants) {
@@ -801,7 +801,7 @@ int main (int argc, char* argv[]) {
     thrust::transform(index_sequence_begin,
             index_sequence_begin + (n/2),
             rand_start_d.begin(),
-            prg(0,range));
+            prg(0,range-1));
             
     thrust::sort(rand_start_d.begin(), rand_start_d.end());
     
@@ -813,38 +813,38 @@ int main (int argc, char* argv[]) {
     // thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
     
     // Retrieve the markers for this chromosome
-    cur_chr = chr2int(rand_range_chr);
-    start_index = chr_markers[cur_chr-1];
-    end_index = UINT_MAX;
-    for (unsigned int j = cur_chr; j < 25; j++) {
-    	if (chr_markers[j] != UINT_MAX) {
-    		end_index = chr_markers[j];
-    		break;
-    	}
-    }
-    if (end_index == UINT_MAX) {
-    	end_index = var_array.size();
-    }
+//     cur_chr = chr2int(rand_range_chr);
+//     start_index = chr_markers[cur_chr-1];
+//     end_index = UINT_MAX;
+//     for (unsigned int j = cur_chr; j < 25; j++) {
+//     	if (chr_markers[j] != UINT_MAX) {
+//     		end_index = chr_markers[j];
+//     		break;
+//     	}
+//     }
+//     if (end_index == UINT_MAX) {
+//     	end_index = var_array.size();
+//     }
     
 //     thrust::host_vector<int> cur_chr_var2(end_index - start_index);
 //     for (unsigned int j = start_index; j < end_index; j++) {
 //     	cur_chr_var2[j] = atoi(ann_array[j][2].c_str());
 //     }
 //     var = cur_chr_var2;
-		thrust::device_vector<int> cur_chr_var2(end_index - start_index);
-		thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var2.begin());
-    thrust::device_vector<int> bound2(end_index - start_index);
-    thrust::device_vector<int> less_bool2(end_index - start_index);
-    thrust::device_vector<int> greater_bool2(end_index - start_index);
-    thrust::device_vector<int> int_bool2(end_index - start_index);
+// 		thrust::device_vector<int> cur_chr_var2(end_index - start_index);
+// 		thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var2.begin());
+//     thrust::device_vector<int> bound2(end_index - start_index);
+//     thrust::device_vector<int> less_bool2(end_index - start_index);
+//     thrust::device_vector<int> greater_bool2(end_index - start_index);
+//     thrust::device_vector<int> int_bool2(end_index - start_index);
     
     for (int j = 0; j < n/2; j++) {
-    	thrust::fill(bound2.begin(), bound2.end(), rand_start_d[j]);
-    	thrust::transform(cur_chr_var2.begin(), cur_chr_var2.end(), bound2.begin(), less_bool2.begin(), gt);
-    	thrust::fill(bound2.begin(), bound2.end(), rand_end_d[j]);
-    	thrust::transform(cur_chr_var2.begin(), cur_chr_var2.end(), bound2.begin(), greater_bool2.begin(), lte);
-    	thrust::transform(less_bool2.begin(), less_bool2.end(), greater_bool2.begin(), int_bool2.begin(), land);
-    	int this_variants = thrust::reduce(int_bool2.begin(), int_bool2.end());
+    	thrust::fill(bound.begin(), bound.end(), rand_start_d[j]);
+    	thrust::transform(var_d.begin()+start_index, var_d.begin()+end_index, bound.begin(), less_bool.begin(), gt);
+    	thrust::fill(bound.begin(), bound.end(), rand_end_d[j]);
+    	thrust::transform(var_d.begin()+start_index, var_d.begin()+end_index, bound.begin(), greater_bool.begin(), lte);
+    	thrust::transform(less_bool.begin(), less_bool.end(), greater_bool.begin(), int_bool.begin(), land);
+    	int this_variants = thrust::reduce(int_bool.begin(), int_bool.end());
     	if (this_variants >= target_variants) {
 				overbins++;
 			}
