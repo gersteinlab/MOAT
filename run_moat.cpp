@@ -490,6 +490,9 @@ int main (int argc, char* argv[]) {
 		
 			char ncpu_cstr[STRSIZE];
 			sprintf(ncpu_cstr, "%d", ncpu);
+			
+			// DEBUG
+			printf("nCPU: %d\n", ncpu);
 		
 			if (algo == 'v') {
 				exe = "mpirun -n " + string(ncpu_cstr) + " ./moat_v_parallel";
