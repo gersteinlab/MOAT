@@ -1062,46 +1062,46 @@ int main (int argc, char* argv[]) {
 	// 	fclose(testfile_ptr);
 	// 	return 0;
 	
-	if (same_chr) {
-		// Split up the clusters by chromosome
-		unsigned int cluster_assign = 0;
-		vector<unsigned int> member_prime (covar_features.size(),0);
-		map<unsigned int,int> empty_prime;
-		for (unsigned int j = 0; j < numclust; j++) {
-
-			if (empty[j]) {
-				continue;
-			}
-		
-			vector<vector<string> > cluster_bins;
-			vector<unsigned int> indices;
-		
-			// Gather up bins in this cluster
-			for (unsigned int k = 0; k < ann_array.size(); k++) {
-				if (member[k] == j) {
-					cluster_bins.push_back(ann_array[k]);
-					indices.push_back(k);
-				}
-			}
-		
-			bool is_empty = true;
-			for (int i = 1; i <= 25; i++) {
-				string chr = int2chr(i);
-				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
-					if (cluster_bins[k][0] == chr) {
-						member_prime[indices[k]] = cluster_assign;
-						is_empty = false;
-					}
-				}
-				if (!is_empty) {
-					cluster_assign++;
-				}
-			}			
-		}
-		member = member_prime;
-		empty = empty_prime;
-		numclust = cluster_assign+1;
-	}
+// 	if (same_chr) {
+// 		// Split up the clusters by chromosome
+// 		unsigned int cluster_assign = 0;
+// 		vector<unsigned int> member_prime (covar_features.size(),0);
+// 		map<unsigned int,int> empty_prime;
+// 		for (unsigned int j = 0; j < numclust; j++) {
+// 
+// 			if (empty[j]) {
+// 				continue;
+// 			}
+// 		
+// 			vector<vector<string> > cluster_bins;
+// 			vector<unsigned int> indices;
+// 		
+// 			// Gather up bins in this cluster
+// 			for (unsigned int k = 0; k < ann_array.size(); k++) {
+// 				if (member[k] == j) {
+// 					cluster_bins.push_back(ann_array[k]);
+// 					indices.push_back(k);
+// 				}
+// 			}
+// 		
+// 			bool is_empty = true;
+// 			for (int i = 1; i <= 25; i++) {
+// 				string chr = int2chr(i);
+// 				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
+// 					if (cluster_bins[k][0] == chr) {
+// 						member_prime[indices[k]] = cluster_assign;
+// 						is_empty = false;
+// 					}
+// 				}
+// 				if (!is_empty) {
+// 					cluster_assign++;
+// 				}
+// 			}			
+// 		}
+// 		member = member_prime;
+// 		empty = empty_prime;
+// 		numclust = cluster_assign+1;
+// 	}
 	
 	// DEBUG: hardcode the values
 // 	ann_array.clear();
