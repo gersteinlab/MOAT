@@ -299,10 +299,29 @@ int main (int argc, char* argv[]) {
 // 			command += " ";
 // 			command += wg_signal_file;
 			params = (char **)malloc(11*sizeof(char *));
-			params = {exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), wg_signal_mode.c_str(), wg_signal_file.c_str(), (char *) 0 };
+			params[0] = exe.c_str();
+			params[1] = num_permutations_cstr;
+			params[2] = dmin_cstr;
+			params[3] = dmax_cstr;
+			params[4] = prohibited_file.c_str();
+			params[5] = vfile.c_str();
+			params[6] = afile.c_str();
+			params[7] = out.c_str();
+			params[8] = wg_signal_mode.c_str();
+			params[9] = wg_signal_file.c_str();
+			params[10] = (char *) 0;
 		} else {
 			params = (char **)malloc(10*sizeof(char *));
-			params = {exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), wg_signal_mode.c_str(), (char *) 0 };
+			params[0] = exe.c_str();
+			params[1] = num_permutations_cstr;
+			params[2] = dmin_cstr;
+			params[3] = dmax_cstr;
+			params[4] = prohibited_file.c_str();
+			params[5] = vfile.c_str();
+			params[6] = afile.c_str();
+			params[7] = out.c_str();
+			params[8] = wg_signal_mode.c_str();
+			params[9] = (char *) 0;
 		}
 		execv(exe.c_str(), params);
 		// return system(command.c_str());
