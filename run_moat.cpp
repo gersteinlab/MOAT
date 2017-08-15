@@ -507,6 +507,10 @@ int main (int argc, char* argv[]) {
 		std::copy(exe.begin(), exe.end(), exe_wr);
 		exe_wr[exe.size()] = '\0'; // don't forget the terminating 0
 		
+		char *trimer_str_wr = new char[trimer_str.size() + 1];
+		std::copy(trimer_str.begin(), trimer_str.end(), trimer_str_wr);
+		trimer_str_wr[trimer_str.size()] = '\0'; // don't forget the terminating 0
+		
 		char *prohibited_file_wr = new char[prohibited_file.size() + 1];
 		std::copy(prohibited_file.begin(), prohibited_file.end(), prohibited_file_wr);
 		prohibited_file_wr[prohibited_file.size()] = '\0'; // don't forget the terminating 0
@@ -528,7 +532,7 @@ int main (int argc, char* argv[]) {
 		int param_size = 10;
 		char **params = (char **)malloc(param_size*sizeof(char *));
 		params[0] = exe_wr;
-		params[1] = trimer_str;
+		params[1] = trimer_str_wr;
 		params[2] = num_permutations_cstr;
 		params[3] = width_cstr;
 		params[4] = min_width_cstr;
@@ -542,7 +546,7 @@ int main (int argc, char* argv[]) {
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
 			for (int i = 0; i < param_size-covar_files.size(); ++i){
 				int width = strlen(params[i]) + 1;
-				params2[i] = malloc(width*sizeof(char));
+				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
 			}
 			for (unsigned int i = param_size-covar_files.size()-1; i < param_size; i++) {
@@ -566,7 +570,7 @@ int main (int argc, char* argv[]) {
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
 			for (int i = 0; i < param_size-1; ++i){
 				int width = strlen(params[i]) + 1;
-				params2[i] = malloc(width*sizeof(char));
+				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
 			}
 			
@@ -584,7 +588,7 @@ int main (int argc, char* argv[]) {
 				params2 = (char **)malloc(param_size*sizeof(char *));
 				for (int i = 0; i < param_size-1; ++i){
 					int width = strlen(params[i]) + 1;
-					params2[i] = malloc(width*sizeof(char));
+					params2[i] = (char *)malloc(width*sizeof(char));
 					memcpy(params2[i], params[i], width);
 				}
 				
