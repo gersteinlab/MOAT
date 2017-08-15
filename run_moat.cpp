@@ -549,10 +549,10 @@ int main (int argc, char* argv[]) {
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
 			}
-			for (unsigned int i = (unsignd int)param_size-covar_files.size()-1; i < param_size; i++) {
+			for (unsigned int i = (unsigned int)param_size-covar_files.size()-1; i < param_size; i++) {
 // 				command += " ";
 // 				command += covar_files[i];
-				if (i != (unsignd int)param_size-1) {
+				if (i != (unsigned int)param_size-1) {
 					char *covar_file_wr = new char[covar_files[i-(param_size-covar_files.size())-1].size() + 1];
 					std::copy(covar_files[i-(param_size-covar_files.size())-1].begin(), covar_files[i-(param_size-covar_files.size())-1].end(), covar_file_wr);
 					covar_file_wr[covar_files[i-(param_size-covar_files.size())-1].size()] = '\0'; // don't forget the terminating 0
