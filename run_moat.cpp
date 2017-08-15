@@ -559,6 +559,7 @@ int main (int argc, char* argv[]) {
 				int width = strlen(params[i]) + 1;
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
+				printf("Loop iter: %d\n", i); // DEBUG
 			}
 			for (int i = param_size-covar_files_size-1; i < param_size; i++) {
 // 				command += " ";
@@ -571,7 +572,9 @@ int main (int argc, char* argv[]) {
 				} else {
 					params2[i] = (char *)0;
 				}
+				printf("Loop iter 2: %d\n", i); // DEBUG
 			}
+			printf("Breakpoint Alpha\n"); // DEBUG
 			params = params2;
 		} else { // algo == 'v'
 			// + " " + string(wg_signal_mode[0]) + " " + wg_signal_file
