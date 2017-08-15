@@ -753,7 +753,11 @@ int main (int argc, char* argv[]) {
 		unsigned int vpointer2 = var_pointer;
 		
 		// A collection of intersecting variants counts from the random bins
-		vector<int> varcounts;
+		// vector<int> varcounts;
+		
+		// P-value calculation: how many of the random bins have at least as many
+		// variants as k_t?
+		int overbins = 0;
 		
 		// Backwards search!
 		unsigned int j = upstream_random_bins.size();
@@ -855,8 +859,11 @@ int main (int argc, char* argv[]) {
 				upstream_var_end_num = atoi(upstream_var_end.c_str());
 			}
 			
-			// this_variants has been settled, save for output
-			varcounts.push_back(this_variants);
+			// this_variants has been settled
+			// varcounts.push_back(this_variants);
+			if (this_variants >= target_variants) {
+				overbins++;
+			}
 			
 			if (funseq_opt == 'p') {
 				if (signal_sum >= cur_ann_signal) {
@@ -967,7 +974,10 @@ int main (int argc, char* argv[]) {
 			}
 			
 			// this_variants has been settled, save for output
-			varcounts.push_back(this_variants);
+			// varcounts.push_back(this_variants);
+			if (this_variants >= target_variants) {
+				overbins++;
+			}
 			
 			if (funseq_opt == 'p') {
 				if (signal_sum >= cur_ann_signal) {
@@ -978,12 +988,12 @@ int main (int argc, char* argv[]) {
 		
 		// P-value calculation: how many of the random bins have at least as many
 		// variants as k_t?
-		int overbins = 0;
-		for (unsigned int j = 0; j < varcounts.size(); j++) {
-			if (varcounts[j] >= target_variants) {
-				overbins++;
-			}
-		}
+// 		int overbins = 0;
+// 		for (unsigned int j = 0; j < varcounts.size(); j++) {
+// 			if (varcounts[j] >= target_variants) {
+// 				overbins++;
+// 			}
+// 		}
 		
 		// DEBUG
 		// printf("overbins: %d; n: %d\n", overbins, n);
