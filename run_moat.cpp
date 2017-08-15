@@ -536,8 +536,8 @@ int main (int argc, char* argv[]) {
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
 		// DEBUG
-		string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
-		printf("Command: %s\n", command.c_str());
+// 		string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
+// 		printf("Command: %s\n", command.c_str());
 		
 		int param_size = 10;
 		char **params = (char **)malloc(param_size*sizeof(char *));

@@ -350,12 +350,12 @@ int main (int argc, char* argv[]) {
 			return 1;
 		} else {
 		
-// 			if (argv[1][0] == 'y') {
-// 				trimer = true;
-// 			} else if (argv[1][0] == 'n') {
-// 				trimer = false;
-			if (argv[1][0] != '0' && argv[1][0] != '3' && argv[1][0] != '5') {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be one of 0, 3, or 5. Exiting.\n", argv[1][0]);
+			if (argv[1][0] == 'y') {
+				trimer = 1;
+			} else if (argv[1][0] == 'n') {
+				trimer = 0;
+			} else {
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be one of either \'y\' or \'n\'. Exiting.\n", argv[1][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
@@ -1470,7 +1470,7 @@ int main (int argc, char* argv[]) {
 				
 				string chr_nt = "";
 			
-				// if (trimer) {
+				if (trimer) {
 					// Load FASTA
 					string filename = fasta_dir + "/" + chr + ".fa";
 					FILE *fasta_ptr = fopen(filename.c_str(), "r");
@@ -1497,7 +1497,7 @@ int main (int argc, char* argv[]) {
 						MPI_Abort(MPI_COMM_WORLD, 1);
 						return 1;
 					}
-				// }
+				}
 				
 				// DEBUG
 				// printf("Breakpoint Ceti\n");
@@ -1545,7 +1545,7 @@ int main (int argc, char* argv[]) {
 						base.push_back('C');
 						base.push_back('T');
 						
-						if (trimer == 3) {
+						if (trimer) {
 							// Gather up the locations of all confidently mapped trinucleotides (capital letters)
 							// Coordinates are for the second letter in the trinucleotide (where the actual mutation is located)
 							// map<string,vector<int> > local_nt;
@@ -1564,39 +1564,9 @@ int main (int argc, char* argv[]) {
 									}
 								}
 							}
-						} else if (trimer == 5) {
-							// Gather up the locations of all confidently mapped pentanucleotides (capital letters)
-							// Coordinates are for the third letter in the pentanucleotide (where the actual mutation is located)
-							// map<string,vector<int> > local_nt;
-			
-							for (int z = 0; z < 4; z++) {
-								for (int y = 0; y < 4; y++) {
-									for (int x = 0; x < 4; x++) {
-										for (int a = 0; a < 4; a++) {
-											for (int b = 0; b < 4; b++) {
-												stringstream ss;
-												string cur_nt;
-												ss << base[z];
-												ss << base[y];
-												ss << base[x];
-												ss << base[a];
-												ss << base[b];
-												ss >> cur_nt;
-												vector<int> temp;
-												local_nt[cur_nt] = temp;
-											}
-										}
-									}
-								}
-							}
 						}
 	
 						for (int k = rand_range_start; k < rand_range_end; k++) { // 1-based index
-							char nt0, nt4;
-							if (trimer == 5) {
-								nt0 = toupper(chr_nt[k-3]); // 0-based index
-								nt4 = toupper(chr_nt[k+1]); // 0-based index
-							}
 							char nt1 = toupper(chr_nt[k-2]); // 0-based index
 							char nt2 = toupper(chr_nt[k-1]); // 0-based index
 							char nt3 = toupper(chr_nt[k]); // 0-based index
@@ -1611,15 +1581,9 @@ int main (int argc, char* argv[]) {
 						
 							stringstream ss;
 							string nt;
-							if (trimer == 5) {
-								ss << nt0;
-							}
 							ss << nt1;
 							ss << nt2;
 							ss << nt3;
-							if (trimer == 5) {
-								ss << nt4;
-							}
 							ss >> nt;
 						
 							// DEBUG
@@ -1659,26 +1623,15 @@ int main (int argc, char* argv[]) {
 						
 						if (trimer) {
 							vector<string> cur_var = var_array[k];
-							char cur_nt0, cur_nt4;
-							if (trimer == 5) {
-								cur_nt0 = toupper(chr_nt[atoi(cur_var[2].c_str())-3]);
-								cur_nt4 = toupper(chr_nt[atoi(cur_var[2].c_str())+1]);
-							}
 							char cur_nt1 = toupper(chr_nt[atoi(cur_var[2].c_str())-2]);
 							char cur_nt2 = toupper(chr_nt[atoi(cur_var[2].c_str())-1]); // 0-based index
 							char cur_nt3 = toupper(chr_nt[atoi(cur_var[2].c_str())]);
 		
 							stringstream ss;
 							string cur_nt;
-							if (trimer == 5) {
-								ss << cur_nt0;
-							}
 							ss << cur_nt1;
 							ss << cur_nt2;
 							ss << cur_nt3;
-							if (trimer == 5) {
-								ss << cur_nt4;
-							}
 							ss >> cur_nt;
 						
 							// If there is an N in this string, we skip this variant
