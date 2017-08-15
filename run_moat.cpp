@@ -528,6 +528,9 @@ int main (int argc, char* argv[]) {
 		std::copy(out.begin(), out.end(), out_wr);
 		out_wr[out.size()] = '\0'; // don't forget the terminating 0
 		
+		// DEBUG
+		printf("Is it my fault?\n");
+		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
 		// string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
 		int param_size = 10;
