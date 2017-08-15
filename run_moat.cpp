@@ -549,7 +549,7 @@ int main (int argc, char* argv[]) {
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
 			}
-			for (unsigned int i = (unsigned int)param_size-covar_files.size()-1; i < param_size; i++) {
+			for (unsigned int i = (unsigned int)param_size-covar_files.size()-1; i < (unsigned int)param_size; i++) {
 // 				command += " ";
 // 				command += covar_files[i];
 				if (i != (unsigned int)param_size-1) {
