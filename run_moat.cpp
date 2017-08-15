@@ -552,20 +552,21 @@ int main (int argc, char* argv[]) {
 		params[8] = out_wr;
 		params[9] = (char *)0;
 		if (algo == 's') {
-			param_size += covar_files.size();
+			int covar_files_size = (int)covar_files.size();
+			param_size += covar_files_size;
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
-			for (int i = 0; i < param_size-(int)covar_files.size()-1; ++i){
+			for (int i = 0; i < param_size-covar_files_size-1; i++){
 				int width = strlen(params[i]) + 1;
 				params2[i] = (char *)malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
 			}
-			for (unsigned int i = (unsigned int)param_size-covar_files.size()-1; i < (unsigned int)param_size; i++) {
+			for (int i = param_size-covar_files_size-1; i < param_size; i++) {
 // 				command += " ";
 // 				command += covar_files[i];
-				if (i != (unsigned int)param_size-1) {
-					char *covar_file_wr = new char[covar_files[i-(param_size-covar_files.size())-1].size() + 1];
-					std::copy(covar_files[i-(param_size-covar_files.size())-1].begin(), covar_files[i-(param_size-covar_files.size())-1].end(), covar_file_wr);
-					covar_file_wr[covar_files[i-(param_size-covar_files.size())-1].size()] = '\0'; // don't forget the terminating 0
+				if (i < param_size-1) {
+					char *covar_file_wr = new char[covar_files[i-(param_size-covar_files_size)-1].size() + 1];
+					std::copy(covar_files[i-(param_size-covar_files_size)-1].begin(), covar_files[i-(param_size-covar_files_size)-1].end(), covar_file_wr);
+					covar_file_wr[covar_files[i-(param_size-covar_files_size)-1].size()] = '\0'; // don't forget the terminating 0
 					params2[i] = covar_file_wr;
 				} else {
 					params2[i] = (char *)0;
