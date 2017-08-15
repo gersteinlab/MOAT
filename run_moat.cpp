@@ -584,6 +584,7 @@ int main (int argc, char* argv[]) {
 			wg_signal_mode_wr[wg_signal_mode.size()] = '\0'; // don't forget the terminating 0
 			
 			params2[param_size-2] = wg_signal_mode_wr;
+			printf("Breakpoint Alpha\n"); // DEBUG
 			params2[param_size-1] = (char *)0;
 			params = params2;
 			if (wg_signal_mode[0] == 'y') {
