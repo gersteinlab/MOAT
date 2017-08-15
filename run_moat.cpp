@@ -294,12 +294,14 @@ int main (int argc, char* argv[]) {
 		
 		// execl(exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), (char *)0);
 		// string command = exe + " " + string(num_permutations_cstr) + " " + string(dmin_cstr) + " " + string(dmax_cstr) + " " + prohibited_file + " " + vfile + " " + afile + " " + out + " " + wg_signal_mode[0];
-		char *params[];
+		char **params;
 		if (wg_signal_mode[0] != 'n') {
 // 			command += " ";
 // 			command += wg_signal_file;
+			params = (char **)malloc(11*sizeof(char *));
 			params = {exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), wg_signal_mode.c_str(), wg_signal_file.c_str(), (char *) 0 };
 		} else {
+			params = (char **)malloc(10*sizeof(char *));
 			params = {exe.c_str(), num_permutations_cstr, dmin_cstr, dmax_cstr, prohibited_file.c_str(), vfile.c_str(), afile.c_str(), out.c_str(), wg_signal_mode.c_str(), (char *) 0 };
 		}
 		execv(exe.c_str(), params);
