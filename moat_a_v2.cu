@@ -149,7 +149,7 @@ int main (int argc, char* argv[]) {
 	string signal_file;
 	
 	if (argc != 9 && argc != 10) {
-		fprintf(stderr, "Usage: moat_a_cpu [# of permutations] [d_min] [d_max] [prohibited regions file] [variant file] [annotation file] [output file] [wg signal option (o/p/n)] [wg signal file (optional)]. Exiting.\n");
+		fprintf(stderr, "Usage: moat_a_v2 [# of permutations] [d_min] [d_max] [prohibited regions file] [variant file] [annotation file] [output file] [wg signal option (o/p/n)] [wg signal file (optional)]. Exiting.\n");
 		return 1;
 	} else {
 		n = atoi(argv[1]);
@@ -642,7 +642,7 @@ int main (int argc, char* argv[]) {
 		int rand_range_start = ((cur_ann_start_num + cur_ann_end_num)/2) - dmax;
 		
 		thrust::device_vector<int> rand_start_d(n/2);
-		thrust::host_vector<int> rand_start_h(n/2);
+		// thrust::host_vector<int> rand_start_h(n/2);
     thrust::counting_iterator<unsigned int> index_sequence_begin(0);
 
     thrust::transform(index_sequence_begin,
@@ -651,15 +651,29 @@ int main (int argc, char* argv[]) {
             prg(0,range));
             
     thrust::sort(rand_start_d.begin(), rand_start_d.end());
-    thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
+    
+    thrust::device_vector<int> rand_start_d2(n/2);
+    thrust::device_vector<int> range_start(n/2);
+    thrust::fill(range_start.begin(), range_start.end(), rand_range_start);
+    thrust::transform(rand_start_d.begin(), rand_start_d.end(), range_start.begin(), rand_start_d2.begin(), thrust::plus<int>);
+    
+    thrust::device_vector<int> rand_end_d(n/2);
+    // thrust::host_vector<int> rand_end_h(n/2);
+    thrust::device_vector<int> adder(n/2);
+    thrust::fill(adder.begin(), adder.end(), (cur_ann_end_num - cur_ann_start_num));
+    thrust::transform(rand_start_d.begin(), rand_start_d.end(), adder.begin(), rand_end_d.begin(), thrust::plus<int>);
+    
+    // thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
+    // thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
 		
 		for (int j = 0; j < n/2; j++) {
-			int rand_start = rand_start_h[j];
+			int rand_start = rand_start_d2[j];
 			
 			// Find the bounds of this bin
 			string rand_chr = rand_range_chr;
-			rand_start += rand_range_start;
-			int rand_end = rand_start + (cur_ann_end_num - cur_ann_start_num);
+			// rand_start += rand_range_start;
+			// int rand_end = rand_start + (cur_ann_end_num - cur_ann_start_num);
+			int rand_end = rand_end_d[j];
 			
 			char rand_start_cstr[STRSIZE];
 			sprintf(rand_start_cstr,"%d", rand_start);
@@ -690,15 +704,22 @@ int main (int argc, char* argv[]) {
             prg(0,range));
             
     thrust::sort(rand_start_d.begin(), rand_start_d.end());
-    thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
+    
+    thrust::fill(range_start.begin(), range_start.end(), rand_range_start);
+    thrust::transform(rand_start_d.begin(), rand_start_d.end(), range_start.begin(), rand_start_d2.begin(), thrust::plus<int>);
+     
+    thrust::transform(rand_start_d.begin(), rand_start_d.end(), adder.begin(), rand_end_d.begin(), thrust::plus<int>);
+    // thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
+    // thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
 		
 		for (int j = 0; j < n/2; j++) {
-			int rand_start = rand_start_h[j];
+			int rand_start = rand_start_d2[j];
 			
 			// Find the bounds of this bin
 			string rand_chr = rand_range_chr;
-			rand_start += rand_range_start;
-			int rand_end = rand_start + (cur_ann_end_num - cur_ann_start_num);
+			// rand_start += rand_range_start;
+			// int rand_end = rand_start + (cur_ann_end_num - cur_ann_start_num);
+			int rand_end = rand_end_d[j];
 			
 			char rand_start_cstr[STRSIZE];
 			sprintf(rand_start_cstr,"%d",rand_start);
