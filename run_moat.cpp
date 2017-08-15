@@ -25,12 +25,13 @@ using namespace std;
  * Synopsis (MOAT-a): run_moat --algo=a --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --dmin=MIN_DIST_FOR_RANDOM_BINS --dmax=MAX_DIST_FOR_RANDOM_BINS
  * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --afile=ANNOTATION_FILE
- * --out=OUTPUT_FILE
+ * --out=OUTPUT_FILE --wg_signal_mode=[o/p/n] [--wg_signal_file=WHOLE_GENOME_SIGNAL_FILE]
  *
  * Synopsis (MOAT-v): run_moat --algo=v --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR
  * --blacklist_file=BLACKLIST_FILE --vfile=VARIANT_FILE --out=OUTPUT_DIRECTORY 
- * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --funseq_mode=[n/so/do/sp/dp]
+ * --ncpu=NUMBER_OF_PARALLEL_CPU_CORES --3mer=[y/n] --wg_signal_mode=[y/n]
+ * [--wg_signal_file=WHOLE_GENOME_SIGNAL_FILE]
  *
  * Synopsis (MOATsim): run_moat --algo=s --parallel=[y/n] -n=NUM_PERMUTATIONS 
  * --width=WG_BIN_WIDTH --min_width=MIN_WG_BIN_WIDTH --fasta=WG_FASTA_DIR 
