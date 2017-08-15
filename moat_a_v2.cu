@@ -519,6 +519,14 @@ int main (int argc, char* argv[]) {
 	// Vector of p-values calculated on wg signal score
 	vector<double> signal_pvalues;
 	
+	thrust::device_vector<int> rand_start_d(n/2);
+	thrust::host_vector<int> rand_start_h(n/2);
+	thrust::counting_iterator<unsigned int> index_sequence_begin(0);
+	thrust::plus<int> op;
+	thrust::device_vector<int> range_start(n/2);
+	thrust::host_vector<int> rand_end_h(n/2);
+  thrust::device_vector<int> adder(n/2);
+	
 	// Main loop: Iterate through the annotations
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
 	
@@ -643,9 +651,9 @@ int main (int argc, char* argv[]) {
 		string rand_range_chr = cur_ann_chr;
 		int rand_range_start = ((cur_ann_start_num + cur_ann_end_num)/2) - dmax;
 		
-		thrust::device_vector<int> rand_start_d(n/2);
-		thrust::host_vector<int> rand_start_h(n/2);
-    thrust::counting_iterator<unsigned int> index_sequence_begin(0);
+// 		thrust::device_vector<int> rand_start_d(n/2);
+// 		thrust::host_vector<int> rand_start_h(n/2);
+//     thrust::counting_iterator<unsigned int> index_sequence_begin(0);
 
     thrust::transform(index_sequence_begin,
             index_sequence_begin + (n/2),
@@ -654,16 +662,16 @@ int main (int argc, char* argv[]) {
             
     thrust::sort(rand_start_d.begin(), rand_start_d.end());
     
-    thrust::plus<int> op;
+    // thrust::plus<int> op;
     
     // thrust::device_vector<int> rand_start_d2(n/2);
-    thrust::device_vector<int> range_start(n/2);
+    // thrust::device_vector<int> range_start(n/2);
     thrust::fill(range_start.begin(), range_start.end(), rand_range_start);
     thrust::transform(rand_start_d.begin(), rand_start_d.end(), range_start.begin(), rand_start_d.begin(), op);
     
     // thrust::device_vector<int> rand_end_d(n/2);
-    thrust::host_vector<int> rand_end_h(n/2);
-    thrust::device_vector<int> adder(n/2);
+    // thrust::host_vector<int> rand_end_h(n/2);
+    // thrust::device_vector<int> adder(n/2);
     thrust::fill(adder.begin(), adder.end(), (cur_ann_end_num - cur_ann_start_num));
     
     thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
