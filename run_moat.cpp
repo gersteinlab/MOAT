@@ -503,20 +503,40 @@ int main (int argc, char* argv[]) {
 			}
 		}
 		
+		char *exe_wr = new char[exe.size() + 1];
+		std::copy(exe.begin(), exe.end(), exe_wr);
+		exe_wr[exe.size()] = '\0'; // don't forget the terminating 0
+		
+		char *prohibited_file_wr = new char[prohibited_file.size() + 1];
+		std::copy(prohibited_file.begin(), prohibited_file.end(), prohibited_file_wr);
+		prohibited_file_wr[prohibited_file.size()] = '\0'; // don't forget the terminating 0
+		
+		char *fasta_dir_wr = new char[fasta_dir.size() + 1];
+		std::copy(fasta_dir.begin(), fasta_dir.end(), fasta_dir_wr);
+		fasta_dir_wr[fasta_dir.size()] = '\0'; // don't forget the terminating 0
+		
+		char *vfile_wr = new char[vfile.size() + 1];
+		std::copy(vfile.begin(), vfile.end(), vfile_wr);
+		vfile_wr[vfile.size()] = '\0'; // don't forget the terminating 0
+		
+		char *out_wr = new char[out.size() + 1];
+		std::copy(out.begin(), out.end(), out_wr);
+		out_wr[out.size()] = '\0'; // don't forget the terminating 0
+		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
 		// string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
 		int param_size = 10;
 		char **params = (char **)malloc(param_size*sizeof(char *));
-		params[0] = exe.c_str();
+		params[0] = exe_wr;
 		params[1] = trimer_str;
 		params[2] = num_permutations_cstr;
 		params[3] = width_cstr;
 		params[4] = min_width_cstr;
-		params[5] = prohibited_file.c_str();
-		params[6] = fasta_dir.c_str();
-		params[7] = vfile.c_str();
-		params[8] = out.c_str();
-		params[9] = (char *)0 ;
+		params[5] = prohibited_file_wr;
+		params[6] = fasta_dir_wr;
+		params[7] = vfile_wr;
+		params[8] = out_wr;
+		params[9] = (char *)0;
 		if (algo == 's') {
 			param_size += covar_files.size();
 			char **params2 = (char **)malloc(param_size*sizeof(char *));
@@ -529,7 +549,10 @@ int main (int argc, char* argv[]) {
 // 				command += " ";
 // 				command += covar_files[i];
 				if (i != param_size-1) {
-					params2[i] = covar_files[i-(param_size-covar_files.size())-1].c_str();
+					char *covar_file_wr = new char[covar_files[i-(param_size-covar_files.size())-1].size() + 1];
+					std::copy(covar_files[i-(param_size-covar_files.size())-1].begin(), covar_files[i-(param_size-covar_files.size())-1].end(), covar_file_wr);
+					covar_file_wr[covar_files[i-(param_size-covar_files.size())-1].size()] = '\0'; // don't forget the terminating 0
+					params2[i] = covar_file_wr;
 				} else {
 					params2[i] = (char *)0;
 				}
@@ -546,7 +569,12 @@ int main (int argc, char* argv[]) {
 				params2[i] = malloc(width*sizeof(char));
 				memcpy(params2[i], params[i], width);
 			}
-			params2[param_size-2] = wg_signal_mode.c_str();
+			
+			char *wg_signal_mode_wr = new char[wg_signal_mode.size() + 1];
+			std::copy(wg_signal_mode.begin(), wg_signal_mode.end(), wg_signal_mode_wr);
+			wg_signal_mode_wr[wg_signal_mode.size()] = '\0'; // don't forget the terminating 0
+			
+			params2[param_size-2] = wg_signal_mode_wr;
 			params2[param_size-1] = (char *)0;
 			params = params2;
 			if (wg_signal_mode[0] == 'y') {
@@ -559,7 +587,12 @@ int main (int argc, char* argv[]) {
 					params2[i] = malloc(width*sizeof(char));
 					memcpy(params2[i], params[i], width);
 				}
-				params2[param_size-2] = wg_signal_file.c_str();
+				
+				char *wg_signal_file_wr = new char[wg_signal_file.size() + 1];
+				std::copy(wg_signal_file.begin(), wg_signal_file.end(), wg_signal_file_wr);
+				wg_signal_file_wr[wg_signal_file.size()] = '\0'; // don't forget the terminating 0
+				
+				params2[param_size-2] = wg_signal_file_wr;
 				params2[param_size-1] = (char *)0;
 				params = params2;
 			}
