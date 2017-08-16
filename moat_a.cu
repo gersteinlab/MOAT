@@ -1262,7 +1262,7 @@ int main (int argc, char* argv[]) {
 // 	*test_int_cpu = 246;
 // 	cudaMemcpy(test_int_gpu, test_int_cpu, sizeof(int), cudaMemcpyHostToDevice);
 
-	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1006632960);
+	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 2006632960);
 	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMalloc((void**)&gpu_var_chr, var_arr_length*sizeof(int));
@@ -1363,7 +1363,7 @@ int main (int argc, char* argv[]) {
 	curandState **d_state_b;
 	for (int i = 0; i < num_threads; i++) {
 		printf("Loop iter: %d\n", i); // DEBUG
-		cudaMalloc(&d_state_b[i], sizeof(curandState));
+		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
 		GPUerrchk(cudaPeekAtLastError());
 	}
 	
