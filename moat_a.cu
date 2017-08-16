@@ -300,8 +300,8 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		// int rand_range_chr = this_ann_chr;
 		int rand_range_start = ((this_ann_start + this_ann_end)/2) - dmax;
 		
-		// curandState *d_state;
-		// d_state = (curandState *)malloc(sizeof(curandState));
+		curandState *d_state;
+		d_state = (curandState *)malloc(sizeof(curandState));
 		int tid = threadIdx.x + blockIdx.x * blockDim.x;
 		curand_init(65536, tid, 0, d_state[tid]);
 		
@@ -1354,24 +1354,24 @@ int main (int argc, char* argv[]) {
 	
 	// Malloc additional variables to improve performance
 	curandState **d_state;
-	cudaMalloc((void**)&d_state, num_threads*sizeof(curandState*));
-	GPUerrchk(cudaPeekAtLastError());
+// 	cudaMalloc((void**)&d_state, num_threads*sizeof(curandState*));
+// 	GPUerrchk(cudaPeekAtLastError());
 	
 	// DEBUG
 	printf("Breakpoint 4a-1\n");
 	
-	curandState **d_state_b;
-	for (int i = 0; i < num_threads; i++) {
-		printf("Loop iter: %d\n", i); // DEBUG
-		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
-		GPUerrchk(cudaPeekAtLastError());
-	}
+// 	curandState **d_state_b;
+// 	for (int i = 0; i < num_threads; i++) {
+// 		printf("Loop iter: %d\n", i); // DEBUG
+// 		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
+// 		GPUerrchk(cudaPeekAtLastError());
+// 	}
 	
 	// DEBUG
 	printf("Breakpoint 4a-2\n");
 	
-	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
-	GPUerrchk(cudaPeekAtLastError());
+// 	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
+// 	GPUerrchk(cudaPeekAtLastError());
 	
 	// DEBUG
 	printf("Breakpoint 4b\n");
