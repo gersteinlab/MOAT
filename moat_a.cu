@@ -1358,8 +1358,9 @@ int main (int argc, char* argv[]) {
 	GPUerrchk(cudaPeekAtLastError());
 	
 	curandState **d_state_b;
-	cudaMemcpy(d_state_b, d_state, num_threads*sizeof(curandState*), cudaMemcpyDeviceToHost);
-	GPUerrchk(cudaPeekAtLastError()); 
+	d_state_b = (curandState**)malloc(num_threads*sizeof(curandState*));
+// 	cudaMemcpy(d_state_b, d_state, num_threads*sizeof(curandState*), cudaMemcpyDeviceToHost);
+// 	GPUerrchk(cudaPeekAtLastError()); 
 	
 	// DEBUG
 	printf("Breakpoint 4a-1\n");
