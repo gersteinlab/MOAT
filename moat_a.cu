@@ -1362,6 +1362,7 @@ int main (int argc, char* argv[]) {
 	
 	curandState **d_state_b;
 	for (int i = 0; i < num_threads; i++) {
+		printf("Loop iter: %d\n", i); // DEBUG
 		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
 		GPUerrchk(cudaPeekAtLastError());
 	}
