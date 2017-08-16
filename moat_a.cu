@@ -838,7 +838,7 @@ int main (int argc, char* argv[]) {
 	vector<vector<string> > prohibited_regions;
 	
 	// DEBUG
-	// printf("Breakpoint 1\n");
+	printf("Breakpoint 1\n");
 	
 	// Bring variant file data into memory
 	// Save the first 3 columns, ignore the rest if there are any
@@ -943,7 +943,7 @@ int main (int argc, char* argv[]) {
 	}
 	
 	// DEBUG
-	// printf("Breakpoint 2\n");
+	printf("Breakpoint 2\n");
 	
 	// Sort the arrays
 	sort(var_array.begin(), var_array.end(), cmpIntervals);
@@ -993,7 +993,7 @@ int main (int argc, char* argv[]) {
 // 	for (unsigned int i = 0; i < var_array.size(); i++) {
 // 		printf("%s, %s, %s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
 // 	}
-	// printf("Breakpoint 3\n");
+	printf("Breakpoint 3\n");
 	
 	// Variables for main loop
 	// unsigned int var_pointer = 0;
@@ -1067,7 +1067,7 @@ int main (int argc, char* argv[]) {
 		// vector<vector<string> > signal_output;
 		
 		// DEBUG
-		// printf("Breakpoint 3a\n");
+		printf("Breakpoint 3a\n");
 		
 		// Index to track where we are in the var_array
 		unsigned int v_index = 0;
@@ -1114,7 +1114,7 @@ int main (int argc, char* argv[]) {
 		// sort(signal_output.begin(), signal_output.end(), cmpIntervals);
 		
 		// DEBUG
-		// printf("Breakpoint 3b\n");
+		printf("Breakpoint 3b\n");
 		
 		// Gather up and sum the Funseq values over each annotation
 		unsigned int signal_var_pointer = 0;
@@ -1234,7 +1234,7 @@ int main (int argc, char* argv[]) {
 	// ann_array.clear();
 	
 	// DEBUG
-	// printf("Breakpoint 4\n");
+	printf("Breakpoint 4\n");
 	
 	// Begin the CUDA magic
 	int *gpu_var_chr;
@@ -1395,7 +1395,7 @@ int main (int argc, char* argv[]) {
 // 	}
 	
 	// DEBUG
-	// printf("Breakpoint 5\n");
+	printf("Breakpoint 5\n");
 	
 	// Adjust the heap size based on the size of the dataset
 // 	if (ann_array.size() > 3000) {
@@ -1415,7 +1415,7 @@ int main (int argc, char* argv[]) {
 // 	printf("Test int: %d\n", *test_int_cpu);
 
 	// DEBUG
-	// printf("Breakpoint 6\n");
+	printf("Breakpoint 6\n");
 	
 	// GPUerrchk(cudaDeviceSynchronize());
 	
@@ -1477,7 +1477,7 @@ int main (int argc, char* argv[]) {
 // 	}
 
 	// DEBUG
-	// printf("Breakpoint 7\n");
+	printf("Breakpoint 7\n");
 
 	// Output generation
 	FILE *outfile_ptr = fopen(outfile.c_str(), "w");
