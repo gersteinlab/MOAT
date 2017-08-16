@@ -1363,16 +1363,16 @@ int main (int argc, char* argv[]) {
 // 	GPUerrchk(cudaPeekAtLastError()); 
 	
 	// DEBUG
-	printf("Breakpoint 4a-1\n");
+	// printf("Breakpoint 4a-1\n");
 	
 	for (int i = 0; i < num_threads; i++) {
-		printf("Loop iter: %d\n", i); // DEBUG
+		// printf("Loop iter: %d\n", i); // DEBUG
 		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
 		GPUerrchk(cudaPeekAtLastError());
 	}
 	
 	// DEBUG
-	printf("Breakpoint 4a-2\n");
+	// printf("Breakpoint 4a-2\n");
 	
 	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
 	GPUerrchk(cudaPeekAtLastError());
@@ -1386,6 +1386,9 @@ int main (int argc, char* argv[]) {
 	GPUerrchk(cudaPeekAtLastError());
 	cudaMalloc((void**)&downstream_start, num_threads*sizeof(int *));
 	GPUerrchk(cudaPeekAtLastError());
+	
+	upstream_start_b = (int**)malloc(num_threads*sizeof(int *));
+	downstream_start_b = (int**)malloc(num_threads*sizeof(int *));
 	
 	for (int i = 0; i < num_threads; i++) {
 		cudaMalloc((void**)&upstream_start_b[i], (n/2)*sizeof(int));
@@ -1406,6 +1409,8 @@ int main (int argc, char* argv[]) {
 	
 	cudaMalloc((void**)&mergesort_array, num_threads*sizeof(int *));
 	GPUerrchk(cudaPeekAtLastError());
+	
+	mergesort_array_b = (int**)malloc(num_threads*sizeof(int *));
 	
 	for (int i = 0; i < num_threads; i++) {
 		cudaMalloc((void**)&mergesort_array_b[i], (n/2)*sizeof(int));
