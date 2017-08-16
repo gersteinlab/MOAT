@@ -1357,10 +1357,13 @@ int main (int argc, char* argv[]) {
 	cudaMalloc((void**)&d_state, num_threads*sizeof(curandState*));
 	GPUerrchk(cudaPeekAtLastError());
 	
+	curandState **d_state_b;
+	cudaMemcpy(d_state_b, d_state, num_threads*sizeof(curandState*), cudaMemcpyDeviceToHost);
+	GPUerrchk(cudaPeekAtLastError()); 
+	
 	// DEBUG
 	printf("Breakpoint 4a-1\n");
 	
-	curandState **d_state_b;
 	for (int i = 0; i < num_threads; i++) {
 		printf("Loop iter: %d\n", i); // DEBUG
 		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
