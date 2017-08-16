@@ -303,10 +303,10 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		curandState *d_state;
 		d_state = (curandState *)malloc(sizeof(curandState));
 		int tid = threadIdx.x + blockIdx.x * blockDim.x;
-		curand_init(65536, tid, 0, d_state[tid]);
+		curand_init(65536, tid, 0, d_state);
 		
 		for (int j = 0; j < n/2; j++) {
-			float this_rand = curand_uniform(d_state[tid]);
+			float this_rand = curand_uniform(d_state);
 			int rand_start = this_rand*range;
 			rand_start += rand_range_start;
 			// int rand_start = rand() % range;
@@ -323,7 +323,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 		rand_range_start = ((this_ann_start + this_ann_end)/2) + dmin;
 		
 		for (int j = 0; j < n/2; j++) {
-			float this_rand = curand_uniform(d_state[tid]);
+			float this_rand = curand_uniform(d_state);
 			int rand_start = this_rand*range;
 			rand_start += rand_range_start;
 			// int rand_start = rand() % range;
@@ -632,7 +632,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 // 			return;
 // 		}
 		
-		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start, mergesort_array);
+		intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, upstream_start, downstream_start, mergesort_array);
 	} else {
 		start = tid;
 		end = tid;
@@ -641,7 +641,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 		// printf("Thread ID: %d; start index: %d; end index: %d\n", tid, start, end);
 		
 		if (tid < length) {
-			intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, d_state, upstream_start, downstream_start, mergesort_array);
+			intersection_kernel(start, end, gpu_var_chr, gpu_var_start, gpu_var_end, gpu_var_signal, gpu_ann_chr, gpu_ann_start, gpu_ann_end, gpu_var_arr_length, gpu_n, gpu_dmin, gpu_dmax, gpu_pvalues, gpu_signal_pvalues, gpu_wg_switch, upstream_start, downstream_start, mergesort_array);
 		}
 	}
 }
@@ -1353,7 +1353,7 @@ int main (int argc, char* argv[]) {
 	printf("Breakpoint 4a\n");
 	
 	// Malloc additional variables to improve performance
-	curandState **d_state;
+// 	curandState **d_state;
 // 	cudaMalloc((void**)&d_state, num_threads*sizeof(curandState*));
 // 	GPUerrchk(cudaPeekAtLastError());
 	
