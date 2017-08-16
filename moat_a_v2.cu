@@ -570,6 +570,15 @@ int main (int argc, char* argv[]) {
   thrust::greater<int> gt;
   thrust::less_equal<int> lte;
   thrust::logical_and<int> land;
+  
+  thrust::device_vector<int> bound(1);
+	thrust::device_vector<int> less_bool(1);
+	thrust::device_vector<int> greater_bool(1);
+	thrust::device_vector<int> int_bool(1);
+  
+  string marker_chr;
+  unsigned int start_index;
+  unsigned int end_index;
 	
 	// Main loop: Iterate through the annotations
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
@@ -579,6 +588,27 @@ int main (int argc, char* argv[]) {
 		string cur_ann_start = ann_array[i][1];
 		string cur_ann_end = ann_array[i][2];
 		string cur_ann_name = ann_array[i][3];
+		
+		// If cur_ann_chr != marker_chr, reallocate certain device vectors
+		if (cur_ann_chr != marker_chr) {
+			marker_chr = cur_ann_chr;
+			int cur_chr = chr2int(cur_ann_chr);
+			start_index = chr_markers[cur_chr-1];
+			end_index = UINT_MAX;
+			for (unsigned int j = cur_chr; j < 25; j++) {
+				if (chr_markers[j] != UINT_MAX) {
+					end_index = chr_markers[j];
+					break;
+				}
+			}
+			if (end_index == UINT_MAX) {
+				end_index = var_array.size();
+			}
+			bound.resize(end_index - start_index);
+			less_bool.resize(end_index - start_index);
+			greater_bool.resize(end_index - start_index);
+			int_bool.resize(end_index - start_index);
+		}
 		
 		// Cast chr, start and end into int
 		int cur_ann_chr_num;
@@ -723,18 +753,18 @@ int main (int argc, char* argv[]) {
     // thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
     
     // Retrieve the markers for this chromosome
-    int cur_chr = chr2int(rand_range_chr);
-    unsigned int start_index = chr_markers[cur_chr-1];
-    unsigned int end_index = UINT_MAX;
-    for (unsigned int j = cur_chr; j < 25; j++) {
-    	if (chr_markers[j] != UINT_MAX) {
-    		end_index = chr_markers[j];
-    		break;
-    	}
-    }
-    if (end_index == UINT_MAX) {
-    	end_index = var_array.size();
-    }
+//     int cur_chr = chr2int(rand_range_chr);
+//     unsigned int start_index = chr_markers[cur_chr-1];
+//     unsigned int end_index = UINT_MAX;
+//     for (unsigned int j = cur_chr; j < 25; j++) {
+//     	if (chr_markers[j] != UINT_MAX) {
+//     		end_index = chr_markers[j];
+//     		break;
+//     	}
+//     }
+//     if (end_index == UINT_MAX) {
+//     	end_index = var_array.size();
+//     }
     
 //     thrust::host_vector<int> cur_chr_var(end_index - start_index);
 //     for (unsigned int j = start_index; j < end_index; j++) {
@@ -743,10 +773,10 @@ int main (int argc, char* argv[]) {
 //     thrust::device_vector<int> var = cur_chr_var;
 		// thrust::device_vector<int> cur_chr_var(end_index - start_index);
 		// thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var.begin());
-    thrust::device_vector<int> bound(end_index - start_index);
-    thrust::device_vector<int> less_bool(end_index - start_index);
-    thrust::device_vector<int> greater_bool(end_index - start_index);
-    thrust::device_vector<int> int_bool(end_index - start_index);
+//     thrust::device_vector<int> bound(end_index - start_index);
+//     thrust::device_vector<int> less_bool(end_index - start_index);
+//     thrust::device_vector<int> greater_bool(end_index - start_index);
+//     thrust::device_vector<int> int_bool(end_index - start_index);
     
     // P-value calculation: how many of the random bins have at least as many
 		// variants as k_t?
