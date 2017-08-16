@@ -1349,6 +1349,9 @@ int main (int argc, char* argv[]) {
 	int threads_per_block = 128;
 	int num_threads = num_blocks * threads_per_block;
 	
+	// DEBUG
+	printf("Breakpoint 4a\n");
+	
 	// Malloc additional variables to improve performance
 	curandState **d_state;
 	cudaMalloc((void**)&d_state, num_threads*sizeof(curandState*));
