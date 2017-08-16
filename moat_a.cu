@@ -1355,13 +1355,22 @@ int main (int argc, char* argv[]) {
 	// Malloc additional variables to improve performance
 	curandState **d_state;
 	cudaMalloc((void**)&d_state, num_threads*sizeof(curandState*));
+	GPUerrchk(cudaPeekAtLastError());
+	
+	// DEBUG
+	printf("Breakpoint 4a-1\n");
 	
 	curandState **d_state_b;
 	for (int i = 0; i < num_threads; i++) {
 		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
+		GPUerrchk(cudaPeekAtLastError());
 	}
 	
+	// DEBUG
+	printf("Breakpoint 4a-2\n");
+	
 	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	
 	// DEBUG
 	printf("Breakpoint 4b\n");
@@ -1369,15 +1378,21 @@ int main (int argc, char* argv[]) {
 	int **upstream_start, **downstream_start, **upstream_start_b, **downstream_start_b;
 	
 	cudaMalloc((void**)&upstream_start, num_threads*sizeof(int *));
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMalloc((void**)&downstream_start, num_threads*sizeof(int *));
+	GPUerrchk(cudaPeekAtLastError());
 	
 	for (int i = 0; i < num_threads; i++) {
 		cudaMalloc((void**)&upstream_start_b[i], (n/2)*sizeof(int));
+		GPUerrchk(cudaPeekAtLastError());
 		cudaMalloc((void**)&downstream_start_b[i], (n/2)*sizeof(int));
+		GPUerrchk(cudaPeekAtLastError());
 	}
 	
 	cudaMemcpy(upstream_start, upstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(downstream_start, downstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	
 	// DEBUG
 	printf("Breakpoint 4c\n");
@@ -1385,12 +1400,15 @@ int main (int argc, char* argv[]) {
 	int **mergesort_array, **mergesort_array_b;
 	
 	cudaMalloc((void**)&mergesort_array, num_threads*sizeof(int *));
+	GPUerrchk(cudaPeekAtLastError());
 	
 	for (int i = 0; i < num_threads; i++) {
 		cudaMalloc((void**)&mergesort_array_b[i], (n/2)*sizeof(int));
+		GPUerrchk(cudaPeekAtLastError());
 	}
 	
 	cudaMemcpy(mergesort_array, mergesort_array_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	
 	// DEBUG
 	// var_signal, gpu_pvalues, gpu_signal_pvalues
