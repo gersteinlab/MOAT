@@ -600,7 +600,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	
 	// Which thread am I?
 	int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	int total_threads = 16*128;
+	int total_threads = 8*128;
 	
 	// DEBUG
 // 	if (tid == 0) {
@@ -1262,7 +1262,7 @@ int main (int argc, char* argv[]) {
 // 	*test_int_cpu = 246;
 // 	cudaMemcpy(test_int_gpu, test_int_cpu, sizeof(int), cudaMemcpyHostToDevice);
 
-	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 503316480);
+	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1006632960);
 	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMalloc((void**)&gpu_var_chr, var_arr_length*sizeof(int));
@@ -1345,7 +1345,7 @@ int main (int argc, char* argv[]) {
 	GPUerrchk(cudaPeekAtLastError());
 	
 	// Try out 16x128 and see how that goes
-	int num_blocks = 16;
+	int num_blocks = 8;
 	int threads_per_block = 128;
 	int num_threads = num_blocks * threads_per_block;
 	
