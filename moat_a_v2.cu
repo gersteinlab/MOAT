@@ -24,21 +24,6 @@ using namespace std;
 
 #define STRSIZE 1000
 
-// Reverse the direction of chr2int
-string int2chr (int chr_num) {
-	if (chr_num == 23) {
-		return "chrX";
-	} else if (chr_num == 24) {
-		return "chrY";
-	} else if (chr_num == 25) {
-		return "chrM";
-	} else {
-		char chr[STRSIZE];
-		sprintf(chr, "%d", chr_num);
-		return "chr" + string(chr);
-	}
-}
-
 struct prg
 {
     int a, b;
@@ -394,23 +379,6 @@ int main (int argc, char* argv[]) {
 	}
 	ann_array = ann_array_new;
 	
-	// Find those variant indices that mark the beginning of a new chromosome
-	vector<unsigned int> chr_markers (25,UINT_MAX);
-	unsigned int first_vpointer = 0;
-	for (int i = 1; i <= 25; i++) {
-		// string chr = int2chr(i);
-		for (unsigned int j = first_vpointer; j < var_array.size(); j++) {
-			int cur_chr = chr2int(var_array[j][0]);
-			if (i == cur_chr) {
-				chr_markers[i-1] = j;
-				first_vpointer = j;
-				break;
-			} else if (i < cur_chr) {
-				break;
-			}
-		}
-	}
-	
 	// DEBUG
 // 	for (unsigned int k = 0; k < var_array.size(); k++) {
 // 		printf("%s, %s, %s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
@@ -551,34 +519,15 @@ int main (int argc, char* argv[]) {
 	// Vector of p-values calculated on wg signal score
 	vector<double> signal_pvalues;
 	
-	thrust::host_vector<int> var_h(var_array.size());
-	for (unsigned int j = 0; j < var_array.size(); j++) {
-		var_h[j] = atoi(var_array[j][2].c_str());
-	}
-	thrust::device_vector<int> var_d = var_h;
-	
 	thrust::device_vector<int> rand_start_d(n/2);
-	// thrust::host_vector<int> rand_start_h(n/2);
+	thrust::host_vector<int> rand_start_h(n/2);
 	thrust::counting_iterator<unsigned int> index_sequence_begin(0);
 	thrust::plus<int> op;
 	thrust::device_vector<int> range_start(n/2);
-	// thrust::host_vector<int> rand_end_h(n/2);
+	thrust::host_vector<int> rand_end_h(n/2);
   thrust::device_vector<int> adder(n/2);
   thrust::device_vector<int> rand_end_d(n/2);
   // thrust::device_vector<int> rand_start_d2(n/2);
-  
-  thrust::greater<int> gt;
-  thrust::less_equal<int> lte;
-  thrust::logical_and<int> land;
-  
-  thrust::device_vector<int> bound(1);
-	thrust::device_vector<int> less_bool(1);
-	thrust::device_vector<int> greater_bool(1);
-	thrust::device_vector<int> int_bool(1);
-  
-  string marker_chr;
-  unsigned int start_index;
-  unsigned int end_index;
 	
 	// Main loop: Iterate through the annotations
 	for (unsigned int i = 0; i < ann_array.size(); i++) {
@@ -588,27 +537,6 @@ int main (int argc, char* argv[]) {
 		string cur_ann_start = ann_array[i][1];
 		string cur_ann_end = ann_array[i][2];
 		string cur_ann_name = ann_array[i][3];
-		
-		// If cur_ann_chr != marker_chr, reallocate certain device vectors
-		if (cur_ann_chr != marker_chr) {
-			marker_chr = cur_ann_chr;
-			int cur_chr = chr2int(cur_ann_chr);
-			start_index = chr_markers[cur_chr-1];
-			end_index = UINT_MAX;
-			for (unsigned int j = cur_chr; j < 25; j++) {
-				if (chr_markers[j] != UINT_MAX) {
-					end_index = chr_markers[j];
-					break;
-				}
-			}
-			if (end_index == UINT_MAX) {
-				end_index = var_array.size();
-			}
-			bound.resize(end_index - start_index);
-			less_bool.resize(end_index - start_index);
-			greater_bool.resize(end_index - start_index);
-			int_bool.resize(end_index - start_index);
-		}
 		
 		// Cast chr, start and end into int
 		int cur_ann_chr_num;
@@ -732,7 +660,7 @@ int main (int argc, char* argv[]) {
     thrust::transform(index_sequence_begin,
             index_sequence_begin + (n/2),
             rand_start_d.begin(),
-            prg(0,range-1));
+            prg(0,range));
             
     thrust::sort(rand_start_d.begin(), rand_start_d.end());
     
@@ -748,76 +676,32 @@ int main (int argc, char* argv[]) {
     // thrust::device_vector<int> adder(n/2);
     thrust::fill(adder.begin(), adder.end(), (cur_ann_end_num - cur_ann_start_num));
     
-    // thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
+    thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
     thrust::transform(rand_start_d.begin(), rand_start_d.end(), adder.begin(), rand_end_d.begin(), op);
-    // thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
-    
-    // Retrieve the markers for this chromosome
-//     int cur_chr = chr2int(rand_range_chr);
-//     unsigned int start_index = chr_markers[cur_chr-1];
-//     unsigned int end_index = UINT_MAX;
-//     for (unsigned int j = cur_chr; j < 25; j++) {
-//     	if (chr_markers[j] != UINT_MAX) {
-//     		end_index = chr_markers[j];
-//     		break;
-//     	}
-//     }
-//     if (end_index == UINT_MAX) {
-//     	end_index = var_array.size();
-//     }
-    
-//     thrust::host_vector<int> cur_chr_var(end_index - start_index);
-//     for (unsigned int j = start_index; j < end_index; j++) {
-//     	cur_chr_var[j] = atoi(var_array[j][2].c_str());
-//     }
-//     thrust::device_vector<int> var = cur_chr_var;
-		// thrust::device_vector<int> cur_chr_var(end_index - start_index);
-		// thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var.begin());
-//     thrust::device_vector<int> bound(end_index - start_index);
-//     thrust::device_vector<int> less_bool(end_index - start_index);
-//     thrust::device_vector<int> greater_bool(end_index - start_index);
-//     thrust::device_vector<int> int_bool(end_index - start_index);
-    
-    // P-value calculation: how many of the random bins have at least as many
-		// variants as k_t?
-		int overbins = 0;
-    
-    for (int j = 0; j < n/2; j++) {
-    	thrust::fill(bound.begin(), bound.end(), rand_start_d[j]);
-    	thrust::transform(var_d.begin()+start_index, var_d.begin()+end_index, bound.begin(), less_bool.begin(), gt);
-    	thrust::fill(bound.begin(), bound.end(), rand_end_d[j]);
-    	thrust::transform(var_d.begin()+start_index, var_d.begin()+end_index, bound.begin(), greater_bool.begin(), lte);
-    	thrust::transform(less_bool.begin(), less_bool.end(), greater_bool.begin(), int_bool.begin(), land);
-    	int this_variants = thrust::reduce(int_bool.begin(), int_bool.end());
-    	if (this_variants >= target_variants) {
-				overbins++;
-			}
-		}
-    
-    // OLD CODE
+    thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
 		
-// 		for (int j = 0; j < n/2; j++) {
-// 			int rand_start = rand_start_h[j];
-// 			
-// 			// Find the bounds of this bin
-// 			string rand_chr = rand_range_chr;
-// 			// rand_start += rand_range_start;
-// 			// int rand_end = rand_start + (cur_ann_end_num - cur_ann_start_num);
-// 			int rand_end = rand_end_h[j];
-// 			
-// 			char rand_start_cstr[STRSIZE];
-// 			sprintf(rand_start_cstr,"%d", rand_start);
-// 			string rand_start_str = string(rand_start_cstr);
-// 			char rand_end_cstr[STRSIZE];
-// 			sprintf(rand_end_cstr,"%d",rand_end);
-// 			string rand_end_str = string(rand_end_cstr);
-// 			
-// 			vector<string> vec;
-// 			vec.push_back(rand_chr);
-// 			vec.push_back(rand_start_str);
-// 			vec.push_back(rand_end_str);
-// 			upstream_random_bins.push_back(vec);
-// 		}
+		for (int j = 0; j < n/2; j++) {
+			int rand_start = rand_start_h[j];
+			
+			// Find the bounds of this bin
+			string rand_chr = rand_range_chr;
+			// rand_start += rand_range_start;
+			// int rand_end = rand_start + (cur_ann_end_num - cur_ann_start_num);
+			int rand_end = rand_end_h[j];
+			
+			char rand_start_cstr[STRSIZE];
+			sprintf(rand_start_cstr,"%d", rand_start);
+			string rand_start_str = string(rand_start_cstr);
+			char rand_end_cstr[STRSIZE];
+			sprintf(rand_end_cstr,"%d",rand_end);
+			string rand_end_str = string(rand_end_cstr);
+			
+			vector<string> vec;
+			vec.push_back(rand_chr);
+			vec.push_back(rand_start_str);
+			vec.push_back(rand_end_str);
+			upstream_random_bins.push_back(vec);
+		}
 		
 		// Downstream bin selection
 		// Configure where the start of this range is
@@ -831,79 +715,39 @@ int main (int argc, char* argv[]) {
     thrust::transform(index_sequence_begin,
             index_sequence_begin + (n/2),
             rand_start_d.begin(),
-            prg(0,range-1));
+            prg(0,range));
             
     thrust::sort(rand_start_d.begin(), rand_start_d.end());
     
     thrust::fill(range_start.begin(), range_start.end(), rand_range_start);
     thrust::transform(rand_start_d.begin(), rand_start_d.end(), range_start.begin(), rand_start_d.begin(), op);
      
-    // thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
+    thrust::copy(rand_start_d.begin(), rand_start_d.end(), rand_start_h.begin());
     thrust::transform(rand_start_d.begin(), rand_start_d.end(), adder.begin(), rand_end_d.begin(), op);
-    // thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
-    
-    // Retrieve the markers for this chromosome
-//     cur_chr = chr2int(rand_range_chr);
-//     start_index = chr_markers[cur_chr-1];
-//     end_index = UINT_MAX;
-//     for (unsigned int j = cur_chr; j < 25; j++) {
-//     	if (chr_markers[j] != UINT_MAX) {
-//     		end_index = chr_markers[j];
-//     		break;
-//     	}
-//     }
-//     if (end_index == UINT_MAX) {
-//     	end_index = var_array.size();
-//     }
-    
-//     thrust::host_vector<int> cur_chr_var2(end_index - start_index);
-//     for (unsigned int j = start_index; j < end_index; j++) {
-//     	cur_chr_var2[j] = atoi(ann_array[j][2].c_str());
-//     }
-//     var = cur_chr_var2;
-// 		thrust::device_vector<int> cur_chr_var2(end_index - start_index);
-// 		thrust::copy(var_d.begin()+start_index, var_d.begin()+end_index, cur_chr_var2.begin());
-//     thrust::device_vector<int> bound2(end_index - start_index);
-//     thrust::device_vector<int> less_bool2(end_index - start_index);
-//     thrust::device_vector<int> greater_bool2(end_index - start_index);
-//     thrust::device_vector<int> int_bool2(end_index - start_index);
-    
-    for (int j = 0; j < n/2; j++) {
-    	thrust::fill(bound.begin(), bound.end(), rand_start_d[j]);
-    	thrust::transform(var_d.begin()+start_index, var_d.begin()+end_index, bound.begin(), less_bool.begin(), gt);
-    	thrust::fill(bound.begin(), bound.end(), rand_end_d[j]);
-    	thrust::transform(var_d.begin()+start_index, var_d.begin()+end_index, bound.begin(), greater_bool.begin(), lte);
-    	thrust::transform(less_bool.begin(), less_bool.end(), greater_bool.begin(), int_bool.begin(), land);
-    	int this_variants = thrust::reduce(int_bool.begin(), int_bool.end());
-    	if (this_variants >= target_variants) {
-				overbins++;
-			}
-		}
-    
-    // OLD CODE
+    thrust::copy(rand_end_d.begin(), rand_end_d.end(), rand_end_h.begin());
 		
-// 		for (int j = 0; j < n/2; j++) {
-// 			int rand_start = rand_start_h[j];
-// 			
-// 			// Find the bounds of this bin
-// 			string rand_chr = rand_range_chr;
-// 			// rand_start += rand_range_start;
-// 			// int rand_end = rand_start + (cur_ann_end_num - cur_ann_start_num);
-// 			int rand_end = rand_end_h[j];
-// 			
-// 			char rand_start_cstr[STRSIZE];
-// 			sprintf(rand_start_cstr,"%d",rand_start);
-// 			string rand_start_str = string(rand_start_cstr);
-// 			char rand_end_cstr[STRSIZE];
-// 			sprintf(rand_end_cstr,"%d",rand_end);
-// 			string rand_end_str = string(rand_end_cstr);
-// 			
-// 			vector<string> vec;
-// 			vec.push_back(rand_chr);
-// 			vec.push_back(rand_start_str);
-// 			vec.push_back(rand_end_str);
-// 			downstream_random_bins.push_back(vec);
-// 		}
+		for (int j = 0; j < n/2; j++) {
+			int rand_start = rand_start_h[j];
+			
+			// Find the bounds of this bin
+			string rand_chr = rand_range_chr;
+			// rand_start += rand_range_start;
+			// int rand_end = rand_start + (cur_ann_end_num - cur_ann_start_num);
+			int rand_end = rand_end_h[j];
+			
+			char rand_start_cstr[STRSIZE];
+			sprintf(rand_start_cstr,"%d",rand_start);
+			string rand_start_str = string(rand_start_cstr);
+			char rand_end_cstr[STRSIZE];
+			sprintf(rand_end_cstr,"%d",rand_end);
+			string rand_end_str = string(rand_end_cstr);
+			
+			vector<string> vec;
+			vec.push_back(rand_chr);
+			vec.push_back(rand_start_str);
+			vec.push_back(rand_end_str);
+			downstream_random_bins.push_back(vec);
+		}
 		
 		// DEBUG: Print the random bins
 // 		for (unsigned int j = 0; j < upstream_random_bins.size(); j++) {
@@ -916,241 +760,241 @@ int main (int argc, char* argv[]) {
 		// Find the intersecting variants for the random bins
 		// Upstream bins: search backwards from the variant at var_array[var_pointer]
 		// sort(upstream_random_bins.begin(), upstream_random_bins.end(), cmpIntervals);
-// 		unsigned int vpointer2 = var_pointer;
-// 		
-// 		// A collection of intersecting variants counts from the random bins
-// 		// vector<int> varcounts;
-// 		
-// 		// P-value calculation: how many of the random bins have at least as many
-// 		// variants as k_t?
-// 		// int overbins = 0;
-// 		
-// 		// Backwards search!
-// 		unsigned int j = upstream_random_bins.size();
-// 		do {
-// 			j--;
-// 		
-// 			// How many variants intersect this bin?
-// 			int this_variants = 0;
-// 			
-// 			// wg signal score, used only if funseq_opt == 'p'
-// 			double signal_sum = 0;
-// 			
-// 			// Unpack the current annotation
-// 			string upstream_ann_chr = upstream_random_bins[j][0];
-// 			string upstream_ann_start = upstream_random_bins[j][1];
-// 			string upstream_ann_end = upstream_random_bins[j][2];
-// 			
-// 			// Cast to int
-// 			int upstream_ann_chr_num;
-// 			if (upstream_ann_chr == "chrX") {
-// 				upstream_ann_chr_num = 24;
-// 			} else if (upstream_ann_chr == "chrY") {
-// 				upstream_ann_chr_num = 25;
-// 			} else if (upstream_ann_chr == "chrM") {
-// 				upstream_ann_chr_num = 26;
-// 			} else {
-// 				string upstream_ann_chr_part = upstream_ann_chr.substr(3);
-// 				upstream_ann_chr_num = atoi(upstream_ann_chr_part.c_str());
-// 			}
-// 		
-// 			int upstream_ann_start_num = atoi(upstream_ann_start.c_str());
-// 			int upstream_ann_end_num = atoi(upstream_ann_end.c_str());
-// 			
-// 			// Unpack the current variant
-// 			string upstream_var_chr = var_array[vpointer2][0];
-// 			string upstream_var_start = var_array[vpointer2][1];
-// 			string upstream_var_end = var_array[vpointer2][2];
-// 			
-// 			// Cast chr, start and end into int
-// 			int upstream_var_chr_num;
-// 			if (upstream_var_chr == "chrX") {
-// 				upstream_var_chr_num = 24;
-// 			} else if (upstream_var_chr == "chrY") {
-// 				upstream_var_chr_num = 25;
-// 			} else if (upstream_var_chr == "chrM") {
-// 				upstream_var_chr_num = 26;
-// 			} else {
-// 				string upstream_var_chr_part = upstream_var_chr.substr(3);
-// 				upstream_var_chr_num = atoi(upstream_var_chr_part.c_str());
-// 			}
-// 		
-// 			int upstream_var_start_num = atoi(upstream_var_start.c_str());
-// 			int upstream_var_end_num = atoi(upstream_var_end.c_str());
-// 			
-// 			// Now count the intersecting variants
-// 			// vpointer2 points to the "earliest" possible annotation, and vpointer3
-// 			// points to the variants up until the last intersecting with the annotation
-// 			unsigned int vpointer3 = vpointer2;
-// 			
-// 			// While vpointer3 does not go past the current annotation
-// 			while (upstream_var_chr_num > upstream_ann_chr_num || (upstream_var_chr_num == upstream_ann_chr_num && upstream_var_start_num >= upstream_ann_start_num)) {
-// 			
-// 				// If the current variant intersects the current annotation, increment target_variants
-// 				if (upstream_var_chr == upstream_ann_chr && upstream_ann_start_num <= upstream_var_end_num && upstream_var_start_num <= upstream_ann_end_num) {
-// 					this_variants++;
-// 					
-// 					// wg signal score code
-// 					if (funseq_opt == 'p') {
-// 						signal_sum += atof(var_array[vpointer3][3].c_str());
-// 					}
-// 				} else { // Update vpointer2
-// 					if (vpointer3 != 0) {
-// 						vpointer2 = vpointer3 - 1;
-// 					}
-// 				}
-// 				// Now update the cur_var
-// 				if (vpointer3 == 0) {
-// 					break;
-// 				}
-// 				vpointer3--;
-// 			
-// 				upstream_var_chr = var_array[vpointer3][0];
-// 				upstream_var_start = var_array[vpointer3][1];
-// 				upstream_var_end = var_array[vpointer3][2];
-// 			
-// 				// Cast chr, start and end into int
-// 				if (upstream_var_chr == "chrX") {
-// 					upstream_var_chr_num = 24;
-// 				} else if (upstream_var_chr == "chrY") {
-// 					upstream_var_chr_num = 25;
-// 				} else if (upstream_var_chr == "chrM") {
-// 					upstream_var_chr_num = 26;
-// 				} else {
-// 					string upstream_var_chr_part = upstream_var_chr.substr(3);
-// 					upstream_var_chr_num = atoi(upstream_var_chr_part.c_str());
-// 				}
-// 		
-// 				upstream_var_start_num = atoi(upstream_var_start.c_str());
-// 				upstream_var_end_num = atoi(upstream_var_end.c_str());
-// 			}
-// 			
-// 			// this_variants has been settled
-// 			// varcounts.push_back(this_variants);
-// 			if (this_variants >= target_variants) {
-// 				overbins++;
-// 			}
-// 			
-// 			if (funseq_opt == 'p') {
-// 				if (signal_sum >= cur_ann_signal) {
-// 					signal_overcount++;
-// 				}
-// 			}
-// 		} while (j > 0);
-// 		
-// 		// Downstream bins: a more straight forward search :)
-// 		// sort(downstream_random_bins.begin(), downstream_random_bins.end(), cmpIntervals);
-// 		vpointer2 = var_pointer;
-// 		
-// 		for (unsigned int j = 0; j < downstream_random_bins.size(); j++) {
-// 			
-// 			// How many variants intersect this bin?
-// 			int this_variants = 0;
-// 			
-// 			// wg signal score, used only if funseq_opt == 'p'
-// 			double signal_sum = 0;
-// 			
-// 			// Unpack the current annotation
-// 			string downstream_ann_chr = downstream_random_bins[j][0];
-// 			string downstream_ann_start = downstream_random_bins[j][1];
-// 			string downstream_ann_end = downstream_random_bins[j][2];
-// 			
-// 			// Cast to int
-// 			int downstream_ann_chr_num;
-// 			if (downstream_ann_chr == "chrX") {
-// 				downstream_ann_chr_num = 24;
-// 			} else if (downstream_ann_chr == "chrY") {
-// 				downstream_ann_chr_num = 25;
-// 			} else if (downstream_ann_chr == "chrM") {
-// 				downstream_ann_chr_num = 26;
-// 			} else {
-// 				string downstream_ann_chr_part = downstream_ann_chr.substr(3);
-// 				downstream_ann_chr_num = atoi(downstream_ann_chr_part.c_str());
-// 			}
-// 			
-// 			int downstream_ann_start_num = atoi(downstream_ann_start.c_str());
-// 			int downstream_ann_end_num = atoi(downstream_ann_end.c_str());
-// 			
-// 			// Unpack the current variant
-// 			string downstream_var_chr = var_array[vpointer2][0];
-// 			string downstream_var_start = var_array[vpointer2][1];
-// 			string downstream_var_end = var_array[vpointer2][2];
-// 			
-// 			// Cast chr, start and end into int
-// 			int downstream_var_chr_num;
-// 			if (downstream_var_chr == "chrX") {
-// 				downstream_var_chr_num = 24;
-// 			} else if (downstream_var_chr == "chrY") {
-// 				downstream_var_chr_num = 25;
-// 			} else if (downstream_var_chr == "chrM") {
-// 				downstream_var_chr_num = 26;
-// 			} else {
-// 				string downstream_var_chr_part = downstream_var_chr.substr(3);
-// 				downstream_var_chr_num = atoi(downstream_var_chr_part.c_str());
-// 			}
-// 		
-// 			int downstream_var_start_num = atoi(downstream_var_start.c_str());
-// 			int downstream_var_end_num = atoi(downstream_var_end.c_str());
-// 			
-// 			// Now count the intersecting variants
-// 			// vpointer2 points to the "earliest" possible annotation, and vpointer3
-// 			// points to the variants up until the last intersecting with the annotation
-// 			unsigned int vpointer3 = vpointer2;
-// 			
-// 			// While vpointer3 does not go past the current annotation
-// 			while (downstream_var_chr_num < downstream_ann_chr_num || (downstream_var_chr_num == downstream_ann_chr_num && downstream_var_end_num <= downstream_ann_end_num)) {
-// 				
-// 				// If the current variant intersects the current annotation, increment target_variants
-// 				if (downstream_var_chr == downstream_ann_chr && downstream_ann_start_num <= downstream_var_end_num && downstream_var_start_num <= downstream_ann_end_num) {
-// 					this_variants++;
-// 					
-// 					// wg signal score code
-// 					if (funseq_opt == 'p') {
-// 						signal_sum += atof(var_array[vpointer3][3].c_str());
-// 					}
-// 				} else { // Update vpointer2
-// 					if (vpointer3 != var_array.size()-1) {
-// 						vpointer2 = vpointer3 + 1;
-// 					}
-// 				}
-// 				// Now update the cur_var
-// 				if (vpointer3 == var_array.size()-1) {
-// 					break;
-// 				}
-// 				vpointer3++;
-// 				
-// 				downstream_var_chr = var_array[vpointer3][0];
-// 				downstream_var_start = var_array[vpointer3][1];
-// 				downstream_var_end = var_array[vpointer3][2];
-// 			
-// 				// Cast chr, start and end into int
-// 				if (downstream_var_chr == "chrX") {
-// 					downstream_var_chr_num = 24;
-// 				} else if (downstream_var_chr == "chrY") {
-// 					downstream_var_chr_num = 25;
-// 				} else if (downstream_var_chr == "chrM") {
-// 					downstream_var_chr_num = 26;
-// 				} else {
-// 					string downstream_var_chr_part = downstream_var_chr.substr(3);
-// 					downstream_var_chr_num = atoi(downstream_var_chr_part.c_str());
-// 				}
-// 		
-// 				downstream_var_start_num = atoi(downstream_var_start.c_str());
-// 				downstream_var_end_num = atoi(downstream_var_end.c_str());
-// 			}
-// 			
-// 			// this_variants has been settled, save for output
-// 			// varcounts.push_back(this_variants);
-// 			if (this_variants >= target_variants) {
-// 				overbins++;
-// 			}
-// 			
-// 			if (funseq_opt == 'p') {
-// 				if (signal_sum >= cur_ann_signal) {
-// 					signal_overcount++;
-// 				}
-// 			}
-// 		}
+		unsigned int vpointer2 = var_pointer;
+		
+		// A collection of intersecting variants counts from the random bins
+		// vector<int> varcounts;
+		
+		// P-value calculation: how many of the random bins have at least as many
+		// variants as k_t?
+		int overbins = 0;
+		
+		// Backwards search!
+		unsigned int j = upstream_random_bins.size();
+		do {
+			j--;
+		
+			// How many variants intersect this bin?
+			int this_variants = 0;
+			
+			// wg signal score, used only if funseq_opt == 'p'
+			double signal_sum = 0;
+			
+			// Unpack the current annotation
+			string upstream_ann_chr = upstream_random_bins[j][0];
+			string upstream_ann_start = upstream_random_bins[j][1];
+			string upstream_ann_end = upstream_random_bins[j][2];
+			
+			// Cast to int
+			int upstream_ann_chr_num;
+			if (upstream_ann_chr == "chrX") {
+				upstream_ann_chr_num = 24;
+			} else if (upstream_ann_chr == "chrY") {
+				upstream_ann_chr_num = 25;
+			} else if (upstream_ann_chr == "chrM") {
+				upstream_ann_chr_num = 26;
+			} else {
+				string upstream_ann_chr_part = upstream_ann_chr.substr(3);
+				upstream_ann_chr_num = atoi(upstream_ann_chr_part.c_str());
+			}
+		
+			int upstream_ann_start_num = atoi(upstream_ann_start.c_str());
+			int upstream_ann_end_num = atoi(upstream_ann_end.c_str());
+			
+			// Unpack the current variant
+			string upstream_var_chr = var_array[vpointer2][0];
+			string upstream_var_start = var_array[vpointer2][1];
+			string upstream_var_end = var_array[vpointer2][2];
+			
+			// Cast chr, start and end into int
+			int upstream_var_chr_num;
+			if (upstream_var_chr == "chrX") {
+				upstream_var_chr_num = 24;
+			} else if (upstream_var_chr == "chrY") {
+				upstream_var_chr_num = 25;
+			} else if (upstream_var_chr == "chrM") {
+				upstream_var_chr_num = 26;
+			} else {
+				string upstream_var_chr_part = upstream_var_chr.substr(3);
+				upstream_var_chr_num = atoi(upstream_var_chr_part.c_str());
+			}
+		
+			int upstream_var_start_num = atoi(upstream_var_start.c_str());
+			int upstream_var_end_num = atoi(upstream_var_end.c_str());
+			
+			// Now count the intersecting variants
+			// vpointer2 points to the "earliest" possible annotation, and vpointer3
+			// points to the variants up until the last intersecting with the annotation
+			unsigned int vpointer3 = vpointer2;
+			
+			// While vpointer3 does not go past the current annotation
+			while (upstream_var_chr_num > upstream_ann_chr_num || (upstream_var_chr_num == upstream_ann_chr_num && upstream_var_start_num >= upstream_ann_start_num)) {
+			
+				// If the current variant intersects the current annotation, increment target_variants
+				if (upstream_var_chr == upstream_ann_chr && upstream_ann_start_num <= upstream_var_end_num && upstream_var_start_num <= upstream_ann_end_num) {
+					this_variants++;
+					
+					// wg signal score code
+					if (funseq_opt == 'p') {
+						signal_sum += atof(var_array[vpointer3][3].c_str());
+					}
+				} else { // Update vpointer2
+					if (vpointer3 != 0) {
+						vpointer2 = vpointer3 - 1;
+					}
+				}
+				// Now update the cur_var
+				if (vpointer3 == 0) {
+					break;
+				}
+				vpointer3--;
+			
+				upstream_var_chr = var_array[vpointer3][0];
+				upstream_var_start = var_array[vpointer3][1];
+				upstream_var_end = var_array[vpointer3][2];
+			
+				// Cast chr, start and end into int
+				if (upstream_var_chr == "chrX") {
+					upstream_var_chr_num = 24;
+				} else if (upstream_var_chr == "chrY") {
+					upstream_var_chr_num = 25;
+				} else if (upstream_var_chr == "chrM") {
+					upstream_var_chr_num = 26;
+				} else {
+					string upstream_var_chr_part = upstream_var_chr.substr(3);
+					upstream_var_chr_num = atoi(upstream_var_chr_part.c_str());
+				}
+		
+				upstream_var_start_num = atoi(upstream_var_start.c_str());
+				upstream_var_end_num = atoi(upstream_var_end.c_str());
+			}
+			
+			// this_variants has been settled
+			// varcounts.push_back(this_variants);
+			if (this_variants >= target_variants) {
+				overbins++;
+			}
+			
+			if (funseq_opt == 'p') {
+				if (signal_sum >= cur_ann_signal) {
+					signal_overcount++;
+				}
+			}
+		} while (j > 0);
+		
+		// Downstream bins: a more straight forward search :)
+		// sort(downstream_random_bins.begin(), downstream_random_bins.end(), cmpIntervals);
+		vpointer2 = var_pointer;
+		
+		for (unsigned int j = 0; j < downstream_random_bins.size(); j++) {
+			
+			// How many variants intersect this bin?
+			int this_variants = 0;
+			
+			// wg signal score, used only if funseq_opt == 'p'
+			double signal_sum = 0;
+			
+			// Unpack the current annotation
+			string downstream_ann_chr = downstream_random_bins[j][0];
+			string downstream_ann_start = downstream_random_bins[j][1];
+			string downstream_ann_end = downstream_random_bins[j][2];
+			
+			// Cast to int
+			int downstream_ann_chr_num;
+			if (downstream_ann_chr == "chrX") {
+				downstream_ann_chr_num = 24;
+			} else if (downstream_ann_chr == "chrY") {
+				downstream_ann_chr_num = 25;
+			} else if (downstream_ann_chr == "chrM") {
+				downstream_ann_chr_num = 26;
+			} else {
+				string downstream_ann_chr_part = downstream_ann_chr.substr(3);
+				downstream_ann_chr_num = atoi(downstream_ann_chr_part.c_str());
+			}
+			
+			int downstream_ann_start_num = atoi(downstream_ann_start.c_str());
+			int downstream_ann_end_num = atoi(downstream_ann_end.c_str());
+			
+			// Unpack the current variant
+			string downstream_var_chr = var_array[vpointer2][0];
+			string downstream_var_start = var_array[vpointer2][1];
+			string downstream_var_end = var_array[vpointer2][2];
+			
+			// Cast chr, start and end into int
+			int downstream_var_chr_num;
+			if (downstream_var_chr == "chrX") {
+				downstream_var_chr_num = 24;
+			} else if (downstream_var_chr == "chrY") {
+				downstream_var_chr_num = 25;
+			} else if (downstream_var_chr == "chrM") {
+				downstream_var_chr_num = 26;
+			} else {
+				string downstream_var_chr_part = downstream_var_chr.substr(3);
+				downstream_var_chr_num = atoi(downstream_var_chr_part.c_str());
+			}
+		
+			int downstream_var_start_num = atoi(downstream_var_start.c_str());
+			int downstream_var_end_num = atoi(downstream_var_end.c_str());
+			
+			// Now count the intersecting variants
+			// vpointer2 points to the "earliest" possible annotation, and vpointer3
+			// points to the variants up until the last intersecting with the annotation
+			unsigned int vpointer3 = vpointer2;
+			
+			// While vpointer3 does not go past the current annotation
+			while (downstream_var_chr_num < downstream_ann_chr_num || (downstream_var_chr_num == downstream_ann_chr_num && downstream_var_end_num <= downstream_ann_end_num)) {
+				
+				// If the current variant intersects the current annotation, increment target_variants
+				if (downstream_var_chr == downstream_ann_chr && downstream_ann_start_num <= downstream_var_end_num && downstream_var_start_num <= downstream_ann_end_num) {
+					this_variants++;
+					
+					// wg signal score code
+					if (funseq_opt == 'p') {
+						signal_sum += atof(var_array[vpointer3][3].c_str());
+					}
+				} else { // Update vpointer2
+					if (vpointer3 != var_array.size()-1) {
+						vpointer2 = vpointer3 + 1;
+					}
+				}
+				// Now update the cur_var
+				if (vpointer3 == var_array.size()-1) {
+					break;
+				}
+				vpointer3++;
+				
+				downstream_var_chr = var_array[vpointer3][0];
+				downstream_var_start = var_array[vpointer3][1];
+				downstream_var_end = var_array[vpointer3][2];
+			
+				// Cast chr, start and end into int
+				if (downstream_var_chr == "chrX") {
+					downstream_var_chr_num = 24;
+				} else if (downstream_var_chr == "chrY") {
+					downstream_var_chr_num = 25;
+				} else if (downstream_var_chr == "chrM") {
+					downstream_var_chr_num = 26;
+				} else {
+					string downstream_var_chr_part = downstream_var_chr.substr(3);
+					downstream_var_chr_num = atoi(downstream_var_chr_part.c_str());
+				}
+		
+				downstream_var_start_num = atoi(downstream_var_start.c_str());
+				downstream_var_end_num = atoi(downstream_var_end.c_str());
+			}
+			
+			// this_variants has been settled, save for output
+			// varcounts.push_back(this_variants);
+			if (this_variants >= target_variants) {
+				overbins++;
+			}
+			
+			if (funseq_opt == 'p') {
+				if (signal_sum >= cur_ann_signal) {
+					signal_overcount++;
+				}
+			}
+		}
 		
 		// P-value calculation: how many of the random bins have at least as many
 		// variants as k_t?
