@@ -1363,6 +1363,9 @@ int main (int argc, char* argv[]) {
 	
 	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
 	
+	// DEBUG
+	printf("Breakpoint 4b\n");
+	
 	int **upstream_start, **downstream_start, **upstream_start_b, **downstream_start_b;
 	
 	cudaMalloc((void**)&upstream_start, num_threads*sizeof(int *));
@@ -1375,6 +1378,9 @@ int main (int argc, char* argv[]) {
 	
 	cudaMemcpy(upstream_start, upstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
 	cudaMemcpy(downstream_start, downstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	
+	// DEBUG
+	printf("Breakpoint 4c\n");
 	
 	int **mergesort_array, **mergesort_array_b;
 	
