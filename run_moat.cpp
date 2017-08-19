@@ -528,7 +528,7 @@ int main (int argc, char* argv[]) {
 		out_wr[out.size()] = '\0'; // don't forget the terminating 0
 		
 		// DEBUG
-		// printf("Is it my fault?\n");
+		printf("Is it my fault?\n");
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
 		// DEBUG
