@@ -683,6 +683,8 @@ int main (int argc, char* argv[]) {
 			pid_t pID = fork();
 	   	if (pID == 0) {
 				execv(prime_exe.c_str(), params);
+			} else {
+				wait();
 			}
 		} else if (parallel == 'n') {
 			execv(exe.c_str(), params);
