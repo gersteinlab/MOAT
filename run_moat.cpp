@@ -678,7 +678,7 @@ int main (int argc, char* argv[]) {
 // 		}
 		
 		if (parallel == 'y') {
-			string prime_exe = "mpirun";
+			string prime_exe = "mpiexec";
 			printf("Breakpoint 1\n"); // DEBUG
 			execv(prime_exe.c_str(), params);
 		} else if (parallel == 'n') {
