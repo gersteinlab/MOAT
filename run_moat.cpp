@@ -673,9 +673,9 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// DEBUG
-// 		for (int k = 0; k < param_size; k++) {
-// 			printf("%s\n", params[k]);
-// 		}
+		for (int k = 0; k < param_size; k++) {
+			printf("%s\n", params[k]);
+		}
 		
 		execv(exe.c_str(), params);
 		// return system(command.c_str());
