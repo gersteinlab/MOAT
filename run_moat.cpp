@@ -673,9 +673,9 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// DEBUG
-// 		for (int k = 0; k < param_size; k++) {
-// 			printf("%s\n", params[k]);
-// 		}
+		for (int k = 0; k < param_size-1; k++) {
+			printf("%s\n", params[k]);
+		}
 		
 		if (parallel == 'y') {
 			string prime_exe = "mpirun";
