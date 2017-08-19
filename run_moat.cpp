@@ -495,9 +495,9 @@ int main (int argc, char* argv[]) {
 			// printf("nCPU: %d\n", ncpu);
 		
 			if (algo == 'v') {
-				exe = "mpirun \\-n " + string(ncpu_cstr) + " ./moat_v_parallel";
+				exe = "mpirun -n " + string(ncpu_cstr) + " ./moat_v_parallel";
 			} else if (algo == 's') {
-				exe = "mpirun \\-n " + string(ncpu_cstr) + " ./moatsim_parallel";
+				exe = "mpirun -n " + string(ncpu_cstr) + " ./moatsim_parallel";
 			}
 		} else if (parallel == 'n') {
 			if (algo == 'v') {
@@ -562,9 +562,9 @@ int main (int argc, char* argv[]) {
 // 			std::copy(exe.begin(), exe.begin()+6, exe1_str_wr);
 // 			exe1_str_wr[6] = '\0'; // don't forget the terminating 0
 			
-			char *exe2_str_wr = new char[4 + 1];
-			std::copy(exe.begin()+7, exe.begin()+11, exe2_str_wr);
-			exe2_str_wr[4] = '\0'; // don't forget the terminating 0
+			char *exe2_str_wr = new char[2 + 1];
+			std::copy(exe.begin()+7, exe.begin()+9, exe2_str_wr);
+			exe2_str_wr[2] = '\0'; // don't forget the terminating 0
 			
 			char ncpu_cstr[STRSIZE];
 			sprintf(ncpu_cstr, "%d", ncpu);
@@ -680,7 +680,10 @@ int main (int argc, char* argv[]) {
 		if (parallel == 'y') {
 			string prime_exe = "mpirun";
 			printf("Breakpoint 1\n"); // DEBUG
-			execv(prime_exe.c_str(), params);
+			pid_t pID = fork();
+	   	if (pID == 0) {
+				execv(prime_exe.c_str(), params);
+			}
 		} else if (parallel == 'n') {
 			execv(exe.c_str(), params);
 		}
