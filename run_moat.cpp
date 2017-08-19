@@ -679,13 +679,8 @@ int main (int argc, char* argv[]) {
 		
 		if (parallel == 'y') {
 			string prime_exe = "mpirun";
-			printf("Breakpoint 1\n"); // DEBUG
-			pid_t pID = fork();
-	   	if (pID == 0) {
-				execv(prime_exe.c_str(), params);
-			} else {
-				wait();
-			}
+			// printf("Breakpoint 1\n"); // DEBUG
+			execvp(prime_exe.c_str(), params);
 		} else if (parallel == 'n') {
 			execv(exe.c_str(), params);
 		}
