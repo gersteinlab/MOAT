@@ -507,10 +507,6 @@ int main (int argc, char* argv[]) {
 			}
 		}
 		
-		char *exe_wr = new char[exe.size() + 1];
-		std::copy(exe.begin(), exe.end(), exe_wr);
-		exe_wr[exe.size()] = '\0'; // don't forget the terminating 0
-		
 		char *trimer_str_wr = new char[trimer_str.size() + 1];
 		std::copy(trimer_str.begin(), trimer_str.end(), trimer_str_wr);
 		trimer_str_wr[trimer_str.size()] = '\0'; // don't forget the terminating 0
@@ -538,19 +534,72 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 // 		string command = exe + " " + trimer_str + " " + string(num_permutations_cstr) + " " + string(width_cstr) + " " + string(min_width_cstr) + " " + prohibited_file + " " + fasta_dir + " " + vfile + " " + out;
 // 		printf("Command: %s\n", command.c_str());
+
+		char **params;
+		int param_size;
+		if (parallel == 'n') {
 		
-		int param_size = 10;
-		char **params = (char **)malloc(param_size*sizeof(char *));
-		params[0] = exe_wr;
-		params[1] = trimer_str_wr;
-		params[2] = num_permutations_cstr;
-		params[3] = width_cstr;
-		params[4] = min_width_cstr;
-		params[5] = prohibited_file_wr;
-		params[6] = fasta_dir_wr;
-		params[7] = vfile_wr;
-		params[8] = out_wr;
-		params[9] = (char *)0;
+			char *exe_wr = new char[exe.size() + 1];
+			std::copy(exe.begin(), exe.end(), exe_wr);
+			exe_wr[exe.size()] = '\0'; // don't forget the terminating 0
+		
+			param_size = 10;
+			**params = (char **)malloc(param_size*sizeof(char *));
+			params[0] = exe_wr;
+			params[1] = trimer_str_wr;
+			params[2] = num_permutations_cstr;
+			params[3] = width_cstr;
+			params[4] = min_width_cstr;
+			params[5] = prohibited_file_wr;
+			params[6] = fasta_dir_wr;
+			params[7] = vfile_wr;
+			params[8] = out_wr;
+			params[9] = (char *)0;
+		} else if (parallel == 'y') {
+			
+			// Set up the exe strings
+			char *exe1_str_wr = new char[6 + 1];
+			std::copy(exe.begin(), exe.begin()+6, exe1_str_wr);
+			exe1_str_wr[6] = '\0'; // don't forget the terminating 0
+			
+			char *exe2_str_wr = new char[2 + 1];
+			std::copy(exe.begin()+7, exe.begin()+9, exe2_str_wr);
+			exe2_str_wr[2] = '\0'; // don't forget the terminating 0
+			
+			string ncpu_str = string(ncpu_cstr);
+			
+			char *exe3_str_wr = new char[ncpu_str.size() + 1];
+			std::copy(ncpu_str.begin(), ncpu_str.end(), exe3_str_wr);
+			exe3_str_wr[ncpu_str.size()] = '\0'; // don't forget the terminating 0
+			
+			string prime_exe;
+			if (algo == 'v') {
+				prime_exe = "./moat_v_parallel";
+			} else if (algo == 's') {
+				prime_exe = "./moatsim_parallel";
+			}
+			
+			char *exe4_str_wr = new char[prime_exe.size() + 1];
+			std::copy(prime_exe.begin(), prime_exe.end(), exe4_str_wr);
+			exe4_str_wr[prime_exe.size()] = '\0'; // don't forget the terminating 0
+			
+			param_size = 13;
+			**params = (char **)malloc(param_size*sizeof(char *));
+			params[0] = exe1_str_wr;
+			params[1] = exe2_str_wr;
+			params[2] = exe3_str_wr;
+			params[3] = exe4_str_wr;
+			params[4] = trimer_str_wr;
+			params[5] = num_permutations_cstr;
+			params[6] = width_cstr;
+			params[7] = min_width_cstr;
+			params[8] = prohibited_file_wr;
+			params[9] = fasta_dir_wr;
+			params[10] = vfile_wr;
+			params[11] = out_wr;
+			params[12] = (char *)0;
+			
+		}
 		if (algo == 's') {
 			int covar_files_size = (int)covar_files.size();
 			param_size += covar_files_size;
