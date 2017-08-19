@@ -435,9 +435,9 @@ int main (int argc, char* argv[]) {
 		if (!trimer) {
 			fprintf(stderr, "Error: 3mer preservation option is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
-// 		} else if (trimer != 'y' && trimer != 'n') {
-// 			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n", trimer);
-// 			return 1;
+		} else if (trimer != 'y' && trimer != 'n') {
+			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n", trimer);
+			return 1;
 		}
 		string trimer_str;
 		trimer_str.push_back(trimer);
@@ -528,7 +528,7 @@ int main (int argc, char* argv[]) {
 		out_wr[out.size()] = '\0'; // don't forget the terminating 0
 		
 		// DEBUG
-		printf("Is it my fault?\n");
+		// printf("Is it my fault?\n");
 		
 		// execl(exe.c_str(), num_permutations_cstr, width_cstr, min_width_cstr, prohibited_file.c_str(), fasta_dir.c_str(), vfile.c_str(), out.c_str(), (char *)0);
 		// DEBUG
@@ -673,12 +673,13 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// DEBUG
-		for (int k = 0; k < param_size-1; k++) {
-			printf("%s\n", params[k]);
-		}
+// 		for (int k = 0; k < param_size-1; k++) {
+// 			printf("%s\n", params[k]);
+// 		}
 		
 		if (parallel == 'y') {
 			string prime_exe = "mpirun";
+			printf("Breakpoint 1\n"); // DEBUG
 			execv(prime_exe.c_str(), params);
 		} else if (parallel == 'n') {
 			execv(exe.c_str(), params);
