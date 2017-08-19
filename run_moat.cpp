@@ -544,7 +544,7 @@ int main (int argc, char* argv[]) {
 			exe_wr[exe.size()] = '\0'; // don't forget the terminating 0
 		
 			param_size = 10;
-			**params = (char **)malloc(param_size*sizeof(char *));
+			params = (char **)malloc(param_size*sizeof(char *));
 			params[0] = exe_wr;
 			params[1] = trimer_str_wr;
 			params[2] = num_permutations_cstr;
@@ -566,11 +566,14 @@ int main (int argc, char* argv[]) {
 			std::copy(exe.begin()+7, exe.begin()+9, exe2_str_wr);
 			exe2_str_wr[2] = '\0'; // don't forget the terminating 0
 			
-			string ncpu_str = string(ncpu_cstr);
+			char ncpu_cstr[STRSIZE];
+			sprintf(ncpu_cstr, "%d", ncpu);
 			
-			char *exe3_str_wr = new char[ncpu_str.size() + 1];
-			std::copy(ncpu_str.begin(), ncpu_str.end(), exe3_str_wr);
-			exe3_str_wr[ncpu_str.size()] = '\0'; // don't forget the terminating 0
+// 			string ncpu_str = string(ncpu_cstr);
+// 			
+// 			char *exe3_str_wr = new char[ncpu_str.size() + 1];
+// 			std::copy(ncpu_str.begin(), ncpu_str.end(), exe3_str_wr);
+// 			exe3_str_wr[ncpu_str.size()] = '\0'; // don't forget the terminating 0
 			
 			string prime_exe;
 			if (algo == 'v') {
@@ -584,10 +587,10 @@ int main (int argc, char* argv[]) {
 			exe4_str_wr[prime_exe.size()] = '\0'; // don't forget the terminating 0
 			
 			param_size = 13;
-			**params = (char **)malloc(param_size*sizeof(char *));
+			params = (char **)malloc(param_size*sizeof(char *));
 			params[0] = exe1_str_wr;
 			params[1] = exe2_str_wr;
-			params[2] = exe3_str_wr;
+			params[2] = ncpu_cstr;
 			params[3] = exe4_str_wr;
 			params[4] = trimer_str_wr;
 			params[5] = num_permutations_cstr;
