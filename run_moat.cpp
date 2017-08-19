@@ -558,9 +558,9 @@ int main (int argc, char* argv[]) {
 		} else if (parallel == 'y') {
 			
 			// Set up the exe strings
-			char *exe1_str_wr = new char[6 + 1];
-			std::copy(exe.begin(), exe.begin()+6, exe1_str_wr);
-			exe1_str_wr[6] = '\0'; // don't forget the terminating 0
+// 			char *exe1_str_wr = new char[6 + 1];
+// 			std::copy(exe.begin(), exe.begin()+6, exe1_str_wr);
+// 			exe1_str_wr[6] = '\0'; // don't forget the terminating 0
 			
 			char *exe2_str_wr = new char[2 + 1];
 			std::copy(exe.begin()+7, exe.begin()+9, exe2_str_wr);
@@ -586,21 +586,21 @@ int main (int argc, char* argv[]) {
 			std::copy(prime_exe.begin(), prime_exe.end(), exe4_str_wr);
 			exe4_str_wr[prime_exe.size()] = '\0'; // don't forget the terminating 0
 			
-			param_size = 13;
+			param_size = 12;
 			params = (char **)malloc(param_size*sizeof(char *));
-			params[0] = exe1_str_wr;
-			params[1] = exe2_str_wr;
-			params[2] = ncpu_cstr;
-			params[3] = exe4_str_wr;
-			params[4] = trimer_str_wr;
-			params[5] = num_permutations_cstr;
-			params[6] = width_cstr;
-			params[7] = min_width_cstr;
-			params[8] = prohibited_file_wr;
-			params[9] = fasta_dir_wr;
-			params[10] = vfile_wr;
-			params[11] = out_wr;
-			params[12] = (char *)0;
+			// params[0] = exe1_str_wr;
+			params[0] = exe2_str_wr;
+			params[1] = ncpu_cstr;
+			params[2] = exe4_str_wr;
+			params[3] = trimer_str_wr;
+			params[4] = num_permutations_cstr;
+			params[5] = width_cstr;
+			params[6] = min_width_cstr;
+			params[7] = prohibited_file_wr;
+			params[8] = fasta_dir_wr;
+			params[9] = vfile_wr;
+			params[10] = out_wr;
+			params[11] = (char *)0;
 			
 		}
 		if (algo == 's') {
@@ -673,11 +673,16 @@ int main (int argc, char* argv[]) {
 		}
 		
 		// DEBUG
-		for (int k = 0; k < param_size; k++) {
-			printf("%s\n", params[k]);
-		}
+// 		for (int k = 0; k < param_size; k++) {
+// 			printf("%s\n", params[k]);
+// 		}
 		
-		execv(exe.c_str(), params);
+		if (parallel == 'y') {
+			string prime_exe = "mpirun";
+			execv(prime_exe.c_str(), params);
+		} else if (parallel == 'n') {
+			execv(exe.c_str(), params);
+		}
 		// return system(command.c_str());
 		
 	} else { // Algo has an invalid value
