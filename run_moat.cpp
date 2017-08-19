@@ -435,9 +435,9 @@ int main (int argc, char* argv[]) {
 		if (!trimer) {
 			fprintf(stderr, "Error: 3mer preservation option is not defined. Use -h or --help for usage information. Exiting.\n");
 			return 1;
-		} else if (trimer != 'y' && trimer != 'n') {
-			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n", trimer);
-			return 1;
+// 		} else if (trimer != 'y' && trimer != 'n') {
+// 			fprintf(stderr, "Invalid option for \"--3mer\" preservation option: \'%c\'. Must be either \'y\' or \'n\'. Use -h or --help for usage information. Exiting.\n", trimer);
+// 			return 1;
 		}
 		string trimer_str;
 		trimer_str.push_back(trimer);
