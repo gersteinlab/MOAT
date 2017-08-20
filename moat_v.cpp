@@ -441,13 +441,17 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 		// printf("%s\n", line.c_str());
 		
-		// Extract chromosome, start, end from line (first 3 columns)
+		// Extract chromosome, start, end, ref, alt, and any extra columns from line
 		vector<string> vec;
-		for (int i = 0; i < 3; i++) {
-			size_t ws_index = line.find_first_of("\t\n");
+		size_t ws_index = 0;
+		while (ws_index != string::npos) {
+			ws_index = line.find_first_of("\t\n");
 			string in = line.substr(0, ws_index);
+			// printf("%s\n", in.c_str()); // DEBUG
 			vec.push_back(in);
-			line = line.substr(ws_index+1);
+			if (ws_index != string::npos) {
+				line = line.substr(ws_index+1);
+			}
 		}
 		
 		// If this is not a standard chromosome, then remove this row
@@ -1170,7 +1174,7 @@ int main (int argc, char* argv[]) {
 			// END NEW CODE
 			
 			// vector<vector<string> > permuted_set = permute_variants(var_subset_count, rand_range);
-			sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
+			// sort(permuted_set.begin(), permuted_set.end(), cmpIntervals);
 		
 			// DEBUG
 			// printf("Loop iter %d\n", i);
@@ -1183,7 +1187,22 @@ int main (int argc, char* argv[]) {
 			last_chr = ann_array[j][0];
 		}
 		for (unsigned int k = 0; k < permuted_set.size(); k++) {
-			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+			string outline = "";
+			for (unsigned int l = 0; l < var_array[k].size(); l++) {
+				if (l < 3) {
+					outline += permuted_set[k][l];
+				} else {
+					outline += var_array[k][l];
+				}
+				if (l < var_array[k].size()-1) {
+					outline += "\t";
+				} else {
+					outline += "\n";
+				}
+			}
+			
+			fprintf(outfile_ptr, "%s", outline.c_str());
+			// fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
 		}
 		fclose(outfile_ptr);
 		
