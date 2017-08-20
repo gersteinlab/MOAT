@@ -345,7 +345,7 @@ int main (int argc, char* argv[]) {
 		string signal_file;
 	
 		if (argc != 10 && argc != 11) {
-			fprintf(stderr, "Usage: moat_v_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory] [wg signal option (y/n)] [wg signal file (optional)]. Exiting.\n");
+			fprintf(stderr, "Usage: moat_v_mpi [3mer preservation option (y/n)] [# permuted datasets] [permutation window width] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory] [wg signal option (y/n)] [wg signal file (optional)]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
@@ -360,7 +360,7 @@ int main (int argc, char* argv[]) {
 				return 1;
 			}
 		
-			trimer = atoi(argv[1]);
+			// trimer = atoi(argv[1]);
 			num_permutations = atoi(argv[2]);
 			window_radius = atoi(argv[3]);
 			min_width = atoi(argv[4]);
