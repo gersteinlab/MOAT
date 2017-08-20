@@ -1160,7 +1160,7 @@ int main (int argc, char* argv[]) {
 					
 				}
 				
-				for (unsigned int l = 3; l < var_array[k].size(); k++) {
+				for (unsigned int l = 3; l < var_array[k].size(); l++) {
 					vec.push_back(var_array[k][l]);
 					
 					// DEBUG
