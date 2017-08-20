@@ -1160,6 +1160,13 @@ int main (int argc, char* argv[]) {
 					
 				}
 				
+				for (unsigned int l = 3; l < var_array[k].size(); k++) {
+					vec.push_back(var_array[k][l]);
+					
+					// DEBUG
+					// printf("Rejoin attr: %s\n", var_array[permuted_var_id[j]][k].c_str());
+				}
+				
 				permuted_set.push_back(vec);
 			}
 			
@@ -1188,13 +1195,9 @@ int main (int argc, char* argv[]) {
 		}
 		for (unsigned int k = 0; k < permuted_set.size(); k++) {
 			string outline = "";
-			for (unsigned int l = 0; l < var_array[k].size(); l++) {
-				if (l < 3) {
-					outline += permuted_set[k][l];
-				} else {
-					outline += var_array[k][l];
-				}
-				if (l < var_array[k].size()-1) {
+			for (unsigned int l = 0; l < permuted_set[k].size(); l++) {
+				outline += permuted_set[k][l];
+				if (l < permuted_set[k].size()-1) {
 					outline += "\t";
 				} else {
 					outline += "\n";

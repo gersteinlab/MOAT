@@ -432,13 +432,16 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 		// printf("%s\n", line.c_str());
 		
-		// Extract chromosome, start, and end from line (first 3 columns)
+		// Extract chromosome, start, end, ref, alt, and any extra columns from line
 		vector<string> vec;
-		for (int i = 0; i < 3; i++) {
-			size_t ws_index = line.find_first_of("\t\n");
+		size_t ws_index = 0;
+		while (ws_index != string::npos) {
+			ws_index = line.find_first_of("\t\n");
 			string in = line.substr(0, ws_index);
 			vec.push_back(in);
-			line = line.substr(ws_index+1);
+			if (ws_index != string::npos) {
+				line = line.substr(ws_index+1);
+			}
 		}
 		
 		// If this is not a standard chromosome, then remove this row
@@ -1003,7 +1006,9 @@ int main (int argc, char* argv[]) {
 // 					ss << chr_nt[cur_var_end-1];
 // 					ss << chr_nt[cur_var_end];
 // 					ss >> cur_nt;
-					string placeholder = "";
+					char em[STRSIZE];
+					sprintf(em, "%u", m);
+					string placeholder = string(em);
 					
 					pair<int,string> variant (this_epoch, placeholder);
 					obs_var_pos.push_back(variant);
@@ -1182,6 +1187,15 @@ int main (int argc, char* argv[]) {
 				sprintf(end_cstr, "%d", new_epoch); // 1-based
 				vec.push_back(string(end_cstr));
 				
+				int index = atoi(obs_var_pos.second[k].c_str());
+				
+				for (unsigned int l = 3; l < var_array[index].size(); l++) {
+					vec.push_back(var_array[index][l]);
+					
+					// DEBUG
+					// printf("Rejoin attr: %s\n", var_array[permuted_var_id[j]][k].c_str());
+				}
+				
 				permuted_set.push_back(vec);
 			}
 			
@@ -1221,8 +1235,19 @@ int main (int argc, char* argv[]) {
 			
 			// DEBUG
 			// printf("Loop iter: %d; permuted set size: %d; \n", (int)k, (int)permuted_set.size());
+			
+			string outline = "";
+			for (unsigned int l = 0; l < permuted_set[k].size(); l++) {
+				outline += permuted_set[k][l];
+				if (l < permuted_set[k].size()-1) {
+					outline += "\t";
+				} else {
+					outline += "\n";
+				}
+			}
 		
-			fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
+			fprintf(outfile_ptr, "%s", outline.c_str());
+			// fprintf(outfile_ptr, "%s\t%s\t%s\n", permuted_set[k][0].c_str(), permuted_set[k][1].c_str(), permuted_set[k][2].c_str());
 		}
 		fclose(outfile_ptr);
 	}
