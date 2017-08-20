@@ -600,7 +600,7 @@ __global__ void apportionWork(int* gpu_var_chr, int* gpu_var_start, int* gpu_var
 	
 	// Which thread am I?
 	int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	int total_threads = 8*128;
+	int total_threads = 24*128;
 	
 	// DEBUG
 // 	if (tid == 0) {
@@ -1262,7 +1262,7 @@ int main (int argc, char* argv[]) {
 // 	*test_int_cpu = 246;
 // 	cudaMemcpy(test_int_gpu, test_int_cpu, sizeof(int), cudaMemcpyHostToDevice);
 
-	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 503316480);
+	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1006632960);
 	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMalloc((void**)&gpu_var_chr, var_arr_length*sizeof(int));
@@ -1345,43 +1345,80 @@ int main (int argc, char* argv[]) {
 	GPUerrchk(cudaPeekAtLastError());
 	
 	// Try out 16x128 and see how that goes
-	int num_blocks = 8;
+	int num_blocks = 24;
 	int threads_per_block = 128;
 	int num_threads = num_blocks * threads_per_block;
+	
+	// DEBUG
+	// printf("Breakpoint 4a\n");
 	
 	// Malloc additional variables to improve performance
 	curandState **d_state;
 	cudaMalloc((void**)&d_state, num_threads*sizeof(curandState*));
+	GPUerrchk(cudaPeekAtLastError());
 	
 	curandState **d_state_b;
+	d_state_b = (curandState**)malloc(num_threads*sizeof(curandState*));
+// 	cudaMemcpy(d_state_b, d_state, num_threads*sizeof(curandState*), cudaMemcpyDeviceToHost);
+// 	GPUerrchk(cudaPeekAtLastError()); 
+	
+	// DEBUG
+	// printf("Breakpoint 4a-1\n");
+	
 	for (int i = 0; i < num_threads; i++) {
+		// printf("Loop iter: %d\n", i); // DEBUG
 		cudaMalloc((void**)&d_state_b[i], sizeof(curandState));
+		GPUerrchk(cudaPeekAtLastError());
 	}
 	
+	// DEBUG
+	// printf("Breakpoint 4a-2\n");
+	
 	cudaMemcpy(d_state, d_state_b, num_threads*sizeof(curandState*), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
+	
+	// DEBUG
+	// printf("Breakpoint 4b\n");
 	
 	int **upstream_start, **downstream_start, **upstream_start_b, **downstream_start_b;
 	
 	cudaMalloc((void**)&upstream_start, num_threads*sizeof(int *));
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMalloc((void**)&downstream_start, num_threads*sizeof(int *));
+	GPUerrchk(cudaPeekAtLastError());
+	
+	upstream_start_b = (int**)malloc(num_threads*sizeof(int *));
+	downstream_start_b = (int**)malloc(num_threads*sizeof(int *));
 	
 	for (int i = 0; i < num_threads; i++) {
 		cudaMalloc((void**)&upstream_start_b[i], (n/2)*sizeof(int));
+		GPUerrchk(cudaPeekAtLastError());
 		cudaMalloc((void**)&downstream_start_b[i], (n/2)*sizeof(int));
+		GPUerrchk(cudaPeekAtLastError());
 	}
 	
 	cudaMemcpy(upstream_start, upstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	cudaMemcpy(downstream_start, downstream_start_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
+	
+	// DEBUG
+	// printf("Breakpoint 4c\n");
 	
 	int **mergesort_array, **mergesort_array_b;
 	
 	cudaMalloc((void**)&mergesort_array, num_threads*sizeof(int *));
+	GPUerrchk(cudaPeekAtLastError());
+	
+	mergesort_array_b = (int**)malloc(num_threads*sizeof(int *));
 	
 	for (int i = 0; i < num_threads; i++) {
 		cudaMalloc((void**)&mergesort_array_b[i], (n/2)*sizeof(int));
+		GPUerrchk(cudaPeekAtLastError());
 	}
 	
 	cudaMemcpy(mergesort_array, mergesort_array_b, num_threads*sizeof(int*), cudaMemcpyHostToDevice);
+	GPUerrchk(cudaPeekAtLastError());
 	
 	// DEBUG
 	// var_signal, gpu_pvalues, gpu_signal_pvalues
