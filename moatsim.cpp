@@ -1187,7 +1187,7 @@ int main (int argc, char* argv[]) {
 				sprintf(end_cstr, "%d", new_epoch); // 1-based
 				vec.push_back(string(end_cstr));
 				
-				int index = atoi(obs_var_pos.second[k].c_str());
+				int index = atoi(obs_var_pos[k].second.c_str());
 				
 				for (unsigned int l = 3; l < var_array[index].size(); l++) {
 					vec.push_back(var_array[index][l]);
