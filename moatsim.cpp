@@ -1007,7 +1007,7 @@ int main (int argc, char* argv[]) {
 // 					ss << chr_nt[cur_var_end];
 // 					ss >> cur_nt;
 					char em[STRSIZE];
-					sprintf(em, "%u", m);
+					sprintf(em, "%d", (int)m);
 					string placeholder = string(em);
 					
 					pair<int,string> variant (this_epoch, placeholder);
