@@ -1,7 +1,7 @@
 CUDA := $(shell echo `command -v nvcc`)
 MPI := $(shell echo `command -v mpic++`)
 
-all: run_moat moat_a_cpu moat_a_gpu moat_v_serial moat_v_parallel moatsim moatsim_parallel
+all: run_moat moat_a_cpu moat_a_gpu moat_v_serial moat_v_parallel moatsim moatsim_parallel moat_v_gpu
 
 run_moat: run_moat.cpp
 	g++ -Wall -o run_moat run_moat.cpp
@@ -18,6 +18,14 @@ ifndef CUDA
 else
 	nvcc -o moat_a_gpu moat_a.cu variant_permutation_v3.cpp
 	@echo "CUDA-accelerated MOAT-a is available"
+endif
+
+moat_v_gpu: moat_v.cu variant_permutation_v3.h variant_permutation_v3.cpp
+ifndef CUDA
+	@echo "No CUDA-capable GPU available for MOAT-v: Can only use CPU version"
+else
+	nvcc -o moat_v_gpu moat_v.cu variant_permutation_v3.cpp
+	@echo "CUDA-accelerated MOAT-v is available"
 endif
 
 moat_v_parallel: moat_v_pval moat_v_mpi.cpp variant_permutation_v3.h variant_permutation_v3.cpp
