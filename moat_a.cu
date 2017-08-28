@@ -230,6 +230,10 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 					signal_sum += this_var_signal;
 				}
 				
+				if (vthis == 0) { // Don't read off the leading edge
+					break;
+				}
+				
 				vthis--;
 				this_var_chr = gpu_var_chr[vthis];
 				this_var_start = gpu_var_start[vthis];
@@ -260,6 +264,10 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, int* g
 				
 				if (funseq_opt) {
 					signal_sum += this_var_signal;
+				}
+				
+				if (vthis == vlength_const-1) { // Don't read off the trailing edge
+					break;
 				}
 				
 				vthis++;

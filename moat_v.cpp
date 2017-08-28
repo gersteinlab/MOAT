@@ -291,7 +291,8 @@ int main (int argc, char* argv[]) {
 	// Number of permuted variant datasets to create
 	int num_permutations;
 	
-	// Radius of the window in which we permute variants
+	// Width of the window in which we permute variants
+	// Accidentally called radius in earlier versions
 	int window_radius;
 	
 	// Minimum width allowed of the variant permutation bins
@@ -321,7 +322,7 @@ int main (int argc, char* argv[]) {
 	string signal_file;
 	
 	if (argc != 10 && argc != 11) {
-		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory] [wg signal option (y/n)] [wg signal file (optional)]. Exiting.\n");
+		fprintf(stderr, "Usage: moat_v [3mer preservation option (y/n)] [# permuted datasets] [permutation window width] [min width] [prohibited regions file] [FASTA dir] [variant file] [output directory] [wg signal option (y/n)] [wg signal file (optional)]. Exiting.\n");
 		return 1;
 	} else {
 	
@@ -1112,11 +1113,12 @@ int main (int argc, char* argv[]) {
 					// If no positions are available, end program with an error and suggest
 					// a larger bin size
 					if (pos.size()-1 == 0) {
-						char errstring[STRSIZE];
-						sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
-										ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
-						fprintf(stderr, errstring);
-						return 1;
+						continue;
+// 						char errstring[STRSIZE];
+// 						sprintf(errstring, "Error: No valid permutations positions for a variant in bin %s:%s-%s. Consider using a larger bin size.\n",
+// 										ann_array[j][0].c_str(), ann_array[j][1].c_str(), ann_array[j][2].c_str());
+// 						fprintf(stderr, errstring);
+// 						return 1;
 					}
 				
 					// vector<int> pos2;
@@ -1125,11 +1127,17 @@ int main (int argc, char* argv[]) {
 							pos2.push_back(pos[l]);
 						}
 					}
+					
+					if (pos2.size() == 0) {
+						continue;
+					}
+					
 					// Pick new position
 					new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 				} else {
 					do {
-						new_index = rand() % (rand_range_end-rand_range_start); // Selection in interval [0,(rand_range_end-rand_range_start)-1]
+						new_index = rand_range_start + rand() % (rand_range_end-rand_range_start); // Selection in interval [rand_range_start,rand_range_end-1]
+						// Used to be: Selection in interval [0,(rand_range_end-rand_range_start)-1]
 					} while (chr_nt[new_index] == 'N');
 				}
 				

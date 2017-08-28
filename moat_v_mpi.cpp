@@ -316,6 +316,7 @@ int main (int argc, char* argv[]) {
 		int num_permutations;
 	
 		// Radius of the window in which we permute variants
+		// Accidentally called radius in earlier versions
 		int window_radius;
 	
 		// Minimum width allowed of the variant permutation bins
@@ -1726,7 +1727,8 @@ int main (int argc, char* argv[]) {
 							new_index = rand() % (pos2.size()); // Selection in interval [0,pos2.size()-1]
 						} else {
 							do {
-								new_index = rand() % (rand_range_end-rand_range_start); // Selection in interval [0,(rand_range_end-rand_range_start)-1]
+								new_index = rand_range_start + rand() % (rand_range_end-rand_range_start); // Selection in interval [rand_range_start,rand_range_end-1]
+								// Used to be: Selection in interval [0,(rand_range_end-rand_range_start)-1]
 							} while (chr_nt[new_index] == 'N');
 						}
 						
