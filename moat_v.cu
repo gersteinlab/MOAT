@@ -1295,8 +1295,8 @@ int main (int argc, char* argv[]) {
 // 	*test_int_cpu = 246;
 // 	cudaMemcpy(test_int_gpu, test_int_cpu, sizeof(int), cudaMemcpyHostToDevice);
 
-// 	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1006632960);
-// 	GPUerrchk(cudaPeekAtLastError());
+	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 8589934592);
+	GPUerrchk(cudaPeekAtLastError());
 	
 	cudaMalloc((void**)&gpu_var_chr, var_arr_length*sizeof(int));
 	GPUerrchk(cudaPeekAtLastError());
