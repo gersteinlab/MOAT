@@ -265,6 +265,9 @@ double euclidean(vector<double> &a, vector<double> &b) {
 // cluster_bins: The genome coordinates of the bins in this cluster
 // Return value: String vector of genome coordinates (chr, start, stop)
 vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string> > &cluster_bins) {
+
+	// DEBUG
+	printf("Begin epoch2genome\n");
 	
 	unsigned int pivot;
 	unsigned int step;
@@ -335,6 +338,9 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 			char end_cstr[STRSIZE];
 			sprintf(end_cstr, "%d", end);
 			retval.push_back(string(end_cstr));
+			
+			// DEBUG
+			printf("End epoch2genome\n");
 			
 // 			retval.push_back(cluster_bins[pivot+1][1]);
 // 			retval.push_back(cluster_bins[pivot+1][2]);
@@ -1783,6 +1789,9 @@ int main (int argc, char* argv[]) {
 						}
 			
 						for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
+						
+							// DEBUG
+							printf("k index: %d\n", k);
 			
 							// Don't read in characters if it will read off either end
 							if (k <= lower_bound || k >= upper_bound) {
@@ -1824,6 +1833,9 @@ int main (int argc, char* argv[]) {
 							this_epoch += epoch_nt;
 							local_nt[cur_nt].push_back(this_epoch);
 						}
+						
+						// DEBUG
+						printf("End indexing\n");
 			
 						// End indexing
 						epoch_nt += (rand_range_end - rand_range_start);
