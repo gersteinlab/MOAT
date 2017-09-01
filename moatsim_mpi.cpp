@@ -1726,9 +1726,9 @@ int main (int argc, char* argv[]) {
 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 					
 						// DEBUG
-// 						printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
-// 						printf("cluster start: %s\n", cluster_bins[l][1].c_str());
-// 						printf("cluster end: %s\n", cluster_bins[l][2].c_str());
+						printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
+						printf("cluster start: %s\n", cluster_bins[l][1].c_str());
+						printf("cluster end: %s\n", cluster_bins[l][2].c_str());
 					
 						// FASTA import here
 						if (last_chr != cluster_bins[l][0]) {
@@ -1840,7 +1840,8 @@ int main (int argc, char* argv[]) {
 					// DEBUG
 					// printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-					// printf("Variant processing loop: iter: %d\n", (int)k);
+					printf("Variant processing loop: iter: %d\n", (int)k);
+					printf("Variant: %s:%s-%s\n", obs_var_pos[k].second[0].c_str(), obs_var_pos[k].second[1].c_str(), obs_var_pos[k].second[2].c_str());
 			
 					// string cur_nt = obs_var_pos[k].second;
 					
@@ -1889,8 +1890,8 @@ int main (int argc, char* argv[]) {
 						}
 				
 						// DEBUG
-// 						printf("DEBUG: %c,%c,%c\n", cur_nt1, cur_nt2, cur_nt3);
-// 						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+						printf("DEBUG: %c,%c,%c\n", cur_nt1, cur_nt2, cur_nt3);
+						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
 						
