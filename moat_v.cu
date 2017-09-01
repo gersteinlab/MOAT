@@ -52,15 +52,11 @@ __host__ string int2chr (int chr_num) {
 	}
 }
 
-__device__ bool gpuCmpIntervals (int var_chr, int var_start, int var_end, int ann_chr, int ann_start, int ann_end) {
+__device__ bool gpuCmpIntervals (int var_chr, int var_end, int ann_chr, int ann_start, int ann_end) {
 	if (var_chr != ann_chr) {
 		return (var_chr < ann_chr);
-	} else if (var_start != ann_start) {
-		return (var_start < ann_start);
-	} else if (var_end != ann_end) {
-		return (var_end < ann_end);
-	} else { // The intervals are equal, so return false since a is not less than b
-		return false;
+	} else {
+		return (var_end <= ann_end);
 	}
 }
 
@@ -201,7 +197,7 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr,
 				if (vlength > 1) { // vlength does not fall below 1
 					vlength = vlength/2;
 				}
-				if (!(gpuCmpIntervals(this_var_chr, this_var_start, this_var_end, this_ann_chr, this_ann_start, this_ann_end))) {
+				if (!(gpuCmpIntervals(this_var_chr, this_var_end, this_ann_chr, this_ann_start, this_ann_end))) {
 					if (vthis == 0) { // Don't read off the end of the array
 						// int_variants = 0;
 						if (funseq_opt) {
@@ -343,64 +339,64 @@ __device__ void intersection_kernel(int start, int end, int* gpu_var_chr,
 			// int pos_array[window_width];
 			int pos_array_pointer = 0;
 			
+			// Which array do we look in?
+			char *this_gpu_fasta;
+			if (this_var_chr == 1) {
+				this_gpu_fasta = gpu_fasta_1;
+			} else if (this_var_chr == 2) {
+				this_gpu_fasta = gpu_fasta_2;
+			} else if (this_var_chr == 3) {
+				this_gpu_fasta = gpu_fasta_3;
+			} else if (this_var_chr == 4) {
+				this_gpu_fasta = gpu_fasta_4;
+			} else if (this_var_chr == 5) {
+				this_gpu_fasta = gpu_fasta_5;
+			} else if (this_var_chr == 6) {
+				this_gpu_fasta = gpu_fasta_6;
+			} else if (this_var_chr == 7) {
+				this_gpu_fasta = gpu_fasta_7;
+			} else if (this_var_chr == 8) {
+				this_gpu_fasta = gpu_fasta_8;
+			} else if (this_var_chr == 9) {
+				this_gpu_fasta = gpu_fasta_9;
+			} else if (this_var_chr == 10) {
+				this_gpu_fasta = gpu_fasta_10;
+			} else if (this_var_chr == 11) {
+				this_gpu_fasta = gpu_fasta_11;
+			} else if (this_var_chr == 12) {
+				this_gpu_fasta = gpu_fasta_12;
+			} else if (this_var_chr == 13) {
+				this_gpu_fasta = gpu_fasta_13;
+			} else if (this_var_chr == 14) {
+				this_gpu_fasta = gpu_fasta_14;
+			} else if (this_var_chr == 15) {
+				this_gpu_fasta = gpu_fasta_15;
+			} else if (this_var_chr == 16) {
+				this_gpu_fasta = gpu_fasta_16;
+			} else if (this_var_chr == 17) {
+				this_gpu_fasta = gpu_fasta_17;
+			} else if (this_var_chr == 18) {
+				this_gpu_fasta = gpu_fasta_18;
+			} else if (this_var_chr == 19) {
+				this_gpu_fasta = gpu_fasta_19;
+			} else if (this_var_chr == 20) {
+				this_gpu_fasta = gpu_fasta_20;
+			} else if (this_var_chr == 21) {
+				this_gpu_fasta = gpu_fasta_21;
+			} else if (this_var_chr == 22) {
+				this_gpu_fasta = gpu_fasta_22;
+			} else if (this_var_chr == 23) {
+				this_gpu_fasta = gpu_fasta_23;
+			} else if (this_var_chr == 24) {
+				this_gpu_fasta = gpu_fasta_24;
+			} else if (this_var_chr == 25) {
+				this_gpu_fasta = gpu_fasta_25;
+			}
+			
 			if (trimer) {
 			
 				int this_var_chr = gpu_var_chr[k];
 				int this_var_end = gpu_var_end[k];
-				
-				// Which array do we look in?
-				char *this_gpu_fasta;
-				if (this_var_chr == 1) {
-					this_gpu_fasta = gpu_fasta_1;
-				} else if (this_var_chr == 2) {
-					this_gpu_fasta = gpu_fasta_2;
-				} else if (this_var_chr == 3) {
-					this_gpu_fasta = gpu_fasta_3;
-				} else if (this_var_chr == 4) {
-					this_gpu_fasta = gpu_fasta_4;
-				} else if (this_var_chr == 5) {
-					this_gpu_fasta = gpu_fasta_5;
-				} else if (this_var_chr == 6) {
-					this_gpu_fasta = gpu_fasta_6;
-				} else if (this_var_chr == 7) {
-					this_gpu_fasta = gpu_fasta_7;
-				} else if (this_var_chr == 8) {
-					this_gpu_fasta = gpu_fasta_8;
-				} else if (this_var_chr == 9) {
-					this_gpu_fasta = gpu_fasta_9;
-				} else if (this_var_chr == 10) {
-					this_gpu_fasta = gpu_fasta_10;
-				} else if (this_var_chr == 11) {
-					this_gpu_fasta = gpu_fasta_11;
-				} else if (this_var_chr == 12) {
-					this_gpu_fasta = gpu_fasta_12;
-				} else if (this_var_chr == 13) {
-					this_gpu_fasta = gpu_fasta_13;
-				} else if (this_var_chr == 14) {
-					this_gpu_fasta = gpu_fasta_14;
-				} else if (this_var_chr == 15) {
-					this_gpu_fasta = gpu_fasta_15;
-				} else if (this_var_chr == 16) {
-					this_gpu_fasta = gpu_fasta_16;
-				} else if (this_var_chr == 17) {
-					this_gpu_fasta = gpu_fasta_17;
-				} else if (this_var_chr == 18) {
-					this_gpu_fasta = gpu_fasta_18;
-				} else if (this_var_chr == 19) {
-					this_gpu_fasta = gpu_fasta_19;
-				} else if (this_var_chr == 20) {
-					this_gpu_fasta = gpu_fasta_20;
-				} else if (this_var_chr == 21) {
-					this_gpu_fasta = gpu_fasta_21;
-				} else if (this_var_chr == 22) {
-					this_gpu_fasta = gpu_fasta_22;
-				} else if (this_var_chr == 23) {
-					this_gpu_fasta = gpu_fasta_23;
-				} else if (this_var_chr == 24) {
-					this_gpu_fasta = gpu_fasta_24;
-				} else if (this_var_chr == 25) {
-					this_gpu_fasta = gpu_fasta_25;
-				}
 				
 				char cur_nt1 = toupper(this_gpu_fasta[this_var_end-2]); // 0-based index
 				char cur_nt2 = toupper(this_gpu_fasta[this_var_end-1]); // 0-based index
