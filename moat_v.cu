@@ -113,7 +113,7 @@ __device__ void BottomUpSort(int* target_array, int n, int* temp_array) {
 __device__ void intersection_kernel(int start, int end, int* gpu_var_chr, 
 	int* gpu_var_end, double* gpu_var_signal, int* gpu_ann_chr, int* gpu_ann_start, 
 	int* gpu_ann_end, int* gpu_var_arr_length, int* gpu_trimer, 
-	double* gpu_permuted_chr, double *gpu_permuted_end, int *gpu_wg_switch, 
+	int* gpu_permuted_chr, int *gpu_permuted_end, int *gpu_wg_switch, 
 	curandState **d_state, char *gpu_fasta_1, char *gpu_fasta_2, 
 	char *gpu_fasta_3, char *gpu_fasta_4, char *gpu_fasta_5, char *gpu_fasta_6, 
 	char *gpu_fasta_7, char *gpu_fasta_8, char *gpu_fasta_9, char *gpu_fasta_10, 
