@@ -1890,7 +1890,7 @@ int main (int argc, char* argv[]) {
 						}
 				
 						// DEBUG
-						printf("DEBUG: %c,%c,%c\n", cur_nt1, cur_nt2, cur_nt3);
+						printf("DEBUG: %c,%c,%c,%c,%c\n", cur_nt0, cur_nt1, cur_nt2, cur_nt3, cur_nt4);
 						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
