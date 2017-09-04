@@ -286,6 +286,9 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 		sprintf(end_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch);
 		retval.push_back(string(end_cstr));
 		
+		// DEBUG
+		printf("End epoch2genome\n");
+		
 // 		retval.push_back(cluster_bins[0][1]);
 // 		retval.push_back(cluster_bins[0][2]);
 		return retval;
@@ -306,7 +309,7 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 			step = step/2;
 		}
 	
-		if (epoch < left) { // Below pivot case
+		if (epoch <= left) { // Below pivot case
 			if (pivot == 0) {
 				vector<string> retval;
 				retval.push_back(cluster_bins[0][0]);
@@ -319,12 +322,15 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 				sprintf(end_cstr, "%d", atoi(cluster_bins[0][1].c_str()) + epoch);
 				retval.push_back(string(end_cstr));
 				
+				// DEBUG
+				printf("End epoch2genome\n");
+				
 // 				retval.push_back(cluster_bins[0][1]);
 // 				retval.push_back(cluster_bins[0][2]);
 				return retval;
 			}
 			pivot -= step;
-		} else if (epoch >= right) { // Above pivot case
+		} else if (epoch > right) { // Above pivot case
 			pivot += step;
 		} else { // This is it
 			vector<string> retval;
@@ -1791,7 +1797,7 @@ int main (int argc, char* argv[]) {
 						for (int k = rand_range_start+1; k <= rand_range_end; k++) { // 1-based index
 						
 							// DEBUG
-							printf("k index: %d\n", k);
+							// printf("k index: %d\n", k);
 			
 							// Don't read in characters if it will read off either end
 							if (k <= lower_bound || k >= upper_bound) {
@@ -1835,7 +1841,7 @@ int main (int argc, char* argv[]) {
 						}
 						
 						// DEBUG
-						printf("End indexing\n");
+						// printf("End indexing\n");
 			
 						// End indexing
 						epoch_nt += (rand_range_end - rand_range_start);
@@ -1974,7 +1980,7 @@ int main (int argc, char* argv[]) {
 							// coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							
 							// DEBUG: check coor
-							// printf("new_epoch: %d\n", new_epoch);
+							printf("new_epoch: %d\n", new_epoch);
 							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
 							
 							// If new_epoch is, in genome coordinates, not within local_radius of
