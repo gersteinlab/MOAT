@@ -227,7 +227,7 @@ NOTE: MOAT-s relies on the "bigWigAverageOverBed" program to generate the covari
 
 http://genome.ucsc.edu/goldenpath/help/bigWig.html (scroll to end of page)
 
-Additionally, the use of "bigWigAverageOverBed" will result in the generation of temporary files in the MOAT directory. Therefore, if you attempt to run multiple instances of MOATsim, this will likely cause the data interference between the instances, thereby corrupting the results. We recommend you clone the MOAT source code to another directory for parallel runs.
+Additionally, the use of "bigWigAverageOverBed" will result in the generation of temporary files in the MOAT directory. Therefore, if you attempt to run multiple instances of MOAT-s, this will likely cause the data interference between the instances, thereby corrupting the results. We recommend you clone the MOAT source code to another directory for parallel runs.
 
 2) Input formats
 
