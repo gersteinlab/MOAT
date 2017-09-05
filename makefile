@@ -36,8 +36,8 @@ moat_s: moat_s.cpp variant_permutation_v3.h variant_permutation_v3.cpp
 
 moat_s_parallel: moat_s_mpi.cpp variant_permutation_v3.h variant_permutation_v3.cpp
 ifndef MPI
-	@echo "No OpenMPI installation detected: Can only use serial version of MOAT-sim"
+	@echo "No OpenMPI installation detected: Can only use serial version of MOAT-s"
 else
 	mpic++ -Wall -o moat_s_parallel moat_s_mpi.cpp variant_permutation_v3.cpp
-	@echo "OpenMPI-accelerated MOATsim is available"
+	@echo "OpenMPI-accelerated MOAT-s is available"
 endif
