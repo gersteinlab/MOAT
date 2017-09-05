@@ -3,7 +3,7 @@ Mutations Overburdening Annotations Tool (MOAT)
 README
 v1.0
 
-April 21, 2017
+Sept 5, 2017
 
 Lucas Lochovsky	and Jing Zhang
 Gerstein Lab
@@ -28,7 +28,7 @@ G) MOAT-v
 	2) Input formats
 	3) Output format
 	4) Calculation of p-values
-H) MOATsim
+H) MOAT-s
 	1) Overview
 	2) Input formats
 	3) Output format
@@ -39,7 +39,7 @@ MOAT (Mutations Overburdening Annotations Tool) is a computational system for id
 
 MOAT's annotation permutation algorithm was amenable to parallelization on graphics processing units (GPUs) using Nvidia's CUDA framework due to its high computational intensity and low memory requirements. MOAT's variant permutation algorithm, however, required importing the human reference genome into memory, which made it better suited to parallelization across multiple CPUs with the OpenMPI framework.
 
-Additionally, we provide a variant distribution simulator called MOATsim, which produces permutations of the input variants taking into account trinucleotide identity preservation (similar to MOAT-v), as well as the distribution of whole genome covariates that influence the background mutation rate. Whole genome regions are clustered into groups with similar covariate signal profiles, and intersecting input variants are permuted within all regions in the same cluster, with their new locations preserving the original trinucleotide identity. MOATsim's parallel implementation utilizes the OpenMPI framework.
+Additionally, we provide a variant distribution simulator called MOAT-s, which produces permutations of the input variants taking into account trinucleotide identity preservation (similar to MOAT-v), as well as the distribution of whole genome covariates that influence the background mutation rate. Whole genome regions are clustered into groups with similar covariate signal profiles, and intersecting input variants are permuted within all regions in the same cluster, with their new locations preserving the original trinucleotide identity. MOAT-s's parallel implementation utilizes the OpenMPI framework.
 
 Furthermore, MOAT offers the ability to use a whole genome signal track to compute the input variants' signal scores, and aggregate them into annotation signal scores. This is done alongside the permutation algorithms, enabling users to gauge the statistical significance of an elevated annotation signal score, in addition to mutation burden. We have released one such signal track derived from Funseq2 (funseq2.gersteinlab.org), a framework for evaluating the functional impact of single nucleotide variants.
 
@@ -67,7 +67,7 @@ The following software are required to run MOAT. The "version tested" fields ind
 
 (C) File List
 
-1) bigWigAverageOverBed: Required to compute the covariate signals of each genome bin in MOATsim. Also used to retrieve precomputed Funseq scores. Must be in the MOAT directory.
+1) bigWigAverageOverBed: Required to compute the covariate signals of each genome bin in MOAT-s. Also used to retrieve precomputed Funseq scores. Must be in the MOAT directory.
 	*** THE 64-BIT LINUX VERSION OF THIS SCRIPT IS INCLUDED WITH MOAT. FOR OTHER VERSIONS USE THE FOLLOWING LINK.
 	Link: http://genome.ucsc.edu/goldenpath/help/bigWig.html (scroll to end of page)
 
@@ -81,9 +81,9 @@ The following software are required to run MOAT. The "version tested" fields ind
 
 6) moat_v_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOAT-v.
 
-7) moatsim.cpp: The C++ source code for the serial version of MOATsim.
+7) moat_s.cpp: The C++ source code for the serial version of MOAT-s.
 
-8) moatsim_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOATsim.
+8) moat_s_mpi.cpp: The C++ source code for the parallel OpenMPI version of MOAT-s.
 
 9) p_value_emp.cpp: The C++ source code for doing p-value calculations in MOAT-v.
 
@@ -209,7 +209,7 @@ Additionally, p_value_emp can derive the Funseq scores of the annotations in the
 p_value_emp's [output file] has the following tab-delimited columns:
 (chr, start, stop, name, p-value, wg signal score (optional), wg signal score p-value (optional))
 
-(H) MOATsim
+(H) MOAT-s
 
 1) Overview
 
@@ -217,13 +217,13 @@ p_value_emp's [output file] has the following tab-delimited columns:
 
 Usage: run_moat --algo=s --parallel=[y/n] -n=[number of permutations] --width=[width of whole genome bins] --min_width=[minimum width of whole genome bins] --fasta=[reference genome FASTA file directory] --blacklist_file=[blacklist file] --vfile=[variant file] --out=[output directory] --ncpu=[number of parallel CPU cores to use] --3mer=[y/n] --covar_file=[covariate signal file 1] [--covar_file=[covariate_signal_file_2] ...]
 
-MOATsim is a somatic variant simulator that produces [n] permutations of the input [variant file]. Like MOAT-v, it divides the human genome into bins of size [width of whole genome bins]. [width] controls the size of the local genome context, in which we assume the covariates affecting the background mutation rate are more or less constant. The [min_width] parameter influences what MOATsim will do when it produces bins less than [width], which can happen at the ends of chromosomes, or if a blacklist region is encountered as defined in the [blacklist file]. If the bin's size is higher than [min_width], MOATsim will proceed with the bin as is. Otherwise, it will attempt to merge the bin with an adjoining neighbor bin to avoid having a bin size below [min_width]. If there are no adjoining neighbors available, the bin will be deleted.
+MOAT-s is a somatic variant simulator that produces [n] permutations of the input [variant file]. Like MOAT-v, it divides the human genome into bins of size [width of whole genome bins]. [width] controls the size of the local genome context, in which we assume the covariates affecting the background mutation rate are more or less constant. The [min_width] parameter influences what MOAT-s will do when it produces bins less than [width], which can happen at the ends of chromosomes, or if a blacklist region is encountered as defined in the [blacklist file]. If the bin's size is higher than [min_width], MOAT-s will proceed with the bin as is. Otherwise, it will attempt to merge the bin with an adjoining neighbor bin to avoid having a bin size below [min_width]. If there are no adjoining neighbors available, the bin will be deleted.
 
-Bins are clustered using k-means clustering based on the similarity of their covariate signal profiles derived from the [covariate signal files]. At least one such file must be provided when invoking MOATsim. If [3mer] is set to [y]es, the variants from the [variant file] are relocated within their cluster's bins to locations with the same trinucleotide identity as their original sites. If [3mer] is set to [n]o, new locations are chosen uniformly over all nucleotides in the bin cluster. Trinucleotide identities are derived from the sequence data imported from the [reference genome FASTA file directory]. The [n] permuted variant datasets are produced as [n] files in the [output directory].
+Bins are clustered using k-means clustering based on the similarity of their covariate signal profiles derived from the [covariate signal files]. At least one such file must be provided when invoking MOAT-s. If [3mer] is set to [y]es, the variants from the [variant file] are relocated within their cluster's bins to locations with the same trinucleotide identity as their original sites. If [3mer] is set to [n]o, new locations are chosen uniformly over all nucleotides in the bin cluster. Trinucleotide identities are derived from the sequence data imported from the [reference genome FASTA file directory]. The [n] permuted variant datasets are produced as [n] files in the [output directory].
 
-The [parallel] flag indicates whether to use the OpenMPI-accelerated version [y] (recommended) or the much slower single CPU version [n]. Finally, the [ncpu] option gives the user control over the number of CPU cores to use in the parallel version. This parameter can be omitted, in which case MOATsim will automatically use all available CPU cores. This can also be achieved by setting --ncpu to MAX. Alternatively, the user can specify any number between 2 and the maximum number of cores available.
+The [parallel] flag indicates whether to use the OpenMPI-accelerated version [y] (recommended) or the much slower single CPU version [n]. Finally, the [ncpu] option gives the user control over the number of CPU cores to use in the parallel version. This parameter can be omitted, in which case MOAT-s will automatically use all available CPU cores. This can also be achieved by setting --ncpu to MAX. Alternatively, the user can specify any number between 2 and the maximum number of cores available.
 
-NOTE: MOATsim relies on the "bigWigAverageOverBed" program to generate the covariate signal profiles for the whole genome bins. The 64-bit Linux version is provided with the MOAT distribution, but if you need another version, other versions are available from:
+NOTE: MOAT-s relies on the "bigWigAverageOverBed" program to generate the covariate signal profiles for the whole genome bins. The 64-bit Linux version is provided with the MOAT distribution, but if you need another version, other versions are available from:
 
 http://genome.ucsc.edu/goldenpath/help/bigWig.html (scroll to end of page)
 

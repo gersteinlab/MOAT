@@ -19,83 +19,6 @@ using namespace std;
 
 #define STRSIZE 256
 
-// The notable difference with the v2 is that this code places random bins anywhere
-// in the genome
-// In v3, rather than permuting the window locations, we instead permute the variant
-// positions
-
-// In v4, the variants are treated as positions on a number line that is shifted
-// everywhere in the genome, with wraparound between chromosomes
-
-// In v5, only the variants within some number of basepairs upstream and downstream
-// of each annotation are shuffled with random uniform distribution
-
-// In v6, we generate whole genome bins, subtract the prohibited regions, then 
-// shuffle the variants within each bin, writing an output file for each
-// permutation
-
-// In v7, we generate whole genome bins, subtract the prohibited regions, then
-// shuffle the variants within each bin. Whereas v6 chose random locations uniformly
-// within each bin, v7 picks variant locations that preserve the reference nucleotide
-// context
-
-// In v8, the dinucleotide context of the reference influences the available
-// locations
-
-// In v9, the trinucleotide context of the reference influences the available
-// locations
-
-// In v10, covariate inputs have been added, and the bins are clustered on these
-// criteria, and all the variants in these clusters are permuted within the cluster bins
-
-/* 
- * Depends on bigWigAverageOverBed
- */
-
-// vector<string> coor_search (long raw_rand_start, int ann_length) {
-// 	
-// 	// hg19 chromosome lengths
-// 	int chr_lengths[24] = {248956422, 242193529, 198295559, 190214555, 181538259,
-// 													170805979, 159345973, 145138636, 138394717, 133797422,
-// 													135086622, 133275309, 114364328, 107043718, 101991189,
-// 													90338345, 83257441, 80373285, 58617616, 64444167, 46709983,
-// 													50818468, 156040895, 57227415};
-// 	int i = 0;
-// 	for (; i < 24; i++) {
-// 		if (raw_rand_start >= (chr_lengths[i] - ann_length)) {
-// 			raw_rand_start -= chr_lengths[i] - ann_length;
-// 		} else {
-// 			break;
-// 		}
-// 	}
-// 	
-// 	string rand_chr;
-// 	if (i == 22) {
-// 		rand_chr = "chrX";
-// 	} else if (i == 23) {
-// 		rand_chr = "chrY";
-// 	} else {
-// 		i++;
-// 		char rand_chr_cstr[STRSIZE];
-// 		sprintf(rand_chr_cstr, "%d", i);
-// 		rand_chr = "chr" + string(rand_chr_cstr);
-// 	}
-// 	
-// 	int rand_start = raw_rand_start;
-// 	char rand_start_cstr[STRSIZE];
-// 	sprintf(rand_start_cstr, "%d", rand_start);
-// 	
-// 	int rand_end = rand_start + ann_length;
-// 	char rand_end_cstr[STRSIZE];
-// 	sprintf(rand_end_cstr, "%d", rand_end);
-// 	
-// 	vector<string> vec;
-// 	vec.push_back(rand_chr);
-// 	vec.push_back(string(rand_start_cstr));
-// 	vec.push_back(string(rand_end_cstr));
-// 	return vec;
-// }
-
 // Refactorization of the code that turns a chromosome string into an integer
 int chr2int (string chr_str) {
 	if (chr_str == "chrX") {
@@ -257,40 +180,6 @@ double euclidean(vector<double> &a, vector<double> &b) {
 	return sqrt(sum);
 }
 
-// Get the next FASTA file in the sequence
-// void newFastaFilehandle (FILE *fasta_ptr, string chr) {
-// 	if (fasta_ptr != NULL) {
-// 		fclose(fasta_ptr);
-// 	}
-// 	string filename = chr + ".fa";
-// 	fasta_ptr = fopen(filename.c_str(), "r");
-// 	
-// 	// Get past the first comment line
-// 	char linebuf[STRSIZE];
-// 	fgets(linebuf, STRSIZE, fasta_ptr);
-// }
-
-// Retrieve a string of characters corresponding to reference basepairs in the
-// target region
-// string fillBuffer(fasta_ptr, &char_pointer, region_start, region_end, ) {
-// 	string buffer = "";
-// 	string strbuf;
-// 	char linebuf[STRSIZE];
-// 	while((*char_pointer) < region_end && fgets(linebuf, STRSIZE, fasta_ptr) != NULL) {
-// 		int length = strlen(linebuf);
-// 		strbuf = string(linebuf);
-// 		if ((*char_pointer) <= region_start && (*char_pointer)+length > region_start) {
-// 			buffer += strbuf.substr(region_start-(*char_pointer));
-// 		} else if ((*char_pointer) > region_start && (*char_pointer)+length <= region_end) {
-// 			buffer += strbuf;
-// 		} else if ((*char_pointer) <= region_end && (*char_pointer)+length > region_end) {
-// 			buffer += strbuf.substr(0, region_end-(*char_pointer)+1);
-// 		}
-// 		(*char_pointer) += length;
-// 	}
-// 	return buffer;
-// }
-
 /* 
  * This code takes as input a variant track and an annotation track. For each
  * element, count intersecting variants (n_r). Then, permute all variant positions 
@@ -334,7 +223,7 @@ int main (int argc, char* argv[]) {
 	vector<string> covar_files;
 	
 	if (argc < 10) {
-		fprintf(stderr, "Usage: moatsim [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+		fprintf(stderr, "Usage: moat_s [3mer preservation option (y/n)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 		return 1;
 	} else {
 	
