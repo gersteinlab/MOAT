@@ -303,7 +303,7 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 			step = step/2;
 		}
 	
-		if (epoch < left) { // Below pivot case
+		if (epoch <= left) { // Below pivot case
 			if (pivot == 0) {
 				vector<string> retval;
 				retval.push_back(cluster_bins[0][0]);
@@ -321,7 +321,7 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 				return retval;
 			}
 			pivot -= step;
-		} else if (epoch >= right) { // Above pivot case
+		} else if (epoch > right) { // Above pivot case
 			pivot += step;
 		} else { // This is it
 			vector<string> retval;
