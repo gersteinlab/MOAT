@@ -9,6 +9,8 @@
 #include <map>
 #include <algorithm>
 #include <utility>
+#include <float.h>
+#include <limits.h>
 
 using namespace std;
 

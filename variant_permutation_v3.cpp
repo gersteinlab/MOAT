@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <utility>
 #include <stdexcept>
+#include <float.h>
+#include <limits.h>
 
 using namespace std;
 
