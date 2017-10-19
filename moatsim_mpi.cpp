@@ -491,6 +491,10 @@ int main (int argc, char* argv[]) {
 	
 		/* User-supplied arguments */
 		
+		// Whitelist regions file
+		// Only allow permuted variants in these regions
+		string whitelist_file;
+		
 		// Number of clusters to use
 		unsigned int numclust;
 		
@@ -532,47 +536,48 @@ int main (int argc, char* argv[]) {
 		// Covariate signal files in bigWig format
 		vector<string> covar_files;
 	
-		if (argc < 12) {
-			fprintf(stderr, "Usage: moatsim_mpi [number of clusters] [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+		if (argc < 13) {
+			fprintf(stderr, "Usage: moatsim_mpi [whitelist regions file] [number of clusters] [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
 		
-			numclust = atoi(argv[1]);
-			local_radius = atoi(argv[2]);
+			whitelist_file = string(argv[1]);
+			numclust = atoi(argv[2]);
+			local_radius = atoi(argv[3]);
 		
-			if (argv[3][0] == 'y') {
+			if (argv[4][0] == 'y') {
 				same_chr = true;
-			} else if (argv[3][0] == 'n') {
+			} else if (argv[4][0] == 'n') {
 				same_chr = false;
 			} else {
-				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[3][0]);
+				fprintf(stderr, "Invalid option for chromosome restriction option: \'%c\'. Must be either \'y\' or \'n\'. Exiting.\n", argv[4][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 
 		
-			if (argv[4][0] == '5') {
+			if (argv[5][0] == '5') {
 				trimer = 5;
-			} else if (argv[4][0] == '3') {
+			} else if (argv[5][0] == '3') {
 				trimer = 3;
-			} else if (argv[4][0] == '0') {
+			} else if (argv[5][0] == '0') {
 				trimer = 0;
 			} else {
-				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[4][0]);
+				fprintf(stderr, "Invalid option for 3mer preservation option: \'%c\'. Must be \'0\' or \'3\' or \'5\'. Exiting.\n", argv[5][0]);
 				MPI_Abort(MPI_COMM_WORLD, 1);
 				return 1;
 			}
 			
-			num_permutations = atoi(argv[5]);
-			window_radius = atoi(argv[6]);
-			min_width = atoi(argv[7]);
+			num_permutations = atoi(argv[6]);
+			window_radius = atoi(argv[7]);
+			min_width = atoi(argv[8]);
 			prohibited_file = string(argv[8]);
-			fasta_dir = string(argv[9]);
-			vfile = string(argv[10]);
-			outdir = string(argv[11]);
+			fasta_dir = string(argv[10]);
+			vfile = string(argv[11]);
+			outdir = string(argv[12]);
 		
-			for (int i = 12; i < argc; i++) {
+			for (int i = 13; i < argc; i++) {
 				covar_files.push_back(string(argv[i]));
 			}
 			
@@ -604,6 +609,19 @@ int main (int argc, char* argv[]) {
 		// Check that the file is not empty
 		if (pbuf.st_size == 0) {
 			fprintf(stderr, "Error: Prohibited regions file cannot be empty. Exiting.\n");
+			MPI_Abort(MPI_COMM_WORLD, 1);
+			return 1;
+		}
+		
+		struct stat wbuf;
+		if (stat(whitelist_file.c_str(), &wbuf)) { // Report the error and exit
+			fprintf(stderr, "Error trying to stat %s: %s\n", whitelist_file.c_str(), strerror(errno));
+			MPI_Abort(MPI_COMM_WORLD, 1);
+			return 1;
+		}
+		// Check that the file is not empty
+		if (wbuf.st_size == 0) {
+			fprintf(stderr, "Error: Whitelist regions file cannot be empty. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
@@ -646,6 +664,9 @@ int main (int argc, char* argv[]) {
 	
 		// Vector of covariate features for each bin
 		vector<vector<double> > covar_features;
+		
+		// Whitelist regions array, contains annotations of the format vector(chr, start, end)
+		vector<vector<string> > whitelist_regions;
 	
 		// Number of clusters to create: numclust
 		// unsigned int numclust = 100;
@@ -722,6 +743,39 @@ int main (int argc, char* argv[]) {
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		}
+		
+		// Import whitelist regions file
+		FILE *whitelist_file_ptr = fopen(whitelist_file.c_str(), "r");
+		while (fgets(linebuf, STRSIZE, whitelist_file_ptr) != NULL) {
+		
+			string line = string(linebuf);
+		
+			// Extract chromosome, start, and end from line (first 3 columns)
+			vector<string> vec;
+			for (int i = 0; i < 3; i++) {
+				size_t ws_index = line.find_first_of("\t\n");
+				string in = line.substr(0, ws_index);
+				vec.push_back(in);
+				line = line.substr(ws_index+1);
+			}
+			
+			// If this is not a standard chromosome, then remove this row
+			if (chr2int(vec[0]) == 0) {
+				continue;
+			}
+			
+			whitelist_regions.push_back(vec);
+		}
+		// Check feof of whitelist_file_ptr
+		if (feof(whitelist_file_ptr)) { // We're good
+			fclose(whitelist_file_ptr);
+		} else { // It's an error
+			char errstring[STRSIZE];
+			sprintf(errstring, "Error reading from %s", whitelist_file.c_str());
+			perror(errstring);
+			MPI_Abort(MPI_COMM_WORLD, 1);
+			return 1;
+		}
 	
 		// DEBUG
 		// printf("Breakpoint 1\n");
@@ -729,9 +783,13 @@ int main (int argc, char* argv[]) {
 		// Sort the arrays
 		sort(var_array.begin(), var_array.end(), cmpIntervals);
 		sort(prohibited_regions.begin(), prohibited_regions.end(), cmpIntervals);
+		sort(whitelist_regions.begin(), whitelist_regions.end(), cmpIntervals);
 	
 		// Merge prohibited regions
 		prohibited_regions = merge_intervals(prohibited_regions);
+		
+		// Merge whitelist regions
+		whitelist_regions = merge_intervals(whitelist_regions);
 	
 		for (int i = 1; i <= 25; i++) {
 			string chr = int2chr(i);
@@ -1220,6 +1278,25 @@ int main (int argc, char* argv[]) {
 		free(var_coor);
 		// free(var_alleles);
 		// free((char *)var_id);
+		
+		// Now send the whitelist regions data
+		int whitelist_regions_size = whitelist_regions.size();
+		
+		// Package the whitelist regions data for the child
+		int *whitelist_coor = (int *)malloc(3*whitelist_regions_size*sizeof(int));
+		for (int k = 0; k < whitelist_regions_size; k++) {
+			whitelist_coor[3*k] = chr2int(whitelist_regions[k][0]);
+			whitelist_coor[3*k+1] = atoi(whitelist_regions[k][1].c_str());
+			whitelist_coor[3*k+2] = atoi(whitelist_regions[k][2].c_str());
+		}
+		
+		// Transmit whitelist regions data
+		for (int i = 1; i < mpi_size; i++) {
+			MPI_Send(whitelist_coor, 3*whitelist_regions_size, MPI_INT, i, 25, MPI_COMM_WORLD);
+		}
+		
+		// Free dynamic memory allocations
+		free(whitelist_coor);
 	
 		/* Permutate variant locations */
 		srand(0);
@@ -1481,6 +1558,36 @@ int main (int argc, char* argv[]) {
 // 		for (unsigned int i = 0; i < var_array.size(); i++) {
 // 			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
 // 		}
+
+		// Receive whitelist regions data
+		// MPI_Probe first
+		int wr_count;
+		MPI_Probe(0, 25, MPI_COMM_WORLD, &status);
+		MPI_Get_count(&status, MPI_INT, &wr_count);
+		int *whitelist_coor = (int *)malloc(wr_count*sizeof(int));
+		MPI_Recv(whitelist_coor, wr_count, MPI_INT, 0, 25, MPI_COMM_WORLD, &status);
+		
+		// Translate into expected data structure
+		vector<vector<string> > whitelist_regions;
+		for (int i = 0; i < varcount/3; i++) {
+			vector<string> temp;
+			
+			string cur_region_chr = int2chr(whitelist_coor[3*i]);
+			temp.push_back(cur_region_chr);
+			int cur_region_start_num = whitelist_coor[3*i+1];
+			int cur_region_end_num = whitelist_coor[3*i+2];
+			
+			char cur_region_start_cstr[STRSIZE];
+			sprintf(cur_region_start_cstr, "%d", cur_region_start_num);
+			temp.push_back(string(cur_region_start_cstr));
+	
+			char cur_region_end_cstr[STRSIZE];
+			sprintf(cur_region_end_cstr, "%d", cur_region_end_num);
+			temp.push_back(string(cur_region_end_cstr));
+			
+			whitelist_regions.push_back(temp);
+		}
+		free(whitelist_coor);
 		
 		FILE *fasta_ptr = NULL;
 		string last_chr = "";
@@ -1645,7 +1752,22 @@ int main (int argc, char* argv[]) {
 				
 				// DEBUG
 				// bool tocont = false;
-			
+				
+				// Filter the cluster bins for those that overlap the whitelist regions
+				vector<vector<string> > cluster_bins_2;
+				unsigned int index_lower_bound = 0;
+				for (unsigned int i = 0; i < cluster_bins.size(); i++) {
+					pair<vector<vector<string> >, unsigned int> int_intervals = intersecting_intervals_w(whitelist_regions, cluster_bins[i], index_lower_bound);
+					for (unsigned int j = 0; j < int_intervals.first.size(); j++) {
+						cluster_bins_2.push_back(int_intervals.first[j]);
+					}
+					if (int_intervals.second != UINT_MAX) {
+						index_lower_bound = int_intervals.second;
+					}
+				}
+				cluster_bins = cluster_bins_2;
+				
+				// End of setting up, begin calculating results
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 			
 					int rand_range_start = atoi(cluster_bins[l][1].c_str());

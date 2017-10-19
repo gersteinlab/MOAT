@@ -143,7 +143,7 @@ bool isGreaterIntervals (vector<string> a, vector<string> b) {
 }
 
 // Subroutine for calculating intersecting intervals
-vector<vector<string> > intersecting_intervals (vector<vector<string> > intervals, vector<string> region) {
+vector<vector<string> > intersecting_intervals (vector<vector<string> > &intervals, vector<string> &region) {
 	
 	// Output vector
 	vector<vector<string> > output_intervals;
@@ -189,6 +189,65 @@ vector<vector<string> > intersecting_intervals (vector<vector<string> > interval
 		}
 	}
 	return output_intervals;
+}
+
+// Subroutine for calculating intersecting intervals for pulling out the whitelist regions
+pair<vector<vector<string> >, unsigned int> intersecting_intervals_w (vector<vector<string> > &intervals, vector<string> &region, unsigned int left_pointer) {
+	
+	// Output vector
+	vector<vector<string> > output_intervals;
+	
+	// Unpack region
+	string region_chr = region[0];
+	string region_start = region[1];
+	string region_end = region[2];
+	int region_start_num = atoi(region_start.c_str());
+	int region_end_num = atoi(region_end.c_str());
+	
+	// Record the index of the "lower bound" - where we first find an intersection
+	unsigned int lower_bound = UINT_MAX; // Sentinel value
+	
+	// Main loop
+	for (unsigned int i = left_pointer; i < intervals.size(); i++) {
+		// Unpack interval
+		string val_chr = intervals[i][0];
+		string val_start = intervals[i][1];
+		string val_end = intervals[i][2];
+		int val_start_num = atoi(val_start.c_str());
+		int val_end_num = atoi(val_end.c_str());
+		
+		// Intersection test
+		if (region_chr == val_chr && region_start_num <= val_end_num && region_end_num >= val_start_num) {
+		
+			// For first intersection
+			if (lower_bound == UINT_MAX) {
+				lower_bound = i;
+			}
+		
+			int max_start = max(region_start_num, val_start_num);
+			int min_end = min(region_end_num, val_end_num);
+			
+			vector<string> vec;
+			vec.push_back(region_chr);
+		
+			char max_start_cstr[STRSIZE];
+			sprintf(max_start_cstr, "%d", max_start);
+			vec.push_back(string(max_start_cstr));
+		
+			char min_end_cstr[STRSIZE];
+			sprintf(min_end_cstr, "%d", min_end);
+			vec.push_back(string(min_end_cstr));
+		
+			output_intervals.push_back(vec);
+		}
+			
+		// Do we continue?
+		if (isGreaterIntervals(intervals[i], region)) {
+			break;
+		}
+	}
+	pair<vector<vector<string> >, unsigned int> retval (output_intervals, lower_bound);
+	return retval;
 }
 
 // Subroutine for calculating intersecting variants
