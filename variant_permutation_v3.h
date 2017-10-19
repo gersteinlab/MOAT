@@ -17,7 +17,7 @@ using namespace std;
 bool cmpIntervals (vector<string> a, vector<string> b);
 vector<vector<string> > permute_variants (int varcount, vector<string> region);
 vector<vector<string> > intersecting_intervals (vector<vector<string> > &intervals, vector<string> &region);
-pair<vector<vector<string> >, unsigned int> intersecting_intervals_w (vector<vector<string> > &intervals, vector<string> &region);
+pair<vector<vector<string> >, unsigned int> intersecting_intervals_w (vector<vector<string> > &intervals, vector<string> &region, unsigned int left_pointer);
 pair<unsigned int,unsigned int> intersecting_variants (vector<vector<string> > const &intervals, vector<string> region, unsigned int left_pointer);
 pair<unsigned int,unsigned int> intersecting_variantsV (vector<vector<string> > const &intervals, vector<string> region, unsigned int left_pointer);
 vector<vector<string> > subtract_intervals (vector<string> region, vector<vector<string> > intervals);
