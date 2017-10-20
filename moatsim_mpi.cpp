@@ -1228,12 +1228,12 @@ int main (int argc, char* argv[]) {
 // 	var_array.push_back(temp);
 	
 	// DEBUG
-	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-dev/clusters.txt";
-	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
-	for (unsigned int i = 0; i < member.size(); i++) {
-		fprintf(cluster_ptr, "%s:%s-%s\t%d\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str(), member[i]);
-	}
-	fclose(cluster_ptr);
+// 	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-dev/clusters.txt";
+// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+// 	for (unsigned int i = 0; i < member.size(); i++) {
+// 		fprintf(cluster_ptr, "%s:%s-%s\t%d\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str(), member[i]);
+// 	}
+// 	fclose(cluster_ptr);
 // 	return 0;
 	
 		// First, give the trimer boolean flag to all children
@@ -1326,6 +1326,15 @@ int main (int argc, char* argv[]) {
 						cluster_bins.push_back(ann_array[k]);
 					}
 				}
+				
+				// DEBUG
+				string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-dev/clusters.txt";
+				FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+				fprintf(cluster_ptr, "Cluster %d\n", j);
+				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
+					fprintf(cluster_ptr, "%s:%s-%s\n", cluster_bins[k][0].c_str(), cluster_bins[k][1].c_str(), cluster_bins[k][2].c_str());
+				}
+				fclose(cluster_ptr);
 				
 				// Determine which child is available to take this job
 				int available_flag;
