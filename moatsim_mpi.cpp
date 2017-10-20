@@ -1778,7 +1778,7 @@ int main (int argc, char* argv[]) {
 					fprintf(testout_ptr, "%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
 				}
 				fclose(testout_ptr);
-				exit(1);
+				// exit(1);
 				
 				// End of setting up, begin calculating results
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
