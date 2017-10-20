@@ -572,7 +572,7 @@ int main (int argc, char* argv[]) {
 			num_permutations = atoi(argv[6]);
 			window_radius = atoi(argv[7]);
 			min_width = atoi(argv[8]);
-			prohibited_file = string(argv[8]);
+			prohibited_file = string(argv[9]);
 			fasta_dir = string(argv[10]);
 			vfile = string(argv[11]);
 			outdir = string(argv[12]);
