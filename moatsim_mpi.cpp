@@ -1752,7 +1752,7 @@ int main (int argc, char* argv[]) {
 				
 				// DEBUG
 				// bool tocont = false;
-				FILE *testout_ptr = fopen("testout.txt","w");
+				FILE *testout_ptr = fopen("testout.txt","a");
 				fprintf(testout_ptr, "Cluster bins 1\n");
 				for (unsigned int i; i < cluster_bins.size(); i++) {
 					fprintf(testout_ptr, "%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
