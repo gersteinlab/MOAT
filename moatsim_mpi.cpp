@@ -1228,12 +1228,12 @@ int main (int argc, char* argv[]) {
 // 	var_array.push_back(temp);
 	
 	// DEBUG
-// 	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-5/clusters.txt";
-// 	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
-// 	for (unsigned int i = 0; i < member.size(); i++) {
-// 		fprintf(cluster_ptr, "%s\t%s\t%s\t%d\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str(), member[i]);
-// 	}
-// 	fclose(cluster_ptr);
+	string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-dev/clusters.txt";
+	FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+	for (unsigned int i = 0; i < member.size(); i++) {
+		fprintf(cluster_ptr, "%s:%s-%s\t%d\n", ann_array[i][0].c_str(), ann_array[i][1].c_str(), ann_array[i][2].c_str(), member[i]);
+	}
+	fclose(cluster_ptr);
 // 	return 0;
 	
 		// First, give the trimer boolean flag to all children
