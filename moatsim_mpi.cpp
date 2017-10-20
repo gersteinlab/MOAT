@@ -1329,7 +1329,7 @@ int main (int argc, char* argv[]) {
 				
 				// DEBUG
 				string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-dev/clusters.txt";
-				FILE *cluster_ptr = fopen(cluster_file.c_str(), "w");
+				FILE *cluster_ptr = fopen(cluster_file.c_str(), "a");
 				fprintf(cluster_ptr, "Cluster %d\n", j);
 				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
 					fprintf(cluster_ptr, "%s:%s-%s\n", cluster_bins[k][0].c_str(), cluster_bins[k][1].c_str(), cluster_bins[k][2].c_str());
