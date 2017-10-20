@@ -1752,6 +1752,11 @@ int main (int argc, char* argv[]) {
 				
 				// DEBUG
 				// bool tocont = false;
+				FILE *testout_ptr = fopen("testout.txt","w");
+				fprintf(testout_ptr, "Cluster bins 1\n");
+				for (unsigned int i; i < cluster_bins.size(); i++) {
+					fprintf(testout_ptr, "%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
+				}
 				
 				// Filter the cluster bins for those that overlap the whitelist regions
 				vector<vector<string> > cluster_bins_2;
@@ -1766,6 +1771,14 @@ int main (int argc, char* argv[]) {
 					}
 				}
 				cluster_bins = cluster_bins_2;
+				
+				// DEBUG
+				fprintf(testout_ptr, "Cluster bins 2\n");
+				for (unsigned int i; i < cluster_bins.size(); i++) {
+					fprintf(testout_ptr, "%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
+				}
+				fclose(testout_ptr);
+				exit(1);
 				
 				// End of setting up, begin calculating results
 				for (unsigned int l = 0; l < cluster_bins.size(); l++) {
