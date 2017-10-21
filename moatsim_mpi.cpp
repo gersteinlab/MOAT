@@ -1608,7 +1608,7 @@ int main (int argc, char* argv[]) {
 		// DEBUG
 		printf("Whitelist regions\n");
 		for (unsigned int i = 0; i < whitelist_regions.size(); i++) {
-			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
+			printf("%s:%s-%s\n", whitelist_regions[i][0].c_str(), whitelist_regions[i][1].c_str(), whitelist_regions[i][2].c_str());
 		}
 		
 		FILE *fasta_ptr = NULL;
