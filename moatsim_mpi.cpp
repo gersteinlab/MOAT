@@ -267,7 +267,7 @@ double euclidean(vector<double> &a, vector<double> &b) {
 vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string> > &cluster_bins) {
 
 	// DEBUG
-	printf("Begin epoch2genome\n");
+	// printf("Begin epoch2genome\n");
 	
 	unsigned int pivot;
 	unsigned int step;
@@ -287,7 +287,7 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 		retval.push_back(string(end_cstr));
 		
 		// DEBUG
-		printf("End epoch2genome\n");
+		// printf("End epoch2genome\n");
 		
 // 		retval.push_back(cluster_bins[0][1]);
 // 		retval.push_back(cluster_bins[0][2]);
@@ -323,7 +323,7 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 				retval.push_back(string(end_cstr));
 				
 				// DEBUG
-				printf("End epoch2genome\n");
+				// printf("End epoch2genome\n");
 				
 // 				retval.push_back(cluster_bins[0][1]);
 // 				retval.push_back(cluster_bins[0][2]);
@@ -346,7 +346,7 @@ vector<string> epoch2genome(int epoch, vector<int> &sum_nt, vector<vector<string
 			retval.push_back(string(end_cstr));
 			
 			// DEBUG
-			printf("End epoch2genome\n");
+			// printf("End epoch2genome\n");
 			
 // 			retval.push_back(cluster_bins[pivot+1][1]);
 // 			retval.push_back(cluster_bins[pivot+1][2]);
@@ -1283,7 +1283,7 @@ int main (int argc, char* argv[]) {
 		int whitelist_regions_size = whitelist_regions.size();
 		
 		// DEBUG
-		printf("Whitelist region size: %d\n", whitelist_regions_size);
+		// printf("Whitelist region size: %d\n", whitelist_regions_size);
 		
 		// Package the whitelist regions data for the child
 		int *whitelist_coor = (int *)malloc(3*whitelist_regions_size*sizeof(int));
@@ -1567,13 +1567,13 @@ int main (int argc, char* argv[]) {
 		// free(var_id);
 		
 		// DEBUG
-		printf("Trimer: %d\n", trimer);
-		printf("Local radius: %d\n", local_radius);
-		printf("FASTA dir: %s\n", fasta_dir.c_str());
-		printf("Var array\n");
-		for (unsigned int i = 0; i < var_array.size(); i++) {
-			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
-		}
+// 		printf("Trimer: %d\n", trimer);
+// 		printf("Local radius: %d\n", local_radius);
+// 		printf("FASTA dir: %s\n", fasta_dir.c_str());
+// 		printf("Var array\n");
+// 		for (unsigned int i = 0; i < var_array.size(); i++) {
+// 			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
+// 		}
 
 		// Receive whitelist regions data
 		// MPI_Probe first
@@ -1606,10 +1606,10 @@ int main (int argc, char* argv[]) {
 		free(whitelist_coor);
 		
 		// DEBUG
-		printf("Whitelist regions\n");
-		for (unsigned int i = 0; i < whitelist_regions.size(); i++) {
-			printf("%s:%s-%s\n", whitelist_regions[i][0].c_str(), whitelist_regions[i][1].c_str(), whitelist_regions[i][2].c_str());
-		}
+// 		printf("Whitelist regions\n");
+// 		for (unsigned int i = 0; i < whitelist_regions.size(); i++) {
+// 			printf("%s:%s-%s\n", whitelist_regions[i][0].c_str(), whitelist_regions[i][1].c_str(), whitelist_regions[i][2].c_str());
+// 		}
 		
 		FILE *fasta_ptr = NULL;
 		string last_chr = "";
@@ -1774,11 +1774,11 @@ int main (int argc, char* argv[]) {
 				
 				// DEBUG
 				// bool tocont = false;
-				FILE *testout_ptr = fopen("testout.txt","a");
-				fprintf(testout_ptr, "Cluster bins 1\n");
-				for (unsigned int i; i < cluster_bins.size(); i++) {
-					fprintf(testout_ptr, "%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
-				}
+// 				FILE *testout_ptr = fopen("testout.txt","a");
+// 				fprintf(testout_ptr, "Cluster bins 1\n");
+// 				for (unsigned int i; i < cluster_bins.size(); i++) {
+// 					fprintf(testout_ptr, "%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
+// 				}
 				
 				// Filter the cluster bins for those that overlap the whitelist regions
 				vector<vector<string> > cluster_bins_2;
@@ -1795,11 +1795,11 @@ int main (int argc, char* argv[]) {
 				cluster_bins = cluster_bins_2;
 				
 				// DEBUG
-				fprintf(testout_ptr, "Cluster bins 2\n");
-				for (unsigned int i; i < cluster_bins.size(); i++) {
-					fprintf(testout_ptr, "%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
-				}
-				fclose(testout_ptr);
+// 				fprintf(testout_ptr, "Cluster bins 2\n");
+// 				for (unsigned int i; i < cluster_bins.size(); i++) {
+// 					fprintf(testout_ptr, "%s:%s-%s\n", cluster_bins[i][0].c_str(), cluster_bins[i][1].c_str(), cluster_bins[i][2].c_str());
+// 				}
+// 				fclose(testout_ptr);
 				// exit(1);
 				
 				// End of setting up, begin calculating results
@@ -1895,9 +1895,9 @@ int main (int argc, char* argv[]) {
 					for (unsigned int l = 0; l < cluster_bins.size(); l++) {
 					
 						// DEBUG
-						printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
-						printf("cluster start: %s\n", cluster_bins[l][1].c_str());
-						printf("cluster end: %s\n", cluster_bins[l][2].c_str());
+// 						printf("cluster chr: %s\n", cluster_bins[l][0].c_str());
+// 						printf("cluster start: %s\n", cluster_bins[l][1].c_str());
+// 						printf("cluster end: %s\n", cluster_bins[l][2].c_str());
 					
 						// FASTA import here
 						if (last_chr != cluster_bins[l][0]) {
@@ -2015,8 +2015,8 @@ int main (int argc, char* argv[]) {
 					// DEBUG
 					// printf("Inner loop\n");
 					// printf("%s:%s-%s\n", var_array[k][0].c_str(), var_array[k][1].c_str(), var_array[k][2].c_str());
-					printf("Variant processing loop: iter: %d\n", (int)k);
-					printf("Variant: %s:%s-%s\n", obs_var_pos[k].second[0].c_str(), obs_var_pos[k].second[1].c_str(), obs_var_pos[k].second[2].c_str());
+// 					printf("Variant processing loop: iter: %d\n", (int)k);
+// 					printf("Variant: %s:%s-%s\n", obs_var_pos[k].second[0].c_str(), obs_var_pos[k].second[1].c_str(), obs_var_pos[k].second[2].c_str());
 			
 					// string cur_nt = obs_var_pos[k].second;
 					
@@ -2065,8 +2065,8 @@ int main (int argc, char* argv[]) {
 						}
 				
 						// DEBUG
-						printf("DEBUG: %c,%c,%c,%c,%c\n", cur_nt0, cur_nt1, cur_nt2, cur_nt3, cur_nt4);
-						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
+// 						printf("DEBUG: %c,%c,%c,%c,%c\n", cur_nt0, cur_nt1, cur_nt2, cur_nt3, cur_nt4);
+// 						printf("DEBUG: cur_nt: %s\n", cur_nt.c_str());
 				
 						vector<int> pos = local_nt[cur_nt];
 						
@@ -2137,7 +2137,7 @@ int main (int argc, char* argv[]) {
 							// coor = epoch2genome(new_epoch, sum_nt, cluster_bins);
 							
 							// DEBUG: check coor
-							printf("new_epoch: %d\n", new_epoch);
+							// printf("new_epoch: %d\n", new_epoch);
 							// printf("%s:%s-%s\n", coor[0].c_str(), coor[1].c_str(), coor[2].c_str());
 							
 							// If new_epoch is, in genome coordinates, not within local_radius of
