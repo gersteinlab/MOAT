@@ -1328,13 +1328,13 @@ int main (int argc, char* argv[]) {
 				}
 				
 				// DEBUG
-				string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-dev/clusters.txt";
-				FILE *cluster_ptr = fopen(cluster_file.c_str(), "a");
-				fprintf(cluster_ptr, "Cluster %d\n", j);
-				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
-					fprintf(cluster_ptr, "%s:%s-%s\n", cluster_bins[k][0].c_str(), cluster_bins[k][1].c_str(), cluster_bins[k][2].c_str());
-				}
-				fclose(cluster_ptr);
+// 				string cluster_file = "/home/fas/gerstein/ll426/scratch/code/moat-instance-dev/clusters.txt";
+// 				FILE *cluster_ptr = fopen(cluster_file.c_str(), "a");
+// 				fprintf(cluster_ptr, "Cluster %d\n", j);
+// 				for (unsigned int k = 0; k < cluster_bins.size(); k++) {
+// 					fprintf(cluster_ptr, "%s:%s-%s\n", cluster_bins[k][0].c_str(), cluster_bins[k][1].c_str(), cluster_bins[k][2].c_str());
+// 				}
+// 				fclose(cluster_ptr);
 				
 				// Determine which child is available to take this job
 				int available_flag;
@@ -1564,9 +1564,13 @@ int main (int argc, char* argv[]) {
 		// free(var_id);
 		
 		// DEBUG
-// 		for (unsigned int i = 0; i < var_array.size(); i++) {
-// 			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
-// 		}
+		printf("Trimer: %d\n", trimer);
+		printf("Local radius: %d\n", local_radius);
+		printf("FASTA dir: %s\n", fasta_dir.c_str());
+		printf("Var array\n");
+		for (unsigned int i = 0; i < var_array.size(); i++) {
+			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
+		}
 
 		// Receive whitelist regions data
 		// MPI_Probe first
@@ -1597,6 +1601,12 @@ int main (int argc, char* argv[]) {
 			whitelist_regions.push_back(temp);
 		}
 		free(whitelist_coor);
+		
+		// DEBUG
+		printf("Whitelist regions\n");
+		for (unsigned int i = 0; i < whitelist_regions.size(); i++) {
+			printf("%s:%s-%s\n", var_array[i][0].c_str(), var_array[i][1].c_str(), var_array[i][2].c_str());
+		}
 		
 		FILE *fasta_ptr = NULL;
 		string last_chr = "";
