@@ -537,7 +537,7 @@ int main (int argc, char* argv[]) {
 		vector<string> covar_files;
 	
 		if (argc < 13) {
-			fprintf(stderr, "Usage: moatsim_mpi [whitelist regions file] [number of clusters] [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window radius] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
+			fprintf(stderr, "Usage: moatsim_mpi [whitelist regions file] [number of clusters] [local context radius] [restrict to same chromosome (y/n)] [3mer preservation option (0/3/5)] [# permuted datasets] [permutation window width] [min width] [prohibited regions file] [FASTA dir] [variant file] [output folder] [covariate files ...]. Exiting.\n");
 			MPI_Abort(MPI_COMM_WORLD, 1);
 			return 1;
 		} else {
