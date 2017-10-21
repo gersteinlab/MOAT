@@ -1282,6 +1282,9 @@ int main (int argc, char* argv[]) {
 		// Now send the whitelist regions data
 		int whitelist_regions_size = whitelist_regions.size();
 		
+		// DEBUG
+		printf("Whitelist region size: %d\n", whitelist_regions_size);
+		
 		// Package the whitelist regions data for the child
 		int *whitelist_coor = (int *)malloc(3*whitelist_regions_size*sizeof(int));
 		for (int k = 0; k < whitelist_regions_size; k++) {
@@ -1582,7 +1585,7 @@ int main (int argc, char* argv[]) {
 		
 		// Translate into expected data structure
 		vector<vector<string> > whitelist_regions;
-		for (int i = 0; i < varcount/3; i++) {
+		for (int i = 0; i < wr_count/3; i++) {
 			vector<string> temp;
 			
 			string cur_region_chr = int2chr(whitelist_coor[3*i]);
